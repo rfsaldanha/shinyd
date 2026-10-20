@@ -412,18 +412,21 @@ def main():
             stop_process(proxy)
             if touched_service:
                 if "error" in report:
-                    # Only this test's trusted fixture IDs are inspected. No app
-                    # logs, environments or image labels enter the report.
+                    # Only this test's trusted fixture IDs are inspected.
+                    # No environments or image labels enter the report.
                     report["fixture_diagnostics"] = []
                     for instance in created:
                         inspection = command("podman", "inspect", "shinyd-" + instance, check=False)
                         if inspection.returncode == 0:
-                            state = json.loads(inspection.stdout)[0]["State"]
+                            metadata = json.loads(inspection.stdout)[0]
+                            state = metadata["State"]
                             diagnosis = {
                                 "instance": instance,
                                 "status": state.get("Status"),
                                 "error": state.get("Error"),
                                 "exit_code": state.get("ExitCode"),
+                                "apparmor_configured": metadata.get("AppArmorProfile"),
+                                "oom_killed": state.get("OOMKilled"),
                             }
                             if instance in ids[:2]:
                                 # These two fixtures contain no secrets or uploaded

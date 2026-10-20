@@ -293,9 +293,24 @@ func (m *Manager) Close() {
 func RealAttachment(appsDir string, gid int) Attachment {
 	slots := make(chan struct{}, 128)
 	return func(ctx context.Context, r Record, value *Inspection) (Endpoint, error) {
-		namespace, err := PinNamespace(value, r)
-		if err != nil {
-			return nil, err
+		deadline := time.Now().Add(20 * time.Second)
+		var namespace *os.File
+		var err error
+		for {
+			// OCI "running" can precede exec and its AppArmor transition.
+			// No traffic is admitted until every kernel check succeeds.
+			namespace, err = PinNamespace(value, r)
+			if err == nil {
+				break
+			}
+			if time.Now().After(deadline) || ctx.Err() != nil {
+				return nil, err
+			}
+			select {
+			case <-ctx.Done():
+				return nil, err
+			case <-time.After(100 * time.Millisecond):
+			}
 		}
 		transport := &http.Transport{
 			DialContext:       func(ctx context.Context, _, _ string) (net.Conn, error) { return DialNamespace(ctx, namespace) },
@@ -304,7 +319,6 @@ func RealAttachment(appsDir string, gid int) Attachment {
 		defer transport.CloseIdleConnections()
 		client := &http.Client{Transport: transport, Timeout: time.Second,
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-		deadline := time.Now().Add(20 * time.Second)
 		for {
 			req, _ := http.NewRequestWithContext(ctx, "GET", "http://instance/", nil)
 			response, err := client.Do(req)
