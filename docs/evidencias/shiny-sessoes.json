@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T12:09:44.371746+00:00",
+  "scope": "Shiny + reverse proxy experimental, somente loopback",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "two_r_versions_and_affinity",
+      "passed": true,
+      "observed": [
+        {
+          "instance": "a",
+          "r": "4.4.3",
+          "shiny": "1.10.0",
+          "pid": "1"
+        },
+        {
+          "instance": "b",
+          "r": "4.5.2",
+          "shiny": "1.13.0",
+          "pid": "1"
+        }
+      ]
+    },
+    {
+      "name": "upload_and_download",
+      "passed": true
+    },
+    {
+      "name": "unauthorized_http_and_websocket",
+      "passed": true
+    },
+    {
+      "name": "failure_isolation",
+      "passed": true
+    }
+  ],
+  "images": [
+    {
+      "r": "4.4.3",
+      "image": "docker.io/rocker/shiny@sha256:0c321be169928ed9efdc4f3d39103a9ebec40fb8cbb10ab1bfa2f5154bbb4427"
+    },
+    {
+      "r": "4.5.2",
+      "image": "docker.io/rocker/shiny@sha256:f42fc6fc08cc8b9842bf055fd72ed726e7d738e6a8191a886f8d68ea6cdc27ba"
+    }
+  ],
+  "limitations": [
+    "Não homologa login central, criação de imagens com renv ou isolamento AppArmor.",
+    "Containers rootless de fixtures confiáveis; rede de produção ainda não homologada."
+  ],
+  "passed": true
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T12:03:21.555146+00:00",
+  "scope": "rootless-smoke",
+  "kernel": "7.0.0-38-generic",
+  "tests": [
+    {
+      "name": "cgroup_v2",
+      "passed": true,
+      "detail": "v2"
+    },
+    {
+      "name": "systemd_manager",
+      "passed": true,
+      "detail": "systemd"
+    },
+    {
+      "name": "isolation",
+      "passed": true,
+      "detail": "UID não-root, raiz somente leitura, tmpfs, rede desligada, caps=0, seccomp e NNP"
+    },
+    {
+      "name": "memory_limit",
+      "passed": true,
+      "detail": "memory.max=128 MiB no kernel"
+    },
+    {
+      "name": "pids_limit",
+      "passed": true,
+      "detail": "pids.max=64 no kernel"
+    }
+  ],
+  "production_ready": false,
+  "limitations": [
+    "Não testa ainda Shiny, build de pacotes, rede de atendimento, QoS sob disputa ou reboot.",
+    "A imagem de teste permanece em cache; somente containers/unidades do teste são removidos.",
+    "Rootless não homologa delegação de CPU, AppArmor ou slices do sistema."
+  ],
+  "podman_version": "4.9.3",
+  "controllers": [
+    "memory",
+    "pids"
+  ],
+  "apparmor_reported": false,
+  "image_digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8",
+  "uid_map": "0       1000          1\n         1     100000      65536",
+  "apparmor_profile": "podman (unconfined)",
+  "smoke_passed": true
+}

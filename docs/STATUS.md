@@ -8,7 +8,7 @@ Este arquivo distingue implementação de homologação. O plano completo está 
 * F0-01: plano/backlog registrados; licença MIT preservada.
 * F0-02: comando somente leitura com JSON v1, códigos de saída e fixtures.
 * Plataforma local observada: Ubuntu 24.04 amd64, systemd, cgroups v2.
-* Runtime de containers não homologado: Podman não instalado e sudo exige senha.
+* No momento do primeiro marco, Podman não estava instalado e sudo exigia senha.
 * Não há declaração de prontidão para produção.
 * Verificação: `go test -race ./...`, `go vet ./...` e build aprovados.
 * `shinyd doctor --json`: requisitos observáveis presentes; alerta de Podman
@@ -48,3 +48,22 @@ do produto completo ainda dependem das etapas seguintes.
 
 Próxima porta técnica: homologação de containers e árvore de cgroups com os
 privilégios apropriados, seguida dos experimentos de sessões/ambientes R.
+
+## Marco 3 — Experimentos de containers e sessões
+
+* Podman instalado pelo operador; teste rootless inicial aprovado.
+* Limitações reais: CPU não delegada e AppArmor não imposto no modo rootless.
+* Roteiro rootful limitado disponível; resultado ainda pendente.
+* Núcleo do proxy Go com autorização antes de HTTP/WS e revalidação de WS,
+  fronteiras de cabeçalhos/cookies e destinos loopback.
+* Experimento com R 4.4.3/Shiny 1.10.0 e R 4.5.2/Shiny 1.13.0 simultâneos:
+  afinidade, upload/download, negação sem credencial e falha isolada aprovados.
+* Go: `go test -race ./...` e `go vet ./...` aprovados, incluindo revogação de WS.
+* Revisão do código atual de ShinyProxy/ContainerProxy registrada, sem alegar
+  execução ou benchmark da solução.
+
+Detalhes e relatórios em [DECISOES_EXECUTOR.md](DECISOES_EXECUTOR.md).
+Os experimentos não estão conectados ao painel e não habilitam execução de
+código publicado. Não há declaração de conclusão do MVP ou da versão 1.0.
+
+CI remota: marcos 1 e 2 aprovados em GitHub Actions.
