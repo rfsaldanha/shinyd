@@ -262,7 +262,8 @@ func PinNamespace(value *Inspection, record Record) (*os.File, error) {
 	if len(required) != 0 {
 		return nil, ErrProcess
 	}
-	profile, err := os.ReadFile(prefix + "/attr/current")
+	// Select AppArmor explicitly on kernels with multiple security modules.
+	profile, err := os.ReadFile(prefix + "/attr/apparmor/current")
 	if err != nil || !strings.Contains(string(profile), "(enforce)") {
 		return nil, ErrProfile
 	}

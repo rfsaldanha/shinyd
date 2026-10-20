@@ -438,7 +438,9 @@ def main():
                                     "shinyd-" + instance,
                                     check=False,
                                 ).stderr[-4000:]
-                            if state.get("Status") == "created":
+                            if state.get("Status") == "created" or (
+                                instance in ids[:2] and state.get("Status") == "exited"
+                            ):
                                 # A failed fixture start may leave no OCI error in
                                 # inspect. Retry only this trusted test container,
                                 # outside the service, to identify host vs unit errors.
@@ -447,6 +449,17 @@ def main():
                                 )
                                 diagnosis["diagnostic_start_code"] = retry.returncode
                                 diagnosis["diagnostic_start_error"] = retry.stderr[:2000]
+                                if retry.returncode == 0:
+                                    time.sleep(1)
+                                    running = json.loads(
+                                        command("podman", "inspect", "shinyd-" + instance).stdout
+                                    )[0]["State"]["Pid"]
+                                    for attribute in ("attr/current", "attr/apparmor/current"):
+                                        try:
+                                            value = Path(f"/proc/{running}/{attribute}").read_text()
+                                        except OSError as exc:
+                                            value = f"errno={exc.errno}"
+                                        diagnosis[attribute] = value
                             report["fixture_diagnostics"].append(diagnosis)
                     report["executor_diagnostics"] = command(
                         "journalctl",
