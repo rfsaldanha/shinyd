@@ -38,8 +38,8 @@ def main():
     elif mode in {"panel", "auth"} and not arguments:
         from gunicorn.app.wsgiapp import WSGIApplication
 
-        for key in listen:
-            os.environ.pop(key, None)
+        if listen.get("LISTEN_PID") != str(os.getpid()) or listen.get("LISTEN_FDS") != "1":
+            raise ValueError("Inicie o serviço pelo socket systemd.")
         app = (
             "shinyd_web.wsgi:application"
             if mode == "panel"
@@ -49,7 +49,7 @@ def main():
         sys.argv = [
             "gunicorn",
             "--bind",
-            "fd://3",
+            f"unix:/run/shinyd-{mode}/http.sock",
             "--workers",
             "1",
             "--threads",

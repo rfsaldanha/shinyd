@@ -70,6 +70,7 @@ def main():
     parser.add_argument("--https-port", type=int, default=443)
     parser.add_argument("--bind", default="0.0.0.0")
     args = parser.parse_args()
+    stage = "pré-requisitos"
     try:
         if os.geteuid() != 0:
             raise ValueError("Execute a configuração com sudo.")
@@ -105,6 +106,7 @@ def main():
                 raise ValueError(
                     "Prepare as políticas aprovadas de builder/runtime antes de configurar."
                 )
+        stage = "certificado"
         cert, key = args.certificate.read_bytes(), args.private_key.read_bytes()
         verify_certificate(cert, key, config)
         write_private(Path("/etc/shinyd-tls/cert.pem"), cert, "shinyd-ingress")
@@ -112,6 +114,7 @@ def main():
         write_private(
             Path("/etc/shinyd-tls/Caddyfile"), caddyfile(config).encode(), "shinyd-ingress"
         )
+        stage = "validação HTTPS"
         result = subprocess.run(
             [
                 "runuser",
@@ -130,6 +133,7 @@ def main():
         )
         if result.returncode:
             raise ValueError("Caddy recusou a configuração HTTPS.")
+        stage = "configuração e migrações"
         write_private(CONFIG, json.dumps(config, indent=2).encode() + b"\n", "shinyd-config")
         subprocess.run(
             [
@@ -158,6 +162,7 @@ def main():
     except (ValueError, OSError, subprocess.SubprocessError, x509.ExtensionNotFound):
         # Do not serialize input values or subprocess output (may contain credentials).
         raise SystemExit(
-            "Configuração não concluída. Confira nomes, certificado/chave, políticas e "
+            f"Configuração não concluída na etapa {stage}. "
+            "Confira nomes, certificado/chave, políticas e "
             "serviços parados; consulte o guia de instalação."
         ) from None

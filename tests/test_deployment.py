@@ -101,3 +101,78 @@ def test_configuration_writer_refuses_service_writable_directory(tmp_path):
     with pytest.raises(ValueError, match="inseguro"):
         write_private(tmp_path / "key", b"never-written", "root")
     assert not (tmp_path / "key").exists()
+
+
+def test_installed_gunicorn_preserves_inherited_socket_across_restarts(tmp_path):
+    import json
+    import os
+    import socket
+    import subprocess
+    import sys
+    import time
+    from pathlib import Path
+
+    if os.geteuid() == 0:
+        pytest.skip("Installed control services deliberately refuse root.")
+    (tmp_path / "keys").mkdir()
+    key = tmp_path / "keys/django.key"
+    key.write_text("a" * 64)
+    key.chmod(0o600)
+    path = tmp_path / "panel.sock"
+    listener = socket.socket(socket.AF_UNIX)
+    listener.bind(str(path))
+    listener.listen(16)
+    inode = path.stat().st_ino
+    root = Path(__file__).resolve().parents[1]
+    code = f"""
+import os, sys
+sys.path.insert(0, {str(root / "backend")!r})
+from deployment import serve
+from deployment.config import environment
+os.dup2({listener.fileno()}, 3)
+os.environ.update(LISTEN_PID=str(os.getpid()), LISTEN_FDS='1')
+config={json.dumps(CONFIG)!r}
+import json
+config=json.loads(config)
+serve.load=lambda:config
+serve.environment=lambda c:dict(environment(c), SHINYD_STATE_DIR={str(tmp_path)!r})
+sys.argv=['service','panel']
+serve.main()
+"""
+    try:
+        for _ in range(2):
+            process = subprocess.Popen(
+                [sys.executable, "-c", code],
+                pass_fds=(listener.fileno(),),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            try:
+                deadline = time.monotonic() + 10
+                while time.monotonic() < deadline:
+                    assert process.poll() is None, "Gunicorn exited during startup"
+                    try:
+                        with socket.socket(socket.AF_UNIX) as client:
+                            client.settimeout(0.5)
+                            client.connect(str(path))
+                            client.sendall(
+                                b"GET /healthz HTTP/1.0\r\nHost: panel.example.org\r\n"
+                                b"X-Forwarded-Proto: https\r\n\r\n"
+                            )
+                            if b"200 OK" in client.recv(1024):
+                                break
+                    except (OSError, TimeoutError):
+                        pass
+                else:
+                    pytest.fail("Inherited listener did not serve healthz")
+            finally:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+            assert process.returncode == 0
+            assert path.exists() and path.stat().st_ino == inode
+    finally:
+        listener.close()
