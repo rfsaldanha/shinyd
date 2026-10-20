@@ -10,7 +10,7 @@ from django.utils import timezone
 from control import activation_jobs as activation
 from control import runtime_client
 from control.gateway_auth import authorize
-from control.models import AppInstance, Application, AuditEvent, Job, Version
+from control.models import AppInstance, Application, AuditEvent, Job, Publication, Version
 from control.services import Conflict, set_environment
 
 pytestmark = pytest.mark.django_db
@@ -99,6 +99,15 @@ def test_activation_enables_only_checked_route_and_respects_access(app, accounts
     client.force_login(accounts["publisher"])
     assert b"Abrir aplicativo" in client.get(reverse("app_detail", args=[app.pk])).content
     assert AuditEvent.objects.filter(action="publication.activated").count() == 1
+
+
+@pytest.mark.parametrize("domain", ["", "apps.localhost:99999", "example.org", "a" * 260])
+def test_invalid_operator_domain_leaves_no_candidate(app, accounts, settings, domain):
+    settings.SHINYD_APP_DOMAIN = domain
+    with pytest.raises(ValidationError):
+        queue(app, accounts)
+    assert not Job.objects.exists() and not Publication.objects.exists()
+    assert not AppInstance.objects.exists()
 
 
 def test_failed_candidate_preserves_previous(app, accounts, runtime, monkeypatch):

@@ -2,9 +2,9 @@
 
 Este marco integra a preparação offline ao painel e ao worker. Depois de
 inspecionar um ZIP, o publicador pode selecionar **Preparar versão**, escolher
-um ambiente R aprovado e acompanhar o resultado. Ainda não ativa uma publicação:
-o executor precisa de um contrato para reconhecer artefatos do builder antes
-de automatizar partida, readiness e registro no gateway.
+um ambiente R aprovado e acompanhar o resultado. A preparação não ativa uma
+publicação: a [ativação](ATIVACAO_PAINEL.md) é uma operação separada, com
+partida, verificação de funcionamento e registro no gateway.
 
 ## Fluxo e autorização
 

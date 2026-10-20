@@ -21,6 +21,8 @@ A interface informa que usuários conectados precisarão abrir o aplicativo
 novamente. Não há drenagem neste marco. Cada instância tem host próprio, sem
 trocar seu destino: credenciais e WebSockets antigos nunca passam para outro
 processo R. O botão **Abrir aplicativo** usa o fluxo de login central existente.
+A entrada estável `<app>.apps.exemplo.org` prevista no plano ainda não está
+implementada: neste marco o host de execução muda em cada ativação.
 
 ## Falhas e limites
 

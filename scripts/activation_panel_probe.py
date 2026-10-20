@@ -49,11 +49,24 @@ def main():
     actor = User.objects.get(username="publisher")
     client = Client(HTTP_HOST="panel.localhost")
     client.force_login(actor)
-    instances, checks = [], []
+    instances, checks, busy_retries = [], [], []
 
     def check(name, value):
         assert value, name
         checks.append(name)
+
+    def rejected(name, expected, operation):
+        for attempt in range(4):
+            try:
+                operation()
+            except runtime_client.RuntimeRejected as exc:
+                if exc.code == "runtime_busy" and attempt < 3:
+                    busy_retries.append(name)
+                    time.sleep(5)
+                    continue
+                check(name, exc.code == expected)
+                return
+            raise AssertionError(name)
 
     def wait(job):
         deadline = time.monotonic() + 600
@@ -113,12 +126,12 @@ def main():
     )
     client.force_login(actor)
     foreign = {**first.publication.runtime_spec, "app_id": str(uuid.uuid4())}
-    try:
-        runtime_client.request("PUT", uuid.uuid4(), foreign)
-    except runtime_client.RuntimeRejected as exc:
-        check("activation_cross_app_artifact_denied", exc.code == "artifact_rejected")
-    else:
-        raise AssertionError("foreign artifact accepted")
+    foreign_id = uuid.uuid4()
+    rejected(
+        "activation_cross_app_artifact_denied",
+        "artifact_rejected",
+        lambda: runtime_client.request("PUT", foreign_id, foreign),
+    )
 
     def prepare(data):
         response = client.post(
@@ -166,12 +179,11 @@ def main():
     client.post(reverse("job_cancel", args=[cancelled.pk]))
     wait(cancelled)
     check("activation_cancel_confirmed", cancelled.status == "cancelled")
-    try:
-        runtime_client.ensure(cancelled.publication)
-    except runtime_client.RuntimeRejected as exc:
-        check("activation_late_launch_denied", exc.code == "instance_conflict")
-    else:
-        raise AssertionError("cancelled instance recreated")
+    rejected(
+        "activation_late_launch_denied",
+        "instance_conflict",
+        lambda: runtime_client.ensure(cancelled.publication),
+    )
     replacement = wait(activate(new_version))
     app.refresh_from_db()
     instance.refresh_from_db()
@@ -190,6 +202,7 @@ def main():
                 "checks": checks,
                 "instances": instances,
                 "active_instance": str(replacement.publication_id),
+                "busy_retries": busy_retries,
             }
         )
     )

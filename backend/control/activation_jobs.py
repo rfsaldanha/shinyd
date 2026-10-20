@@ -86,7 +86,12 @@ def enqueue(actor, version_id, key):
         target="",
         enabled=False,
     )
-    instance_origin(instance)  # Validate the operator's separate origins before queueing.
+    try:
+        if len(instance.host) > 259:
+            raise ValueError
+        instance_origin(instance)
+    except ValueError as exc:
+        raise ValidationError("Domínio ou porta dos aplicativos inválidos.") from exc
     instance.save()
     job = Job.objects.create(
         app=app,

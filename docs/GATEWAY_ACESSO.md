@@ -1,8 +1,9 @@
 # Login central e gateway Shiny
 
-Este marco conecta a autenticação Django ao proxy HTTP/WebSocket. Instâncias
-de fixtures são registradas pelo experimento; o painel ainda não prepara imagens
-nem executa ZIPs. `SHINYD_RUNTIME_ENABLED` continua falso.
+Este marco conecta a autenticação Django ao proxy HTTP/WebSocket. O experimento
+original registra instâncias de fixtures. A [ativação pelo painel](ATIVACAO_PAINEL.md)
+agora registra instâncias verificadas pelo executor; requer habilitação explícita
+de `SHINYD_RUNTIME_ENABLED`, ainda falso por padrão.
 
 ## Fluxo de acesso
 
@@ -127,7 +128,8 @@ medidos de encerramento foram 18,573 s ao restringir um app público, 0,976 s
 ao revogar a permissão, 19,958 s no logout e 20,004 s na queda do autorizador.
 São observações desse ensaio, não uma medição de capacidade sob carga.
 
-Ainda faltam instalação, TLS real, rede do executor, construção de imagens,
-reconciliação das instâncias, política de renovação e medição de capacidade.
+O executor e o builder agora têm contratos separados de execução e preparação.
+Ainda faltam instalação completa, TLS real, entrada estável por app, drenagem,
+política de renovação e medição de capacidade.
 Há uma consulta ao controle por requisição HTTP e por revalidação de WebSocket;
 não foi medida capacidade de usuários nem homologado uso em produção.
