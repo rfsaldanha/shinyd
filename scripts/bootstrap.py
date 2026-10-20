@@ -17,6 +17,7 @@ for directory in ("keys", "sources", "staging"):
 for name, value in (
     ("django.key", secrets.token_urlsafe(64).encode()),
     ("secrets.key", secrets.token_bytes(32)),
+    ("gateway.key", secrets.token_hex(32).encode()),
 ):
     path = root / "keys" / name
     try:

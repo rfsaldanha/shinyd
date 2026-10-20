@@ -189,3 +189,31 @@ class LoginAttempt(models.Model):
     key = models.CharField(max_length=64, unique=True)
     failures = models.PositiveIntegerField(default=0)
     expires_at = models.DateTimeField()
+
+
+class AppInstance(models.Model):
+    """Gateway registration; only the trusted executor may provision these records."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    app = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="instances")
+    host = models.CharField(max_length=259, unique=True)
+    target = models.CharField(max_length=100)
+    enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class GatewayTicket(models.Model):
+    token_hash = models.CharField(max_length=64, unique=True)
+    instance = models.ForeignKey(AppInstance, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    panel_session = models.ForeignKey("sessions.Session", on_delete=models.CASCADE)
+    expires_at = models.DateTimeField(db_index=True)
+    consumed_at = models.DateTimeField(null=True)
+
+
+class GatewaySession(models.Model):
+    token_hash = models.CharField(max_length=64, unique=True)
+    instance = models.ForeignKey(AppInstance, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    panel_session = models.ForeignKey("sessions.Session", on_delete=models.CASCADE)
+    expires_at = models.DateTimeField(db_index=True)

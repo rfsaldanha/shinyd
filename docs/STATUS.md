@@ -102,3 +102,27 @@ Isso aceita o teste inicial do roteiro, não todo F0-05. Continuam pendentes
 build/runtime com dados, rede de atendimento, QoS sob concorrência e reboot.
 `production_ready` permanece `false`. A integração do login central com o gateway
 pode avançar usando fixtures confiáveis; código enviado pelo painel continua sem execução.
+
+## Marco 6 — Gateway com login central
+
+* Novo binário `shinyd-gateway`, com autorização central por socket Unix privado
+  e chave de serviço separada. Nenhum endpoint interno é publicado pelo painel.
+* Código de acesso de uso único via POST; credencial vinculada à instância e
+  à sessão Django. Banco guarda hashes, auditoria não inclui códigos/cookies.
+* Autorização por rota e revalidação dos WebSockets, inclusive para apps públicos.
+  Logout, revogação, falha do controle e mudança de destino negam continuidade.
+* Migração aditiva de instâncias/tickets/sessões e limpeza de registros expirados.
+* Headers, cookies e registro de service workers protegidos na fronteira do app.
+* **85 testes Python aprovados**, testes Go com detector de condições de corrida,
+  `go vet`, Ruff, migrações e verificações Django aprovados.
+* Chrome real com dois Shiny: **nove cenários aprovados**, incluindo HTTP/WS
+  privados, login, isolamento de cookies, replay negado, upload/download e
+  revogação. Queda abrupta do autorizador encerrou o WS em 20,004 segundos.
+
+Roteiro, decisões e limites: [GATEWAY_ACESSO.md](GATEWAY_ACESSO.md).
+Evidência: [gateway-login-central.json](evidencias/gateway-login-central.json).
+
+Esse marco implementa partes de F2-05/F5-03. Não conclui TLS, registro automático
+de instâncias ou publicação: o experimento usa fixtures confiáveis e banco
+descartável. Builder, agente privilegiado, rede, instalação/reboot, QoS sob
+concorrência e as demais fases do plano continuam pendentes.

@@ -113,3 +113,12 @@ credencial temporária de fixture. Não é o login central nem um gateway instal
 O teste não demonstra restore de renv, drenagem de versões, reconexão de sessão
 após queda de rede, coexistência com volumes graváveis ou QoS. F0-04 e F0-06
 continuam parcialmente demonstrados; o painel não oferece execução.
+
+## Integração posterior com o login central
+
+O novo `shinyd-gateway` usa o Django como autorizador por socket Unix. A
+credencial fixa do proxy de experimento não participa desse fluxo. O
+[roteiro de login central](GATEWAY_ACESSO.md) e seu
+[relatório](evidencias/gateway-login-central.json) comprovam o fluxo com dois
+Shiny reais, código de uso único, cookies separados e revogação de conexões.
+TLS e o executor de publicações continuam fora dessa demonstração.

@@ -85,6 +85,11 @@ func reservedCookie(name string) bool {
 }
 
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// An untrusted app must not install a worker that intercepts later login handoffs.
+	if strings.EqualFold(r.Header.Get("Service-Worker"), "script") {
+		http.Error(w, "Service worker não permitido.", http.StatusForbidden)
+		return
+	}
 	route, exists := g.routes[strings.ToLower(r.Host)]
 	if !exists {
 		http.NotFound(w, r)
@@ -149,6 +154,9 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		},
 		ModifyResponse: func(response *http.Response) error {
+			response.Header.Del("Clear-Site-Data")
+			response.Header.Del("Service-Worker-Allowed")
+			response.Header.Set("Cache-Control", "no-store")
 			cookies := response.Cookies()
 			response.Header.Del("Set-Cookie")
 			for _, cookie := range cookies {

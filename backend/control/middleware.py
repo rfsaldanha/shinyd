@@ -14,10 +14,11 @@ class SecurityHeadersMiddleware:
         if length > settings.SHINYD_UPLOAD_LIMIT + 2 * 1024 * 1024:
             return HttpResponse("Envio excede o limite permitido.", status=413)
         response = self.get_response(request)
-        response["Content-Security-Policy"] = (
+        response.setdefault(
+            "Content-Security-Policy",
             "default-src 'self'; script-src 'self'; style-src 'self'; "
             "img-src 'self' data:; object-src 'none'; base-uri 'none'; "
-            "frame-ancestors 'none'; form-action 'self'"
+            "frame-ancestors 'none'; form-action 'self'",
         )
         response["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         if not request.path.startswith("/static/"):

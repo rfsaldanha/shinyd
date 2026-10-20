@@ -116,4 +116,9 @@ SHINYD_ZIP_ENTRIES = 50_000
 SHINYD_MASTER_KEY_FILE = STATE_DIR / "keys" / "secrets.key"
 # No execution before the runtime's safety and session gates are homologated.
 SHINYD_RUNTIME_ENABLED = False
+SHINYD_PANEL_ORIGIN = os.environ.get("SHINYD_PANEL_ORIGIN", "")
+SHINYD_APP_DOMAIN = os.environ.get("SHINYD_APP_DOMAIN", "")
+SHINYD_GATEWAY_KEY_FILE = Path(
+    os.environ.get("SHINYD_GATEWAY_KEY_FILE", STATE_DIR / "keys" / "gateway.key")
+)
 EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"

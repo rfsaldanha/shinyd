@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T13:02:51.788415+00:00",
+  "scope": "Django + gateway por socket Unix + dois Shiny reais",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "anonymous_public_and_private_http_ws",
+      "passed": true
+    },
+    {
+      "name": "central_login_single_use_and_host_cookies",
+      "passed": true
+    },
+    {
+      "name": "private_shiny_affinity_upload_download",
+      "passed": true
+    },
+    {
+      "name": "public_to_private_closes_ws",
+      "passed": true,
+      "seconds": 18.573
+    },
+    {
+      "name": "credential_cannot_cross_instances",
+      "passed": true
+    },
+    {
+      "name": "grant_revocation_closes_ws",
+      "passed": true,
+      "seconds": 0.976
+    },
+    {
+      "name": "central_logout_closes_ws",
+      "passed": true,
+      "seconds": 19.958
+    },
+    {
+      "name": "authorizer_outage_closes_ws",
+      "passed": true,
+      "seconds": 20.004
+    },
+    {
+      "name": "credentials_absent_from_urls_logs_and_app",
+      "passed": true
+    }
+  ],
+  "images": [
+    {
+      "r": "4.4.3",
+      "image": "docker.io/rocker/shiny@sha256:0c321be169928ed9efdc4f3d39103a9ebec40fb8cbb10ab1bfa2f5154bbb4427"
+    },
+    {
+      "r": "4.5.2",
+      "image": "docker.io/rocker/shiny@sha256:f42fc6fc08cc8b9842bf055fd72ed726e7d738e6a8191a886f8d68ea6cdc27ba"
+    }
+  ],
+  "limitations": [
+    "HTTP de desenvolvimento; TLS/DNS de produção ainda não testados.",
+    "Fixtures rootless confiáveis; não testa build ou rede de código enviado.",
+    "Instâncias registradas pelo experimento, sem publicação pelo painel."
+  ],
+  "observed_runtimes": [
+    {
+      "instance": "a",
+      "r": "4.4.3",
+      "shiny": "1.10.0"
+    },
+    {
+      "instance": "b",
+      "r": "4.5.2",
+      "shiny": "1.13.0"
+    }
+  ],
+  "passed": true
+}

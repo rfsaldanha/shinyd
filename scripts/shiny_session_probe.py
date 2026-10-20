@@ -33,6 +33,47 @@ def free_port():
         return sock.getsockname()[1]
 
 
+def start_fixture(name, label, image):
+    """Only trusted repository fixtures; not the production app executor."""
+    command("podman", "image", "exists", image["image"])
+    command(
+        "podman",
+        "run",
+        "--detach",
+        "--name",
+        name,
+        "--label",
+        "org.shinyd.test=" + name,
+        "--network=slirp4netns:allow_host_loopback=false",
+        "--publish=127.0.0.1::3838",
+        "--read-only",
+        "--user=65534:65534",
+        "--cap-drop=all",
+        "--security-opt=no-new-privileges",
+        "--memory=512m",
+        "--memory-swap=512m",
+        "--pids-limit=128",
+        "--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777",
+        "--env=HOME=/tmp",
+        "--env=PROBE_INSTANCE=" + label,
+        "--volume=" + str(ROOT / "experiments/session-fixture") + ":/app:ro",
+        "--workdir=/app",
+        "--entrypoint=Rscript",
+        image["image"],
+        "--vanilla",
+        "-e",
+        "shiny::runApp('/app',host='0.0.0.0',port=3838,launch.browser=FALSE)",
+    )
+    target = "http://" + command("podman", "port", name, "3838/tcp")
+    for _ in range(100):
+        try:
+            urllib.request.urlopen(target, timeout=1).close()
+            return target
+        except OSError:
+            time.sleep(0.2)
+    raise RuntimeError("Fixture não iniciou: " + command("podman", "logs", name))
+
+
 def main():
     proxy_path = ROOT / "dist/shinyd-proxy-probe"
     if not proxy_path.is_file():
@@ -61,46 +102,7 @@ def main():
             label = chr(ord("a") + index)
             name = prefix + "-" + label
             names.append(name)
-            # Pull by digest, never silently resolve a mutable tag during a test.
-            command("podman", "image", "exists", image["image"])
-            command(
-                "podman",
-                "run",
-                "--detach",
-                "--name",
-                name,
-                "--label",
-                "org.shinyd.test=" + prefix,
-                "--network=slirp4netns:allow_host_loopback=false",
-                "--publish=127.0.0.1::3838",
-                "--read-only",
-                "--user=65534:65534",
-                "--cap-drop=all",
-                "--security-opt=no-new-privileges",
-                "--memory=512m",
-                "--memory-swap=512m",
-                "--pids-limit=128",
-                "--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777",
-                "--env=HOME=/tmp",
-                "--env=PROBE_INSTANCE=" + label,
-                "--volume=" + str(ROOT / "experiments/session-fixture") + ":/app:ro",
-                "--workdir=/app",
-                "--entrypoint=Rscript",
-                image["image"],
-                "--vanilla",
-                "-e",
-                "shiny::runApp('/app',host='0.0.0.0',port=3838,launch.browser=FALSE)",
-            )
-            binding = command("podman", "port", name, "3838/tcp")
-            target = "http://" + binding
-            for _ in range(100):
-                try:
-                    urllib.request.urlopen(target, timeout=1).close()
-                    break
-                except OSError:
-                    time.sleep(0.2)
-            else:
-                raise RuntimeError("Fixture não iniciou: " + command("podman", "logs", name))
+            target = start_fixture(name, label, image)
             routes.append({"host": f"{label}.localhost:{port}", "id": label, "target": target})
         with tempfile.TemporaryDirectory(prefix="shinyd-proxy-config-") as temporary:
             config = Path(temporary) / "config.json"

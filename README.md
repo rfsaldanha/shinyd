@@ -11,6 +11,10 @@ O [guia de desenvolvimento](docs/DESENVOLVIMENTO.md) explica como iniciar o pain
 local, criar contas, cadastrar apps e inspecionar um ZIP. O executor ainda não
 está habilitado; uma inspeção aprovada não publica o app.
 
+O [isolamento inicial de containers](docs/HOMOLOGACAO_CONTAINERS.md) passou
+na verificação rootful. O [gateway com login central](docs/GATEWAY_ACESSO.md)
+tem um roteiro separado com apps de teste.
+
 ## Diagnóstico do servidor
 
 Em Linux com Go 1.24 ou superior:

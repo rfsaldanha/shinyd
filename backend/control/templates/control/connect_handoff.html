@@ -1,0 +1,10 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Abrindo aplicativo · shinyd</title>
+<script src="{% static 'control/connect.js' %}" defer></script></head>
+<body><main><h1>Abrindo {{ instance.app.name }}</h1>
+<form id="gateway-handoff" method="post" action="{{ action }}">
+<input type="hidden" name="code" value="{{ code }}">
+<button type="submit">Continuar para o aplicativo</button>
+</form></main></body></html>

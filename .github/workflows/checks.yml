@@ -13,6 +13,7 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
       - run: go build -o dist/shinyd ./cmd/shinyd
+      - run: go build -o dist/shinyd-gateway ./cmd/shinyd-gateway
   python:
     runs-on: ubuntu-24.04
     steps:

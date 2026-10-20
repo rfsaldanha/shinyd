@@ -5,6 +5,7 @@ ui <- fluidPage(
   tags$p("Dados sintéticos para teste; este aplicativo não está publicado."),
   actionButton("increment", "Somar"),
   verbatimTextOutput("state"),
+  verbatimTextOutput("credential_boundary"),
   fileInput("upload", "Arquivo de teste"),
   verbatimTextOutput("uploaded"),
   downloadButton("download", "Baixar estado")
@@ -18,6 +19,14 @@ server <- function(input, output, session) {
     Sys.getpid(), count(), sep = "|"
   ))
   output$state <- renderText(state())
+  output$credential_boundary <- renderText({
+    cookies <- session$request$HTTP_COOKIE
+    auth <- session$request$HTTP_AUTHORIZATION
+    identity <- session$request$HTTP_X_SHINYD_USER
+    leaked <- (!is.null(cookies) && grepl("shinyd", cookies, fixed = TRUE)) ||
+      !is.null(auth) || !is.null(identity)
+    if (leaked) "credential-leaked" else "credential-boundary-ok"
+  })
   output$uploaded <- renderText({
     req(input$upload)
     readLines(input$upload$datapath, warn = FALSE)

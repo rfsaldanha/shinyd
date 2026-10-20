@@ -1,0 +1,6 @@
+{% extends "control/base.html" %}
+{% block title %}Abrir {{ instance.app.name }} · shinyd{% endblock %}
+{% block content %}
+<section class="panel"><h1>{{ instance.app.name }}</h1><p>Você está conectado como {{ user.username }}.</p>
+<form method="post">{% csrf_token %}<button class="btn btn-primary" type="submit">Abrir aplicativo</button></form></section>
+{% endblock %}

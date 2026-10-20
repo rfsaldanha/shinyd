@@ -55,9 +55,14 @@ O código operacional usa Argon2id. Não use `settings_test` para servir o paine
 ## Arquitetura em andamento
 
 O código de metadados, autorização e inspeção é independente do contrato de
-execução. A escolha Podman/systemd ainda depende dos experimentos F0-03–06.
+execução. O isolamento rootful inicial passou; as verificações completas
+F0-03–06 ainda têm itens pendentes.
 `SHINYD_RUNTIME_ENABLED` permanece falso; não há botão que simule execução.
 As fases dependentes desse contrato não estão concluídas.
+
+O [gateway com login central](GATEWAY_ACESSO.md) tem um experimento separado
+com dois Shiny reais, banco descartável e acesso por socket Unix. Esse roteiro
+não transforma uploads do painel em apps executáveis.
 
 A verificação de deployment preserva HSTS e cookies seguros. Somente W021
 (adesão a HSTS preload) é silenciado: cadastrar o domínio em uma lista global
