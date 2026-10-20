@@ -44,6 +44,11 @@ O executor é um serviço separado, root, com API privada autorizada pelo UID
 comprometer esse serviço equivale a comprometer um componente privilegiado.
 O catálogo e o estado são controlados por root, sem escrita por publicadores.
 Nenhum código enviado pelo painel alimenta o catálogo neste marco.
+O serviço do executor permite a preparação privilegiada dos mapeamentos de
+UID pelo Podman; `no-new-privileges` é aplicado aos apps e conferido no processo
+real. Não se aplica essa restrição ao processo que prepara o armazenamento.
+Eventos próprios do Podman ficam desativados, evitando rótulos de imagens na
+auditoria do serviço.
 
 Estado fica em `/var/lib/shinyd-runtime`, com escrita temporária, fsync,
 rename e fsync do diretório. Um lock impede dois executores sobre o mesmo estado.
