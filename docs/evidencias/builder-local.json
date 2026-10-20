@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T16:17:38.006265+00:00",
+  "scope": "Builder offline ZIP/renv, imagens imutáveis e integração com executor",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "empty_test_installation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "package_checksum",
+      "passed": true,
+      "detail": "d54494cea778f86b57d282bb76141f0988fad2581835ed78df87d065c6106a6c"
+    },
+    {
+      "name": "package_identity",
+      "passed": true,
+      "detail": "shinyd-builder 0.1.0~builder1"
+    },
+    {
+      "name": "build_0_prepared",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "build_0_isolation",
+      "passed": true,
+      "detail": {
+        "apparmor": "containers-default-0.57.4-apparmor1 (enforce)",
+        "mapped_uid": true,
+        "network": "none",
+        "maintenance": true
+      }
+    },
+    {
+      "name": "build_0_cache",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "build_1_prepared",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "build_1_isolation",
+      "passed": true,
+      "detail": {
+        "apparmor": "containers-default-0.57.4-apparmor1 (enforce)",
+        "mapped_uid": true,
+        "network": "none",
+        "maintenance": true
+      }
+    },
+    {
+      "name": "build_1_cache",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "different_r_and_packages",
+      "passed": true,
+      "detail": [
+        {
+          "r": "4.4.3",
+          "shiny": "1.10.0",
+          "image": "sha256:6700a5189bbb8782e11f9ba8c3a8d497ea7d512e057386e68c5388bbbf57d042"
+        },
+        {
+          "r": "4.5.2",
+          "shiny": "1.13.0",
+          "image": "sha256:35c8d35bf8946c9c07f0632a7c0b0a30071d94491d828c79dde765cd6cb2704a"
+        }
+      ]
+    },
+    {
+      "name": "artifact_0_ready",
+      "passed": true,
+      "detail": {
+        "id": "a701c465-0bf7-4c35-95bf-5d2cb76d6ff8",
+        "app_id": "a701c465-0bf7-4c35-95bf-5d2cb76d6ff8",
+        "recipe": "built-0",
+        "priority": "normal",
+        "desired": "running",
+        "state": "ready",
+        "target": "unix:/run/shinyd-runtime/apps/a701c465-0bf7-4c35-95bf-5d2cb76d6ff8.sock"
+      }
+    },
+    {
+      "name": "artifact_1_ready",
+      "passed": true,
+      "detail": {
+        "id": "37a9d2bd-cb3f-497b-9307-84147c05eaf3",
+        "app_id": "37a9d2bd-cb3f-497b-9307-84147c05eaf3",
+        "recipe": "built-1",
+        "priority": "normal",
+        "desired": "running",
+        "state": "ready",
+        "target": "unix:/run/shinyd-runtime/apps/37a9d2bd-cb3f-497b-9307-84147c05eaf3.sock"
+      }
+    },
+    {
+      "name": "browser_reactivity_upload_download",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "concurrent_build_refused",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "source_checksum_mismatch",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "unprivileged_builder_refused",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "maintenance_weight_and_memory",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "recover_recorded_orphan",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "invalid_zip",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "error": "archive",
+        "message": "ZIP inválido, inseguro ou fora dos limites permitidos."
+      }
+    },
+    {
+      "name": "wrong_r",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "error": "r_unavailable",
+        "message": "A versão exata do R não corresponde ao ambiente selecionado."
+      }
+    },
+    {
+      "name": "missing_package",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "error": "package_unavailable",
+        "message": "Há pacote ou versão ausente no ambiente offline aprovado."
+      }
+    },
+    {
+      "name": "restore_failure",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "error": "restore",
+        "message": "Falha na restauração offline. Verifique o lockfile e o ambiente aprovado."
+      }
+    },
+    {
+      "name": "failure_preserves_artifacts_and_apps",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "failure_preserves_r_processes",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "no_pending_build",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "environment": {
+    "kernel": "7.0.0-38-generic",
+    "architecture": "x86_64",
+    "logical_cpus": 16,
+    "memory_bytes": 66735202304,
+    "profile": "Dois apps, builds offline e operações reativas; sem teste de capacidade.",
+    "podman": "4.9.3"
+  },
+  "limitations": [
+    "Não integra a publicação pela interface ou downloads de pacotes.",
+    "Não homologa reboot, capacidade, QoS sob carga ou quotas de disco."
+  ],
+  "artifacts": [
+    {
+      "schema_version": 1,
+      "recipe_version": 1,
+      "created_at": "2026-10-20T16:19:17.781848+00:00",
+      "app_id": "a701c465-0bf7-4c35-95bf-5d2cb76d6ff8",
+      "cache_key": "a1d90f19c957def49f52375b2c44ec833364a09bcaa08bac2068c7ed7767927d",
+      "source_hash": "c5b55f00b9969171a23f1a2d44ddbae5221bf481326024f59dc7b9946db993f7",
+      "entrypoint": "project",
+      "base_image": "sha256:9a50834435ade2000ceaf695956d40208e8fed1b1b6430c0730a3217d00af4ca",
+      "image": "sha256:6700a5189bbb8782e11f9ba8c3a8d497ea7d512e057386e68c5388bbbf57d042",
+      "r_version": "4.4.3",
+      "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
+      "packages": {
+        "R6": "2.6.1",
+        "Rcpp": "1.0.14",
+        "base64enc": "0.1-3",
+        "bslib": "0.9.0",
+        "cachem": "1.1.0",
+        "cli": "3.6.4",
+        "commonmark": "1.9.5",
+        "crayon": "1.5.3",
+        "digest": "0.6.37",
+        "docopt": "0.7.2",
+        "evaluate": "1.0.3",
+        "fastmap": "1.2.0",
+        "fontawesome": "0.5.3",
+        "fs": "1.6.5",
+        "glue": "1.8.0",
+        "highr": "0.11",
+        "htmltools": "0.5.8.1",
+        "httpuv": "1.6.15",
+        "jquerylib": "0.1.4",
+        "jsonlite": "2.0.0",
+        "knitr": "1.50",
+        "later": "1.4.2",
+        "lifecycle": "1.0.4",
+        "littler": "0.3.21",
+        "magrittr": "2.0.3",
+        "memoise": "2.0.1",
+        "mime": "0.13",
+        "promises": "1.3.2",
+        "rappdirs": "0.3.3",
+        "renv": "1.1.5",
+        "rlang": "1.1.5",
+        "rmarkdown": "2.29",
+        "sass": "0.4.9",
+        "shiny": "1.10.0",
+        "sourcetools": "0.1.7-1",
+        "tinytex": "0.56",
+        "withr": "3.0.2",
+        "xfun": "0.52",
+        "xtable": "1.8-4",
+        "yaml": "2.3.10"
+      },
+      "protection": {
+        "apparmor": "containers-default-0.57.4-apparmor1 (enforce)",
+        "mapped_uid": true,
+        "network": "none",
+        "maintenance": true
+      },
+      "cache_hit": false
+    },
+    {
+      "schema_version": 1,
+      "recipe_version": 1,
+      "created_at": "2026-10-20T16:19:30.193007+00:00",
+      "app_id": "37a9d2bd-cb3f-497b-9307-84147c05eaf3",
+      "cache_key": "6cdd4913d6a26b0a3ef7da6989d092ed755216c41aaade892823a81fc714fe9d",
+      "source_hash": "baa0571f95ed042e925205da6872f64c4143a2c5de43fd7f874aabdd4eecf985",
+      "entrypoint": "project",
+      "base_image": "sha256:b5db270a3e3d90108baa84ebc1f91ff8cfb7469de243ef1d39fe64a54d99fcd1",
+      "image": "sha256:35c8d35bf8946c9c07f0632a7c0b0a30071d94491d828c79dde765cd6cb2704a",
+      "r_version": "4.5.2",
+      "lock_hash": "b8f2a7373b8320fab390ee9c4df52cfd0e8eb8db71b38cd4bdcddf944cd25fa9",
+      "packages": {
+        "R6": "2.6.1",
+        "Rcpp": "1.1.1",
+        "base64enc": "0.1-6",
+        "bslib": "0.10.0",
+        "cachem": "1.1.0",
+        "cli": "3.6.5",
+        "commonmark": "2.0.0",
+        "digest": "0.6.39",
+        "docopt": "0.7.2",
+        "evaluate": "1.0.5",
+        "fastmap": "1.2.0",
+        "fontawesome": "0.5.3",
+        "fs": "1.6.7",
+        "glue": "1.8.0",
+        "highr": "0.12",
+        "htmltools": "0.5.9",
+        "httpuv": "1.6.16",
+        "jquerylib": "0.1.4",
+        "jsonlite": "2.0.0",
+        "knitr": "1.51",
+        "later": "1.4.8",
+        "lifecycle": "1.0.5",
+        "littler": "0.3.22",
+        "magrittr": "2.0.4",
+        "memoise": "2.0.1",
+        "mime": "0.13",
+        "otel": "0.2.0",
+        "promises": "1.5.0",
+        "rappdirs": "0.3.4",
+        "renv": "1.1.5",
+        "rlang": "1.1.7",
+        "rmarkdown": "2.30",
+        "sass": "0.4.10",
+        "shiny": "1.13.0",
+        "sourcetools": "0.1.7-1",
+        "tinytex": "0.58",
+        "withr": "3.0.2",
+        "xfun": "0.56",
+        "xtable": "1.8-8",
+        "yaml": "2.3.12"
+      },
+      "protection": {
+        "apparmor": "containers-default-0.57.4-apparmor1 (enforce)",
+        "mapped_uid": true,
+        "network": "none",
+        "maintenance": true
+      },
+      "cache_hit": false
+    }
+  ],
+  "passed": true
+}

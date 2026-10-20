@@ -18,8 +18,9 @@ O [executor de containers](docs/EXECUTOR_CONTAINERS.md) acrescenta operações
 restritas de ciclo de vida e atendimento por sockets Unix, em pacote separado.
 Suas 25 verificações funcionais passaram no CI e no host local.
 O [builder offline](docs/BUILDER_OFFLINE.md) prepara ZIPs com `renv.lock` usando
-um catálogo de ambientes aprovado. A integração desses componentes à publicação
-pelo painel ainda está em desenvolvimento.
+um catálogo de ambientes aprovado. Suas 25 verificações passaram no CI e no
+host local, com dois ambientes R distintos. A integração desses componentes
+à publicação pelo painel ainda está em desenvolvimento.
 
 ## Diagnóstico do servidor
 

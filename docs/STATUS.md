@@ -295,6 +295,39 @@ e a matriz de kernels precisam de nova verificação antes do MVP operacional.
 Este é um recorte de F2-03: exige lockfile e pacotes já disponíveis na base;
 não instala dependências externas nem conecta o builder ao painel. A API tipada
 de build, integração com worker e ativação de candidatas continuam pendentes.
-O pacote foi preparado localmente, mas sua homologação privilegiada neste host
-continua pendente: `sudo` exige senha nesta sessão.
 Contrato e demonstração: [BUILDER_OFFLINE.md](BUILDER_OFFLINE.md).
+
+## Marco 13 — Builder homologado localmente
+
+O operador instalou `shinyd-builder 0.1.0~builder1` e executou o roteiro
+privilegiado em 20/10/2026. As **25 verificações passaram** no host local.
+Evidência: [builder-local.json](evidencias/builder-local.json), cópia integral
+do relatório de `var/builder-report.json`.
+
+O ambiente observado tinha kernel `7.0.0-38-generic`, 16 CPUs lógicas,
+66.735.202.304 bytes de RAM e Podman 4.9.3. Os dois artefatos usaram R 4.4.3
+com Shiny 1.10.0 e R 4.5.2 com Shiny 1.13.0, cada um com biblioteca privada
+de 40 pacotes. Foram conferidos:
+
+* AppArmor em modo `enforce`, identidades remapeadas e rede isolada.
+* Cache dos artefatos, execução simultânea e reatividade, upload e download
+  no navegador.
+* Recusa de builds concorrentes, checksum incorreto e operador sem privilégio.
+* Peso de CPU 50 e limite agregado de memória de 1 GiB na manutenção.
+* Recuperação de registro/container interrompido simulado; falhas de ZIP,
+  versão de R, pacote e restauração preservando artefatos e processos R.
+* Ausência de build pendente ao final.
+
+A conferência posterior confirmou o SHA-256 do pacote local igual ao relatório:
+`d54494cea778f86b57d282bb76141f0988fad2581835ed78df87d065c6106a6c`.
+O serviço e socket do executor estavam inativos, com resultado `success`, e
+o socket desabilitado, conforme a finalização do roteiro. O agente de diagnóstico
+continuou ativo, com socket habilitado. O builder é um comando administrativo,
+sem serviço persistente.
+
+Este resultado conclui a homologação local do builder offline. Não esclarece
+a falha anterior no kernel `6.17.0-1022-azure`, nem homologa recuperação após
+reboot, capacidade, QoS sob carga ou quotas de disco. O próximo marco é a API
+privada tipada e sua integração com o worker do painel, incluindo progresso,
+cancelamento e ativação da candidata preservando a publicação anterior.
+Downloads de dependências externas continuam fora deste contrato.

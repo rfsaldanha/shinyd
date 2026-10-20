@@ -112,9 +112,14 @@ cache; não reinicia o host. Requer Playwright, Chrome e `dist/shinyd-proxy-prob
 O [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39449102048) passou nas
 25 verificações; o [relatório](evidencias/builder-ci.json) registra os resultados
 reais, com kernel `7.0.0-1017-azure`, Podman 4.9.3 e os dois ambientes R.
-A homologação local do pacote ainda está pendente. Uma falha inicial de partida
-em outro kernel do CI não teve causa confirmada; [STATUS.md](STATUS.md) registra
-essa limitação para a matriz de compatibilidade anterior ao MVP.
+As mesmas 25 verificações passaram no host local em 20/10/2026, com kernel
+`7.0.0-38-generic` e Podman 4.9.3; veja o
+[relatório local](evidencias/builder-local.json). Após o roteiro, o executor
+ficou parado e seu socket desabilitado, conforme previsto, mantendo o agente
+de diagnóstico ativo. Uma falha inicial de partida em outro kernel do CI
+não teve causa confirmada; [STATUS.md](STATUS.md) registra essa limitação
+para a matriz de compatibilidade anterior ao MVP. Esses cenários não medem
+capacidade, QoS sob carga ou recuperação após reboot.
 
 ## Próximos passos
 
