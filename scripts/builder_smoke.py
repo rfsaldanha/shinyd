@@ -316,6 +316,21 @@ def main():
             report["artifacts"] = results
         except Exception as exc:
             report["error"] = str(exc)
+            # Only repository-owned fixtures, never uploads or app environments.
+            report["fixture_diagnostics"] = []
+            for instance in created:
+                inspected = command("podman", "inspect", "shinyd-" + instance, check=False)
+                if inspected.returncode == 0:
+                    metadata = json.loads(inspected.stdout)[0]
+                    diagnostic = {"instance": instance, "state": metadata["State"]}
+                    diagnostic["fixture_log"] = command(
+                        "podman", "logs", "--tail=10", "shinyd-" + instance, check=False
+                    ).stderr[-3000:]
+                    if metadata["State"]["Status"] == "created":
+                        retry = command("podman", "start", "shinyd-" + instance, check=False)
+                        diagnostic["diagnostic_start_code"] = retry.returncode
+                        diagnostic["diagnostic_start_error"] = retry.stderr[-3000:]
+                    report["fixture_diagnostics"].append(diagnostic)
         finally:
             cleanup_errors = []
             for instance in created:

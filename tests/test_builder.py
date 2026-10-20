@@ -295,3 +295,81 @@ def test_kernel_protection_checks_fail_closed(monkeypatch, change):
         monkeypatch.setattr(Path, "stat", lambda self: types.SimpleNamespace(st_ino=1))
     with pytest.raises(policy.BuildError, match="isolation"):
         podman.verify_process(copy.deepcopy(value))
+
+
+def test_renv_full_description_metadata_is_not_used_as_code(tmp_path, lock, environment):
+    lock["Packages"]["shiny"].update(
+        {
+            "Authors@R": "system('malicious command')",
+            "Title": "Full DESCRIPTION record",
+            "Repository": "RSPM",
+            "OS_type": "unix",
+        }
+    )
+    resolved = resolve(tmp_path, lock, environment)
+    assert set(resolved["Packages"]["shiny"]) == {"Package", "Version", "Source", "Repository"}
+    assert resolved["R"]["Repositories"][0]["Name"] == "RSPM"
+
+
+@pytest.mark.parametrize(
+    "problem", ["host_memory", "unconfigured_budget", "aggregate_full", "pressure", "disk"]
+)
+def test_resource_admission_refuses_unsafe_conditions(tmp_path, monkeypatch, problem):
+    import types
+
+    gib = 1024**3
+    monkeypatch.setattr(podman, "memory_available", lambda: (16 * gib, 8 * gib))
+    files = {
+        str(podman.WORKLOADS / "memory.max"): str(4 * gib),
+        str(podman.WORKLOADS / "memory.current"): str(gib),
+        "/proc/pressure/memory": (
+            "some avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+            "full avg10=0.00 avg60=0.00 avg300=0.00 total=0\n"
+        ),
+    }
+    monkeypatch.setattr(Path, "read_text", lambda self: files[str(self)])
+    monkeypatch.setattr(
+        os, "statvfs", lambda _: types.SimpleNamespace(f_bavail=10 * gib, f_frsize=1)
+    )
+    podman.resources_available(tmp_path, starting=True)
+    if problem == "host_memory":
+        monkeypatch.setattr(podman, "memory_available", lambda: (16 * gib, gib))
+    elif problem == "unconfigured_budget":
+        files[str(podman.WORKLOADS / "memory.max")] = "max"
+    elif problem == "aggregate_full":
+        files[str(podman.WORKLOADS / "memory.current")] = str(4 * gib)
+    elif problem == "pressure":
+        files["/proc/pressure/memory"] = "full avg10=1.01 avg60=0.00 avg300=0.00 total=0\n"
+    else:
+        monkeypatch.setattr(
+            os, "statvfs", lambda _: types.SimpleNamespace(f_bavail=gib, f_frsize=1)
+        )
+    with pytest.raises(policy.BuildError, match="admission"):
+        podman.resources_available(tmp_path, starting=True)
+
+
+def test_command_failure_does_not_expose_output_or_host_environment(tmp_path, monkeypatch):
+    executable = tmp_path / "runtime"
+    executable.write_text(
+        "#!/bin/sh\nprintf 'PRIVATE_PACKAGE_OUTPUT'\nprintf 'PRIVATE_STDERR' >&2\nexit 5\n"
+    )
+    executable.chmod(0o755)
+    monkeypatch.setattr(podman, "PODMAN", str(executable))
+    with pytest.raises(policy.BuildError, match="^restore$") as error:
+        podman.command(["exec"], code="restore")
+    assert "PRIVATE" not in str(error.value)
+    executable.write_text("#!/bin/sh\nprintf '%s' \"${BUILDER_TEST_SECRET-unset}\"\n")
+    monkeypatch.setenv("BUILDER_TEST_SECRET", "secret")
+    assert podman.command(["inspect"]) == b"unset"
+
+
+def test_command_timeout_and_output_are_bounded(tmp_path, monkeypatch):
+    executable = tmp_path / "runtime"
+    executable.write_text("#!/bin/sh\nexec /usr/bin/sleep 10\n")
+    executable.chmod(0o755)
+    monkeypatch.setattr(podman, "PODMAN", str(executable))
+    with pytest.raises(policy.BuildError, match="interrupted"):
+        podman.command([], timeout=0.01)
+    executable.write_text("#!/bin/sh\nexec /usr/bin/head -c 300000 /dev/zero\n")
+    with pytest.raises(policy.BuildError, match="assembly"):
+        podman.command([])

@@ -5,7 +5,8 @@ Description=Orçamento agregado dos aplicativos shinyd
 CPUAccounting=yes
 MemoryAccounting=yes
 CPUWeight=100
+# A positive minimum is required by systemd; zero would be ignored.
 # Fail closed until the executor applies the validated server budget.
-MemoryMax=0
+MemoryMax=1
 MemorySwapMax=0
 TasksMax=4096

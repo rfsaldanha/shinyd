@@ -226,6 +226,8 @@ class Builder:
             base = podman.inspect_image(environment["image"])
             if base["Id"].removeprefix("sha256:") != environment["image"].removeprefix("sha256:"):
                 fail("ownership")
+            if base.get("Config", {}).get("OnBuild"):
+                fail("policy")
             context = work / "context"
             write_context(context, selected, lock, environment, job_id, key)
             active = {"id": job_id, "key": key, "input_image": ""}
