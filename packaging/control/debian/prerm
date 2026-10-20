@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+if [ -d /run/systemd/system ]; then
+    systemctl stop shinyd.target
+    if [ "$1" = remove ]; then
+        systemctl disable shinyd.target
+    fi
+fi

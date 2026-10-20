@@ -29,6 +29,10 @@ o roteiro passou em 49 verificações no CI e 51 no host local, que também
 conferiu o pacote do executor antes de instalá-lo. As evidências e limitações
 estão em [STATUS.md](docs/STATUS.md).
 
+A [instalação integrada experimental](docs/INSTALACAO_INTEGRADA.md) reúne painel,
+worker, autorizador, gateway e HTTPS em serviços systemd. Requer configuração
+explícita e certificado; o estado da homologação está em STATUS.md.
+
 ## Diagnóstico do servidor
 
 O [agente de diagnóstico](docs/AGENTE_EXECUCAO.md) tem pacote `.deb`, socket

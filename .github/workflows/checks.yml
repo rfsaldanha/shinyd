@@ -111,19 +111,20 @@ jobs:
       - name: Prepare disposable builder runner
         run: |
           sudo -n apt-get update -qq
-          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs
+          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs caddy
           python3 -m venv .venv
           .venv/bin/pip install -r requirements.lock playwright==1.64.0
           sudo -n python3 scripts/container_subids.py --apply
       - run: python3 scripts/build_agent_package.py
       - run: python3 scripts/build_agent_package.py --component runtime
       - run: python3 scripts/build_builder_package.py
+      - run: .venv/bin/python scripts/build_control_package.py
       - run: go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
       - run: sudo -n dpkg --install 'dist/shinyd-agent_0.1.0~agent1_amd64.deb' 'dist/shinyd-runtime_0.1.0~runtime2_amd64.deb'
       - name: Verify ZIP, offline restoration, cache, failures and actual Shiny
         run: |
           set -o pipefail
-          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' | tee dist/builder-report.json
+          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control1_amd64.deb' | tee dist/builder-report.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

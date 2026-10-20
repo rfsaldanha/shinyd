@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+if [ "$1" = configure ]; then
+    systemd-sysusers /usr/lib/sysusers.d/shinyd-control.conf
+    systemd-tmpfiles --create /usr/lib/tmpfiles.d/shinyd-control.conf
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload
+    fi
+    # Configuration, migrations, administrative account and starting services
+    # are explicit. Installing never exposes an unconfigured panel.
+fi

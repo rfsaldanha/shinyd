@@ -174,7 +174,14 @@ def main():
         "--activation", action="store_true", help="Homologa também ativação pelo painel"
     )
     parser.add_argument("--install-runtime-package", type=Path)
+    parser.add_argument(
+        "--install-control-package",
+        type=Path,
+        help="Inclui homologação do pacote integrado pelo navegador e HTTPS",
+    )
     args = parser.parse_args()
+    if args.install_control_package and not args.activation:
+        parser.error("--install-control-package exige --activation.")
     if os.geteuid() != 0 or not os.environ.get("SUDO_UID"):
         parser.error("Execute com sudo a partir de uma conta comum.")
     os.umask(0o077)
@@ -574,6 +581,16 @@ def main():
                     timeout=120,
                 )
                 record("activated_app_browser_reactivity", json.loads(browser.stdout).get("passed"))
+            if args.install_control_package:
+                from installed_browser_probe import installed_probe
+
+                installed = installed_probe(
+                    args.install_control_package, temporary / "app-0.zip", created
+                )
+                report["installed"] = installed
+                record("installed_https_probe", installed.get("passed"), installed)
+                for name in installed["checks"]:
+                    record(name, True)
         except Exception as exc:
             report["error"] = str(exc)
             # Only repository-owned fixtures, never uploads or app environments.

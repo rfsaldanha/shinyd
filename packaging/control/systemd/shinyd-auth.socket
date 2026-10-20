@@ -1,0 +1,11 @@
+[Unit]
+Description=Socket privado do auth do shinyd
+PartOf=shinyd.target
+
+[Socket]
+ListenStream=/run/shinyd-auth/http.sock
+SocketUser=root
+SocketGroup=shinyd-gateway
+SocketMode=0660
+DirectoryMode=0750
+RemoveOnStop=yes

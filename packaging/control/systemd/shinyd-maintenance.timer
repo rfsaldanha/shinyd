@@ -1,0 +1,8 @@
+[Unit]
+Description=Limpeza de credenciais expiradas do shinyd
+PartOf=shinyd.target
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+RandomizedDelaySec=5min

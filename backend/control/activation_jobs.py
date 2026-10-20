@@ -86,6 +86,8 @@ def enqueue(actor, version_id, key):
         target="",
         enabled=False,
     )
+    if not settings.DEBUG and settings.SHINYD_HTTPS_PORT != 443:
+        instance.host += f":{settings.SHINYD_HTTPS_PORT}"
     try:
         if len(instance.host) > 259:
             raise ValueError

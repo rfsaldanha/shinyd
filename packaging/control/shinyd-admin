@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if [ "$(id -u)" = 0 ]; then
+    exec /usr/sbin/runuser -u shinyd-control -- /usr/bin/python3 -I /usr/lib/shinyd-control/launch.py manage "$@"
+fi
+exec /usr/bin/python3 -I /usr/lib/shinyd-control/launch.py manage "$@"

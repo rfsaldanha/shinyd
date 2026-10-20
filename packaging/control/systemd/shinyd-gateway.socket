@@ -1,0 +1,12 @@
+[Unit]
+Description=Socket privado do gateway do shinyd
+PartOf=shinyd.target
+
+[Socket]
+ListenStream=/run/shinyd-gateway/http.sock
+SocketUser=root
+SocketGroup=shinyd-ingress
+SocketMode=0660
+FileDescriptorName=control
+DirectoryMode=0750
+RemoveOnStop=yes

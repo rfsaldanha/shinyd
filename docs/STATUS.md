@@ -577,3 +577,34 @@ completa no navegador (partes de F1-03/F2-05). O aceite deve percorrer upload,
 preparação, ativação e acesso público/restrito, incluindo recusa por URL direta
 e WebSocket. Isso precede a declaração de conclusão da fase 2; injeção de
 segredos, volumes persistentes e demais itens da fase 3 continuam no backlog.
+
+## Marco 18 — Pacote integrado e roteiro HTTPS
+
+Implementado o pacote experimental `shinyd-control 0.1.0~control1` para Ubuntu
+24.04 amd64/Python 3.12. Inclui dependências Python fixadas, assets locais,
+gateway Go, unidades systemd, configuração inicial e comando administrativo.
+Painel e autorizador usam Gunicorn; Caddy recebe HTTPS com certificado fornecido
+pelo operador. O gateway instalado recebe socket Unix herdado do systemd.
+
+A instalação mantém o painel parado até configurar origens, certificado,
+políticas, banco e conta administrativa. Configuração repetida preserva chaves
+e cria backup privado de metadados antes das migrações. A remoção preserva dados.
+Painel, worker e autorizador usam a conta de controle; gateway e entrada HTTPS
+possuem identidades próprias. Sockets privados substituem listeners TCP internos.
+
+Os 212 testes Python passaram, incluindo rejeição de configurações ambíguas,
+injeção em nomes de host, certificado sem cobertura, chave divergente e porta
+HTTPS na ativação. Go passou em `go test -race ./...` e `go vet ./...`.
+Ruff, migrações e `check --deploy` passaram. O pacote local foi gerado.
+
+O roteiro ampliado de homologação usa os serviços instalados e Chrome para
+cadastro, upload, preparação, ativação e uso de Shiny por HTTPS. Inclui acesso
+público/restrito, recusa de URL/WebSocket, cookies, transferências, reinício de
+painel/worker sem encerrar Shiny e limpeza. A execução integrada ainda precisa
+ser confirmada; estes testes unitários não a substituem.
+
+Guia e comando: [INSTALACAO_INTEGRADA.md](INSTALACAO_INTEGRADA.md).
+Emissão/renovação automática de certificados, assistente de catálogo, instalação
+em um comando, reboot real, recuperação de atualização e demais itens do MVP
+continuam pendentes. A configuração exige políticas aprovadas e certificado
+fornecido, e recusa mudanças de domínio de uma instalação existente.

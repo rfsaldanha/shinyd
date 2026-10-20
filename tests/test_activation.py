@@ -334,3 +334,13 @@ def test_runtime_client_rejects_mismatched_or_unsafe_responses(
     monkeypatch.setattr(runtime_client, "UnixConnection", Connection)
     with pytest.raises(runtime_client.RuntimeUnavailable):
         runtime_client.inspect(pub)
+
+
+def test_production_activation_preserves_configured_https_port(app, accounts, settings):
+    settings.DEBUG = False
+    settings.SHINYD_PANEL_ORIGIN = "https://panel.example.org:18443"
+    settings.SHINYD_APP_DOMAIN = "apps.example.org"
+    settings.SHINYD_HTTPS_PORT = 18443
+    job = queue(app, accounts)
+    instance = AppInstance.objects.get(pk=job.publication_id)
+    assert instance.host == f"p{job.publication_id.hex}.apps.example.org:18443"

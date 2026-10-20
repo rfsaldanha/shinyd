@@ -119,6 +119,7 @@ SHINYD_RUNTIME_ENABLED = os.environ.get("SHINYD_RUNTIME_ENABLED") == "1"
 SHINYD_RUNTIME_SOCKET = os.environ.get("SHINYD_RUNTIME_SOCKET", "/run/shinyd-runtime/control.sock")
 SHINYD_PANEL_ORIGIN = os.environ.get("SHINYD_PANEL_ORIGIN", "")
 SHINYD_APP_DOMAIN = os.environ.get("SHINYD_APP_DOMAIN", "")
+SHINYD_HTTPS_PORT = int(os.environ.get("SHINYD_HTTPS_PORT", "443"))
 SHINYD_GATEWAY_KEY_FILE = Path(
     os.environ.get("SHINYD_GATEWAY_KEY_FILE", STATE_DIR / "keys" / "gateway.key")
 )

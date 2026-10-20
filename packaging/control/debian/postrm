@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+# Removal and purge preserve configuration, keys and application state.
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+fi

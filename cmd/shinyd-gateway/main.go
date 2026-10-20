@@ -15,11 +15,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rfsaldanha/shinyd/internal/agent"
 	"github.com/rfsaldanha/shinyd/internal/gateway"
 )
 
 func run() error {
 	bind := flag.String("bind", "127.0.0.1:9090", "Listener loopback, atrás da entrada HTTPS")
+	activated := flag.Bool("socket-activation", false, "Usa somente o socket Unix entregue pelo systemd")
 	socket := flag.String("control-socket", "/run/shinyd/gateway-auth.sock", "Socket Unix do autorizador")
 	keyFile := flag.String("key-file", "/etc/shinyd/gateway.key", "Chave compartilhada do serviço")
 	panel := flag.String("panel-origin", "", "Origem HTTPS do painel")
@@ -30,6 +32,16 @@ func run() error {
 	if err != nil || ip == nil || !ip.IsLoopback() || flag.NArg() != 0 {
 		return fmt.Errorf("listener inválido; use endereço IP de loopback")
 	}
+	var listener net.Listener
+	if *activated {
+		listener, err = agent.ActivatedListener("/run/shinyd-gateway/http.sock")
+	} else {
+		listener, err = net.Listen("tcp", *bind)
+	}
+	if err != nil {
+		return fmt.Errorf("falha ao obter listener do gateway")
+	}
+	defer listener.Close()
 	info, err := os.Lstat(*keyFile)
 	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0027 != 0 {
 		return fmt.Errorf("chave exige arquivo regular privado (0600 ou 0640)")
@@ -65,7 +77,7 @@ func run() error {
 		defer cancel()
 		_ = server.Shutdown(shutdown)
 	}()
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.Serve(listener); err != nil && err != http.ErrServerClosed {
 		return fmt.Errorf("falha ao iniciar listener do gateway")
 	}
 	return nil
