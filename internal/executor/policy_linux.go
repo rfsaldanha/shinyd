@@ -29,16 +29,21 @@ var (
 	ErrCgroup      = errors.New("cgroup_verification_failed")
 	ErrNamespace   = errors.New("network_namespace_verification_failed")
 	ErrReadiness   = errors.New("application_readiness_failed")
+	ErrArtifact    = errors.New("artifact_rejected")
 )
 
 type Policy struct {
-	SchemaVersion   int               `json:"schema_version"`
-	Recipes         map[string]string `json:"recipes"` // Local immutable OCI image IDs.
-	MaxInstances    int               `json:"max_instances"`
-	MemoryBudgetMiB int               `json:"memory_budget_mib"` // Aggregate workloads budget.
+	SchemaVersion    int               `json:"schema_version"`
+	Recipes          map[string]string `json:"recipes"` // Local immutable OCI image IDs.
+	MaxInstances     int               `json:"max_instances"`
+	MemoryBudgetMiB  int               `json:"memory_budget_mib"` // Aggregate workloads budget.
+	BuilderArtifacts bool              `json:"builder_artifacts"`
 }
 
 func privateFile(path string, owner uint32) ([]byte, error) {
+	return privateRead(path, owner, 65536)
+}
+func privateRead(path string, owner uint32, limit int64) ([]byte, error) {
 	fd, err := syscall.Open(path, syscall.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
@@ -50,10 +55,10 @@ func privateFile(path string, owner uint32) ([]byte, error) {
 		return nil, err
 	}
 	meta, ok := info.Sys().(*syscall.Stat_t)
-	if !ok || !info.Mode().IsRegular() || info.Mode().Perm()&0022 != 0 || meta.Uid != owner || meta.Nlink != 1 || info.Size() > 65536 {
+	if !ok || !info.Mode().IsRegular() || info.Mode().Perm()&0022 != 0 || meta.Uid != owner || meta.Nlink != 1 || info.Size() > limit {
 		return nil, errors.New("unsafe_private_file")
 	}
-	return io.ReadAll(io.LimitReader(file, 65537))
+	return io.ReadAll(io.LimitReader(file, limit+1))
 }
 
 func SecureDir(path string, owner uint32) error {
@@ -91,7 +96,7 @@ func LoadPolicy(path string) (Policy, error) {
 	if err = decodeStrict(data, &policy); err != nil {
 		return policy, err
 	}
-	if policy.SchemaVersion != 1 || len(policy.Recipes) < 1 || len(policy.Recipes) > 32 ||
+	if policy.SchemaVersion != 1 || (len(policy.Recipes) < 1 && !policy.BuilderArtifacts) || len(policy.Recipes) > 32 ||
 		policy.MaxInstances < 1 || policy.MaxInstances > 16 ||
 		(policy.MemoryBudgetMiB != 0 && policy.MemoryBudgetMiB < 512) || policy.MemoryBudgetMiB > 1<<20 {
 		return policy, ErrInvalid
@@ -155,13 +160,19 @@ func decodeStrict(data []byte, value any) error {
 }
 
 type Spec struct {
-	AppID    string `json:"app_id"`
-	Recipe   string `json:"recipe"`
-	Priority string `json:"priority"`
+	AppID      string `json:"app_id"`
+	Recipe     string `json:"recipe"`
+	Priority   string `json:"priority"`
+	Artifact   string `json:"artifact,omitempty"`
+	SourceHash string `json:"source_hash,omitempty"`
 }
 
 func (s Spec) Validate() error {
-	if !IDPattern.MatchString(s.AppID) || !recipePattern.MatchString(s.Recipe) ||
+	validSource := recipePattern.MatchString(s.Recipe) && s.Artifact == "" && s.SourceHash == ""
+	if s.Recipe == "" && digestPattern.MatchString(s.Artifact) && digestPattern.MatchString(s.SourceHash) {
+		validSource = true
+	}
+	if !IDPattern.MatchString(s.AppID) || !validSource ||
 		(s.Priority != "high" && s.Priority != "normal" && s.Priority != "low") {
 		return ErrInvalid
 	}

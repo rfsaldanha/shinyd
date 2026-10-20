@@ -69,7 +69,7 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 		case len(parts) == 1 && r.Method == "GET" && r.ContentLength == 0:
 			event.Operation = "inspect"
 			value, err = manager.Get(id)
-		case len(parts) == 1 && r.Method == "PUT":
+		case (len(parts) == 1 && r.Method == "PUT") || (len(parts) == 2 && parts[1] == "retire" && r.Method == "POST"):
 			event.Operation = "ensure"
 			if r.Header.Get("Content-Type") != "application/json" || r.ContentLength < 1 || r.ContentLength > 1024 {
 				fail(400, ErrInvalid)
@@ -81,7 +81,12 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 				fail(400, ErrInvalid)
 				return
 			}
-			value, err = manager.Ensure(ctx, id, spec)
+			if len(parts) == 2 {
+				event.Operation = "retire"
+				value, err = manager.Retire(ctx, id, spec)
+			} else {
+				value, err = manager.Ensure(ctx, id, spec)
+			}
 		case len(parts) == 2 && parts[1] == "stop" && r.Method == "POST" && r.ContentLength == 0:
 			event.Operation = "stop"
 			value, err = manager.Stop(ctx, id, false)
@@ -95,7 +100,7 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 		if err != nil {
 			status := 503
 			switch err {
-			case ErrInvalid:
+			case ErrInvalid, ErrArtifact:
 				status = 400
 			case ErrConflict, ErrOwnership:
 				status = 409

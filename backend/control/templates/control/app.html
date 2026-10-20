@@ -4,12 +4,13 @@
 <div class="page-heading"><div><p class="eyebrow">APLICATIVO / {{ app.slug }}</p><h1>{{ app.name }}</h1><p class="muted">{{ app.description|default:"Sem descrição." }}</p></div>{% if manage %}<a class="btn btn-primary" href="{% url 'upload' app.pk %}">Enviar ZIP</a>{% endif %}</div>
 <div class="stats">
   <div class="stat"><span>Acesso</span><strong class="stat-text">{{ app.get_visibility_display }}</strong><small>Responsável: {{ app.owner.username }}</small></div>
-  <div class="stat"><span>Prioridade desejada</span><strong class="stat-text">{{ app.priority.name }}</strong><small>Peso {{ app.priority.weight }} · sem instâncias ativas</small></div>
-  <div class="stat"><span>Publicação</span><strong class="stat-text">Não publicada</strong><small>Publicação pelo painel em desenvolvimento</small></div>
+  <div class="stat"><span>Prioridade desejada</span><strong class="stat-text">{{ app.priority.name }}</strong><small>Peso {{ app.priority.weight }} · aplicado na próxima ativação</small></div>
+  <div class="stat"><span>Publicação</span><strong class="stat-text">{% if active_instance %}Ativada{% else %}Não publicada{% endif %}</strong><small>{% if active_instance %}Versão {{ app.active_publication.version_id }}{% else %}Prepare e ative uma versão{% endif %}</small></div>
 </div>
+{% if active_instance %}<p><a class="btn btn-primary" href="{% url 'gateway_connect' active_instance.pk %}">Abrir aplicativo</a></p>{% endif %}
 {% if manage %}
 <div class="toolbar"><a class="btn btn-light" href="{% url 'app_edit' app.pk %}">Configurar app</a><a class="btn btn-light" href="{% url 'app_access' app.pk %}">Conceder acesso</a><a class="btn btn-light" href="{% url 'app_config' app.pk %}">Adicionar variável ou segredo</a></div>
-<section class="panel"><h2>Envios e preparações</h2><p class="muted">Após validar o ZIP, prepare a versão em um ambiente R aprovado. A ativação pelo painel ainda está em desenvolvimento.</p>
+<section class="panel"><h2>Envios e publicações</h2><p class="muted">Valide o ZIP, prepare a versão em um ambiente R aprovado e solicite a ativação.</p>
 <div class="table-responsive"><table class="table"><thead><tr><th>Envio</th><th>Estado</th><th>Etapa</th><th></th></tr></thead><tbody>
 {% for job in jobs %}<tr><td>{{ job.created_at|date:"d/m/Y H:i" }} UTC</td><td>{{ job.get_status_display }}</td><td>{{ job.phase }}</td><td><a href="{% url 'job_detail' job.pk %}">Ver resultado</a></td></tr>{% empty %}<tr><td colspan="4">Nenhum ZIP enviado.</td></tr>{% endfor %}
 </tbody></table></div></section>

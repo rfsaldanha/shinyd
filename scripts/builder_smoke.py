@@ -170,6 +170,10 @@ def invoke(path, checksum, app_id, environment="r-a"):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--install-package", type=Path, required=True)
+    parser.add_argument(
+        "--activation", action="store_true", help="Homologa também ativação pelo painel"
+    )
+    parser.add_argument("--install-runtime-package", type=Path)
     args = parser.parse_args()
     if os.geteuid() != 0 or not os.environ.get("SUDO_UID"):
         parser.error("Execute com sudo a partir de uma conta comum.")
@@ -195,7 +199,7 @@ def main():
             "profile": ("Dois apps, builds offline e operações reativas; sem teste de capacidade."),
         },
         "limitations": [
-            "Não ativa a publicação pelo painel nem baixa pacotes externos.",
+            "Não baixa pacotes externos; ativação só é testada com --activation.",
             "Não homologa reboot, capacidade, QoS sob carga ou quotas de disco.",
         ],
     }
@@ -224,6 +228,26 @@ def main():
                 and not (STATE / "current.json").exists()
                 and not list((STATE / "artifacts").glob("*.json")),
             )
+            if args.install_runtime_package:
+                package = args.install_runtime_package.resolve(strict=True)
+                checksum = hashlib.sha256(package.read_bytes()).hexdigest()
+                record(
+                    "runtime_package_checksum",
+                    checksum == package.with_suffix(".deb.sha256").read_text().split()[0],
+                    checksum,
+                )
+                identity = command(
+                    "dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)
+                ).stdout
+                record(
+                    "runtime_package_identity",
+                    identity == "shinyd-runtime 0.1.0~runtime2",
+                    identity,
+                )
+                command("dpkg", "--install", str(package), timeout=120)
+            if args.activation:
+                identity = command("dpkg-query", "-W", "-f=${Version}", "shinyd-runtime").stdout
+                record("activation_runtime_installed", identity == "0.1.0~runtime2", identity)
             package = args.install_package.resolve()
             checksum = hashlib.sha256(package.read_bytes()).hexdigest()
             record(
@@ -320,8 +344,9 @@ def main():
                 {
                     "schema_version": 1,
                     "recipes": {f"built-{i}": value["image"] for i, value in enumerate(results)},
-                    "max_instances": 2,
+                    "max_instances": 4 if args.activation else 2,
                     "memory_budget_mib": 4096,
+                    **({"builder_artifacts": True} if args.activation else {}),
                 }
             ).encode()
             with RUNTIME_POLICY.open("xb") as output:
@@ -476,7 +501,7 @@ def main():
                 ROOT / "backend", project / "backend", ignore=shutil.ignore_patterns("__pycache__")
             )
             (project / "scripts").mkdir()
-            for name in ("bootstrap.py", "builder_panel_probe.py"):
+            for name in ("bootstrap.py", "builder_panel_probe.py", "activation_panel_probe.py"):
                 shutil.copyfile(ROOT / "scripts" / name, project / "scripts" / name)
             for path in panel_state.rglob("*"):
                 os.chown(path, control.pw_uid, control.pw_gid, follow_symlinks=False)
@@ -515,6 +540,40 @@ def main():
                 record(name, completed["passed"])
             report["panel_artifact"] = completed["artifact"]
             report["artifacts"] = results
+            if args.activation:
+                result = command(
+                    "runuser",
+                    "-u",
+                    "shinyd-control",
+                    "--",
+                    str(interpreter),
+                    str(project / "scripts/activation_panel_probe.py"),
+                    "--state",
+                    str(panel_state),
+                    timeout=900,
+                    check=False,
+                )
+                try:
+                    activated = json.loads(result.stdout)
+                except ValueError:
+                    activated = {"passed": False, "exit_code": result.returncode}
+                report["activation"] = activated
+                record(
+                    "panel_activation_probe",
+                    result.returncode == 0 and activated.get("passed"),
+                    activated,
+                )
+                for name in activated["checks"]:
+                    record(name, True)
+                browser = command(
+                    sys.executable,
+                    str(ROOT / "scripts/builder_browser_probe.py"),
+                    "--instances",
+                    activated["active_instance"],
+                    ids[0],
+                    timeout=120,
+                )
+                record("activated_app_browser_reactivity", json.loads(browser.stdout).get("passed"))
         except Exception as exc:
             report["error"] = str(exc)
             # Only repository-owned fixtures, never uploads or app environments.
@@ -534,6 +593,12 @@ def main():
                     report["fixture_diagnostics"].append(diagnostic)
         finally:
             cleanup_errors = []
+            if panel_state and (panel_state / "activation-instances.json").exists():
+                for identity in json.loads((panel_state / "activation-instances.json").read_text()):
+                    if str(uuid.UUID(identity)) != identity:
+                        raise RuntimeError("Identificador inválido no roteiro de ativação.")
+                    if identity not in created:
+                        created.append(identity)
             if builder_started:
                 # Namespace was verified empty before this fixture used it.
                 panel_jobs = [p.name for p in (STATE / "jobs").iterdir() if p.is_dir()]
@@ -580,6 +645,14 @@ def main():
                     cleanup_errors.append("runtime_stop")
                 elif RUNTIME_POLICY.exists() and RUNTIME_POLICY.read_bytes() == own_runtime:
                     RUNTIME_POLICY.unlink()
+                    # Only this isolated fixture's tombstones, after the worker
+                    # exited and the executor stopped. Never general retention.
+                    for identity in created:
+                        path = Path("/var/lib/shinyd-runtime") / (identity + ".json")
+                        if path.exists():
+                            value = json.loads(path.read_text())
+                            if value["desired"] == "removed" and value["id"] == identity:
+                                path.unlink()
             if (STATE / "current.json").exists():
                 cleanup_errors.append("pending_build")
             if not cleanup_errors:

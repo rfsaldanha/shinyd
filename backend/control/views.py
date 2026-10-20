@@ -156,6 +156,11 @@ def app_detail(request, pk):
             "jobs": Job.objects.filter(app=app).order_by("-created_at")[:20] if manage else [],
             "environment": app.environment.defer("ciphertext").all() if manage else [],
             "grants": app.grants.select_related("user", "group").all() if manage else [],
+            "active_instance": app.instances.filter(
+                publication_id=app.active_publication_id, enabled=True
+            ).first()
+            if app.active_publication_id
+            else None,
         },
     )
 
@@ -292,6 +297,14 @@ def job_detail(request, pk):
 def job_cancel(request, pk):
     job = accessible_job(request, pk)
     with transaction.atomic():
+        if job.kind == "activate_version" and job.publication_id:
+            from .models import Publication
+
+            if Publication.objects.get(pk=job.publication_id).status == "active":
+                messages.info(
+                    request, "A troca já foi concluída. O encerramento anterior continuará."
+                )
+                return redirect("job_detail", pk=pk)
         if Job.objects.filter(pk=job.pk, status__in=["queued", "running"]).update(
             cancel_requested=True
         ):

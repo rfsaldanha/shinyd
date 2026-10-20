@@ -115,7 +115,8 @@ SHINYD_EXTRACT_LIMIT = 2 * 1024 * 1024 * 1024
 SHINYD_ZIP_ENTRIES = 50_000
 SHINYD_MASTER_KEY_FILE = STATE_DIR / "keys" / "secrets.key"
 # No execution before the runtime's safety and session gates are homologated.
-SHINYD_RUNTIME_ENABLED = False
+SHINYD_RUNTIME_ENABLED = os.environ.get("SHINYD_RUNTIME_ENABLED") == "1"
+SHINYD_RUNTIME_SOCKET = os.environ.get("SHINYD_RUNTIME_SOCKET", "/run/shinyd-runtime/control.sock")
 SHINYD_PANEL_ORIGIN = os.environ.get("SHINYD_PANEL_ORIGIN", "")
 SHINYD_APP_DOMAIN = os.environ.get("SHINYD_APP_DOMAIN", "")
 SHINYD_GATEWAY_KEY_FILE = Path(

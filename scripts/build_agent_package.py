@@ -93,7 +93,8 @@ def build(go, output, component="agent"):
         for path in staging.rglob("*"):
             path.chmod(0o755 if path.is_dir() or path.name in executables else 0o644)
         verify_units(staging, component)
-        package = output / f"shinyd-{component}_0.1.0~{component}1_amd64.deb"
+        revision = 2 if component == "runtime" else 1
+        package = output / f"shinyd-{component}_0.1.0~{component}{revision}_amd64.deb"
         subprocess.run(
             ["dpkg-deb", "--root-owner-group", "--build", str(staging), str(package)],
             env=env,

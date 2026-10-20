@@ -92,7 +92,7 @@ func fixtureManager(t *testing.T) (*Manager, *fakeBackend, *Store) {
 		}
 		return &fakeEndpoint{}, nil
 	}
-	manager, err := NewManager(Policy{1, map[string]string{"fixture": testImage}, 2, 1024}, store, backend, attach, func() bool { return true })
+	manager, err := NewManager(Policy{SchemaVersion: 1, Recipes: map[string]string{"fixture": testImage}, MaxInstances: 2, MemoryBudgetMiB: 1024}, store, backend, attach, func() bool { return true })
 	if err != nil {
 		t.Fatal(err)
 	}

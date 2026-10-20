@@ -18,14 +18,17 @@ var ErrBusy = errors.New("runtime_busy")
 type Endpoint interface{ Close() }
 type Attachment func(context.Context, Record, *Inspection) (Endpoint, error)
 type View struct {
-	ID       string `json:"id"`
-	AppID    string `json:"app_id"`
-	Recipe   string `json:"recipe"`
-	Priority string `json:"priority"`
-	Desired  string `json:"desired"`
-	State    string `json:"state"`
-	Target   string `json:"target,omitempty"`
-	Error    string `json:"error,omitempty"`
+	ID         string `json:"id"`
+	AppID      string `json:"app_id"`
+	Recipe     string `json:"recipe"`
+	Priority   string `json:"priority"`
+	Desired    string `json:"desired"`
+	State      string `json:"state"`
+	Target     string `json:"target,omitempty"`
+	Error      string `json:"error,omitempty"`
+	Artifact   string `json:"artifact,omitempty"`
+	SourceHash string `json:"source_hash,omitempty"`
+	Image      string `json:"image,omitempty"`
 }
 type managed struct {
 	record        Record
@@ -41,14 +44,18 @@ type Manager struct {
 	mu        sync.Mutex
 	operation sync.Mutex
 	instances map[string]*managed
+	resolve   ArtifactResolver
 }
 
-func NewManager(policy Policy, store *Store, backend Backend, attach Attachment, admit func() bool) (*Manager, error) {
+func NewManager(policy Policy, store *Store, backend Backend, attach Attachment, admit func() bool, resolvers ...ArtifactResolver) (*Manager, error) {
 	records, err := store.Load()
 	if err != nil {
 		return nil, err
 	}
 	m := &Manager{policy: policy, store: store, backend: backend, attach: attach, admit: admit, instances: map[string]*managed{}}
+	if len(resolvers) == 1 {
+		m.resolve = resolvers[0]
+	}
 	for id, record := range records {
 		m.instances[id] = &managed{record: record, state: "unavailable"}
 	}
@@ -57,6 +64,9 @@ func NewManager(policy Policy, store *Store, backend Backend, attach Attachment,
 func (m *Manager) view(item *managed) View {
 	r := item.record
 	v := View{ID: r.ID, AppID: r.Spec.AppID, Recipe: r.Spec.Recipe, Priority: r.Spec.Priority, Desired: r.Desired, State: item.state, Error: item.reason}
+	if r.Spec.Artifact != "" {
+		v.Artifact, v.SourceHash, v.Image = r.Spec.Artifact, r.Spec.SourceHash, r.Image
+	}
 	if item.state == "ready" {
 		v.Target = Target(r.ID)
 	}
@@ -90,17 +100,13 @@ func (m *Manager) Ensure(ctx context.Context, id string, spec Spec) (View, error
 	if !IDPattern.MatchString(id) || spec.Validate() != nil {
 		return View{}, ErrInvalid
 	}
-	image, approved := m.policy.Recipes[spec.Recipe]
-	if !approved {
-		return View{}, ErrInvalid
-	}
 	if !m.operation.TryLock() {
 		return View{}, ErrBusy
 	}
 	defer m.operation.Unlock()
 	m.mu.Lock()
 	item, exists := m.instances[id]
-	if exists && (item.record.Spec != spec || item.record.Image != image) {
+	if exists && (item.record.Spec != spec || item.record.Desired == "removed") {
 		m.mu.Unlock()
 		return View{}, ErrConflict
 	}
@@ -115,6 +121,29 @@ func (m *Manager) Ensure(ctx context.Context, id string, spec Spec) (View, error
 		}
 	}
 	m.mu.Unlock()
+	// Artifact launches are once-only. Retries observe the original outcome;
+	// a failed/stopped candidate needs a new publication and UUID.
+	if exists && spec.Artifact != "" {
+		return m.Get(id)
+	}
+	image, approved := m.policy.Recipes[spec.Recipe]
+	if spec.Artifact != "" {
+		if !m.policy.BuilderArtifacts || m.resolve == nil {
+			return View{}, ErrArtifact
+		}
+		var err error
+		image, err = m.resolve(ctx, spec)
+		if err != nil {
+			return View{}, ErrArtifact
+		}
+		approved = imagePattern.MatchString(image)
+	}
+	if !approved {
+		return View{}, ErrInvalid
+	}
+	if exists && item.record.Image != image {
+		return View{}, ErrConflict
+	}
 	if exists {
 		value, err := m.backend.Inspect(ctx, item.record)
 		if err != nil {
@@ -190,6 +219,9 @@ func (m *Manager) Stop(ctx context.Context, id string, remove bool) (View, error
 		}
 		return View{}, ErrNotFound
 	}
+	if item.record.Spec.Artifact != "" && (remove || item.record.Desired == "removed") {
+		return m.retire(ctx, item)
+	}
 	record := item.record
 	record.Desired = "stopped"
 	if err := m.save(item, record); err != nil {
@@ -224,7 +256,7 @@ func (m *Manager) Stop(ctx context.Context, id string, remove bool) (View, error
 }
 func safeError(err error) string {
 	for _, allowed := range []error{ErrInvalid, ErrConflict, ErrAdmission, ErrOwnership, ErrNotFound, ErrBusy,
-		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness} {
+		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness, ErrArtifact} {
 		if errors.Is(err, allowed) {
 			return allowed.Error()
 		}
@@ -239,6 +271,10 @@ func (m *Manager) Recover(ctx context.Context) {
 	defer m.operation.Unlock()
 	for _, item := range m.instances {
 		r := item.record
+		if r.Desired == "removed" {
+			_, _ = m.retire(ctx, item)
+			continue
+		}
 		if r.Desired == "stopped" {
 			err := m.backend.Stop(ctx, r)
 			if err != nil {
@@ -258,6 +294,61 @@ func (m *Manager) Recover(ctx context.Context) {
 		}
 		m.set(item, "ready", "")
 	}
+}
+
+// A durable tombstone fences delayed PUTs, even if cancellation arrived before
+// the first request. Do not delete it while workers could still hold this ID.
+func (m *Manager) Retire(ctx context.Context, id string, spec Spec) (View, error) {
+	if !IDPattern.MatchString(id) || spec.Validate() != nil || spec.Artifact == "" {
+		return View{}, ErrInvalid
+	}
+	if !m.operation.TryLock() {
+		return View{}, ErrBusy
+	}
+	defer m.operation.Unlock()
+	m.mu.Lock()
+	item, exists := m.instances[id]
+	if exists && item.record.Spec != spec {
+		m.mu.Unlock()
+		return View{}, ErrConflict
+	}
+	if !exists && len(m.instances) >= 256 {
+		m.mu.Unlock()
+		return View{}, ErrAdmission
+	}
+	m.mu.Unlock()
+	if !exists {
+		item = &managed{record: Record{SchemaVersion: 1, ID: id, Spec: spec, Desired: "removed"}, state: "removing"}
+		if err := m.store.Save(item.record); err != nil {
+			return View{}, ErrUnavailable
+		}
+		m.mu.Lock()
+		m.instances[id] = item
+		m.mu.Unlock()
+	}
+	return m.retire(ctx, item)
+}
+
+func (m *Manager) retire(ctx context.Context, item *managed) (View, error) {
+	record := item.record
+	record.Desired = "removed"
+	if err := m.save(item, record); err != nil {
+		return View{}, err
+	}
+	if item.endpoint != nil {
+		item.endpoint.Close()
+		item.endpoint = nil
+	}
+	m.set(item, "removing", "")
+	// An image-less tombstone was persisted before any launch was accepted.
+	if record.Image != "" {
+		if err := m.backend.Remove(ctx, record); err != nil {
+			m.set(item, "failed", safeError(err))
+			return View{}, err
+		}
+	}
+	m.set(item, "removed", "")
+	return m.Get(record.ID)
 }
 
 // Observe revokes the relay if the container exits. Its pinned network

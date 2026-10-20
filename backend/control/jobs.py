@@ -81,8 +81,11 @@ def finish(job, *, manifest=None, error=None):
 
 
 def process_one():
+    from .activation_jobs import process_one as process_activation
     from .build_jobs import process_one as process_build
 
+    if process_activation():
+        return True
     if process_build():
         return True
     job = claim()

@@ -1,8 +1,9 @@
 # Executor de containers — contrato inicial
 
 O novo componente `shinyd-runtime` cria, consulta, para e remove instâncias
-mediante operações tipadas. É parte de F1-05/F2-04/F2-07, ainda sem builder,
-publicação de uploads, drenagem ou instalação completa do painel.
+mediante operações tipadas. É parte de F1-05/F2-04/F2-07. O pacote `runtime2`
+acrescenta reconhecimento dos artefatos do builder e encerramento definitivo
+de candidatas. Drenagem e instalação completa do painel continuam pendentes.
 
 ## Isolamento e atendimento
 
@@ -48,7 +49,8 @@ O executor é um serviço separado, root, com API privada autorizada pelo UID
 `shinyd-control`. Ele precisa administrar Podman, namespaces e cgroups;
 comprometer esse serviço equivale a comprometer um componente privilegiado.
 O catálogo e o estado são controlados por root, sem escrita por publicadores.
-Nenhum código enviado pelo painel alimenta o catálogo neste marco.
+O catálogo de receitas permanece sob controle do operador. A opção explícita
+de artefatos do builder está descrita ao final deste documento.
 O serviço do executor permite a preparação privilegiada dos mapeamentos de
 UID pelo Podman; `no-new-privileges` é aplicado aos apps e conferido no processo
 real. Não se aplica essa restrição ao processo que prepara o armazenamento.
@@ -109,7 +111,7 @@ Não altera a autorização do agente de diagnóstico nem reinicia o host.
 
 ```sh
 sudo .venv/bin/python scripts/runtime_smoke.py \
-  --install-package 'dist/shinyd-runtime_0.1.0~runtime1_amd64.deb' \
+  --install-package 'dist/shinyd-runtime_0.1.0~runtime2_amd64.deb' \
   | tee var/runtime-report.json
 ```
 
@@ -146,3 +148,31 @@ armazenamento root do Podman, com rotação de 1 MiB; não integram exportaçõe
 Remoção do pacote preserva política, registros e containers. Remova instâncias
 pela API antes da desinstalação para liberar esses recursos. Isso não apaga
 dados de outros componentes nem oferece purge de dados.
+
+## Artefatos preparados e encerramento definitivo
+
+A política aceita `builder_artifacts: true`, desabilitado por padrão. Nessa
+modalidade `recipes` pode ser vazio. O pedido de partida contém `app_id`,
+`priority`, `recipe: ""`, `artifact` (chave de 64 dígitos hexadecimais) e
+`source_hash`; não aceita referência de imagem ou caminho.
+
+O executor lê `/var/lib/shinyd-builder/artifacts/<chave>.json`, exigindo root
+como proprietário, ancestrais protegidos, arquivo regular sem links e tamanho
+limitado. Confere esquema, app, fonte, chave, digest e os rótulos de selagem da
+imagem local. O manifesto é fornecido pelo builder, não pelo painel.
+A partida conserva as proteções de processo, rede e recursos já existentes.
+
+Para artefatos, repetir a partida retorna o estado da tentativa original.
+Instância que falhou ou parou exige nova publicação com outro UUID. A rota só
+é informada após o teste HTTP de funcionamento e as verificações de isolamento.
+O pedido `POST /v1/instances/<UUID>/retire`, com a mesma especificação JSON,
+persiste o encerramento definitivo antes de remover o container. Funciona
+também antes da primeira partida. Um PUT atrasado fica bloqueado após a
+confirmação, inclusive se o executor reiniciar.
+
+Esses registros de encerramento são mantidos no estado do executor e contam no
+limite inicial de 256 registros; sua coleta segura ainda não foi implementada.
+Não os remova enquanto workers puderem conservar pedidos antigos. Falha de
+remoção fica visível e permite repetir `retire`, sem relançar a instância.
+A API de receitas anterior permanece compatível, incluindo a exclusão de
+registros de suas fixtures.

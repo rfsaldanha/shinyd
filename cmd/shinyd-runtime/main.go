@@ -77,7 +77,8 @@ func run() error {
 		return fmt.Errorf("pré-requisitos do executor indisponíveis: %s", err)
 	}
 	manager, err := executor.NewManager(policy, store, executor.Podman{Run: executor.RunCommand},
-		executor.RealAttachment("/run/shinyd-runtime/apps", gid), executor.AdmissionAvailable)
+		executor.RealAttachment("/run/shinyd-runtime/apps", gid), executor.AdmissionAvailable,
+		executor.BuilderArtifactResolver(executor.RunCommand))
 	if err != nil {
 		return errors.New("estado persistente inválido")
 	}

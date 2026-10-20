@@ -70,8 +70,9 @@ func (s *Store) Load() (map[string]Record, error) {
 		}
 		var record Record
 		if decodeStrict(data, &record) != nil || record.ID != id || record.SchemaVersion != 1 ||
-			record.Spec.Validate() != nil || !imagePattern.MatchString(record.Image) ||
-			(record.Desired != "running" && record.Desired != "stopped") || len(record.Attempts) > 3 {
+			record.Spec.Validate() != nil ||
+			(!imagePattern.MatchString(record.Image) && !(record.Desired == "removed" && record.Image == "" && record.Spec.Artifact != "")) ||
+			(record.Desired != "running" && record.Desired != "stopped" && !(record.Desired == "removed" && record.Spec.Artifact != "")) || len(record.Attempts) > 3 {
 			return nil, ErrInvalid
 		}
 		result[id] = record

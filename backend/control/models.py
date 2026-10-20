@@ -127,6 +127,9 @@ class Publication(models.Model):
     status = models.CharField(default="candidate", max_length=30)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
+    previous = models.ForeignKey("self", null=True, on_delete=models.PROTECT, related_name="+")
+    app_revision = models.PositiveIntegerField(default=1)
+    runtime_spec = models.JSONField(default=dict)
 
 
 class EnvironmentValue(models.Model):
@@ -156,6 +159,7 @@ class Job(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     app = models.ForeignKey(Application, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, null=True, on_delete=models.CASCADE)
+    publication = models.ForeignKey(Publication, null=True, on_delete=models.PROTECT)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     kind = models.CharField(max_length=30)
     build_environment = models.CharField(max_length=40, blank=True)
@@ -201,6 +205,7 @@ class AppInstance(models.Model):
     host = models.CharField(max_length=259, unique=True)
     target = models.CharField(max_length=100)
     enabled = models.BooleanField(default=False)
+    publication = models.OneToOneField(Publication, null=True, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
