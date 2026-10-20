@@ -16,9 +16,10 @@ import (
 )
 
 type Inspection struct {
-	ID    string `json:"Id"`
-	Image string `json:"Image"`
-	State struct {
+	ID              string `json:"Id"`
+	Image           string `json:"Image"`
+	AppArmorProfile string `json:"AppArmorProfile"`
+	State           struct {
 		Running bool `json:"Running"`
 		Pid     int  `json:"Pid"`
 	} `json:"State"`

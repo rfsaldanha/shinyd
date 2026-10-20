@@ -35,6 +35,11 @@ Fontes primárias: [Podman 4.9.3](https://docs.podman.io/en/v4.9.3/markdown/podm
 [runtime.LockOSThread](https://pkg.go.dev/runtime#LockOSThread).
 O código usa `golang.org/x/sys/unix`. A thread é restaurada antes de entregar
 o socket ao Go; falha na restauração encerra a thread ainda bloqueada.
+Na verificação de AppArmor, o perfil padrão esperado do Podman precisa integrar
+o rótulo real do processo e aparecer em modo `enforce` na política carregada em
+`securityfs`. Um rótulo `mixed` só é aceito com essas duas provas; esse rótulo
+pode representar o perfil imposto do container combinado ao perfil do `crun`.
+Referência: [empilhamento de perfis AppArmor](https://www.apparmor.net/advanced/AppArmorStacking/).
 
 ## Privilégios e persistência
 

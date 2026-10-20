@@ -320,3 +320,25 @@ func TestPodmanArgumentsAreClosedAndImmutable(t *testing.T) {
 		}
 	}
 }
+
+func TestAppArmorStackRequiresTheExpectedEnforcedProfile(t *testing.T) {
+	const profile = "containers-default-0.57.4-apparmor1"
+	loaded := profile + " (enforce)\ncrun (unconfined)\n"
+	for _, label := range []string{profile + " (enforce)", profile + "//&crun (mixed)\n", "crun//&" + profile + " (mixed)"} {
+		if !apparmorEnforced(label, profile, loaded) {
+			t.Fatal("rejected enforced container profile:", label)
+		}
+	}
+	for _, trial := range [][3]string{
+		{"crun (unconfined)", profile, loaded},
+		{profile + " (complain)", profile, loaded},
+		{profile + "-other//&crun (mixed)", profile, loaded},
+		{profile + "//&crun (mixed)", profile, profile + " (complain)\ncrun (enforce)\n"},
+		{profile + "//&crun (mixed)", profile, ""},
+		{"unconfined (enforce)", "unconfined", "unconfined (enforce)\n"},
+	} {
+		if apparmorEnforced(trial[0], trial[1], trial[2]) {
+			t.Fatal("accepted missing or unenforced container profile:", trial)
+		}
+	}
+}

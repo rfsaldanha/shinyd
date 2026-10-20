@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -264,7 +265,11 @@ func PinNamespace(value *Inspection, record Record) (*os.File, error) {
 	}
 	// Select AppArmor explicitly on kernels with multiple security modules.
 	profile, err := os.ReadFile(prefix + "/attr/apparmor/current")
-	if err != nil || !strings.Contains(string(profile), "(enforce)") {
+	if err != nil {
+		return nil, ErrProfile
+	}
+	loadedProfiles, err := os.ReadFile("/sys/kernel/security/apparmor/profiles")
+	if err != nil || !apparmorEnforced(string(profile), value.AppArmorProfile, string(loadedProfiles)) {
 		return nil, ErrProfile
 	}
 	mapping, err := os.ReadFile(prefix + "/uid_map")
@@ -295,4 +300,39 @@ func PinNamespace(value *Inspection, record Record) (*os.File, error) {
 		return nil, ErrCgroup
 	}
 	return namespace, nil
+}
+
+var containerProfile = regexp.MustCompile(`^containers-default-[A-Za-z0-9_.-]{1,100}$`)
+
+// A stack reports "mixed" when member modes differ. The container's required
+// profile must be an exact member and independently enforced in securityfs.
+// Additional profiles intersect permissions; a permissive member cannot
+// relax this required profile. Never accept "mixed" on its own.
+func apparmorEnforced(label, expected, loaded string) bool {
+	if !containerProfile.MatchString(expected) {
+		return false
+	}
+	label = strings.TrimSpace(label)
+	stack, ok := strings.CutSuffix(label, " (enforce)")
+	if !ok {
+		stack, ok = strings.CutSuffix(label, " (mixed)")
+	}
+	if !ok {
+		return false
+	}
+	member := false
+	for _, name := range strings.Split(stack, "//&") {
+		if name == expected {
+			member = true
+		}
+	}
+	if !member {
+		return false
+	}
+	for _, line := range strings.Split(loaded, "\n") {
+		if line == expected+" (enforce)" {
+			return true
+		}
+	}
+	return false
 }

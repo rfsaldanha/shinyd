@@ -221,6 +221,15 @@ def main():
                 inspect = json.loads(command("podman", "inspect", "shinyd-" + ids[index]).stdout)[0]
                 container_ids.append(inspect["Id"])
                 pids.append(inspect["State"]["Pid"])
+                label = Path(f"/proc/{pids[-1]}/attr/apparmor/current").read_text().strip()
+                loaded = Path("/sys/kernel/security/apparmor/profiles").read_text().splitlines()
+                expected = inspect["AppArmorProfile"]
+                record(
+                    f"instance_{index}_apparmor",
+                    expected in label.rsplit(" (", 1)[0].split("//&")
+                    and expected + " (enforce)" in loaded,
+                    {"process_label": label, "required_profile": expected},
+                )
                 again = api("ensure", ids[index], spec)
                 current = json.loads(command("podman", "inspect", "shinyd-" + ids[index]).stdout)[0]
                 record(
