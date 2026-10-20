@@ -412,3 +412,11 @@ dependências de `requirements.lock` e importações isoladas de Django 5.2.18,
 Argon2 e cryptography. Isso confirma a correção da preparação Python; **não
 conclui a homologação local** do painel com o builder. A repetição privilegiada
 ainda depende do operador, pois `sudo` exige senha nesta sessão.
+
+O commit `26620d6` passou nos cinco jobs do
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39465438999).
+O roteiro corrigido completou as **33 verificações**, sem erro de limpeza nem
+repetição da API do executor. A preparação Python registrou
+`panel_setup: {"stage": "dependencies", "passed": true}`.
+Evidência: [builder-panel-bootstrap-ci.json](evidencias/builder-panel-bootstrap-ci.json).
+Localmente, os 168 testes Python e as verificações Ruff também passaram.

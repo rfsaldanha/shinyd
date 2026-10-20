@@ -109,8 +109,9 @@ sudo .venv/bin/python scripts/builder_smoke.py \
 ```
 
 As 33 verificações passaram no
-[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39463341316);
-o [relatório](evidencias/builder-panel-ci.json) registra o commit e o ambiente
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39465438999),
+já com a preparação Python corrigida;
+o [relatório](evidencias/builder-panel-bootstrap-ci.json) registra o commit e o ambiente
 observado. Isso não substitui a homologação do novo pacote no host do operador.
 
 Exige a instalação de teste vazia indicada pelo roteiro, os pacotes do agente
