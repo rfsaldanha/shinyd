@@ -116,6 +116,8 @@ def installed_probe(package, fixture, created):
         stage = "installation"
         run("dpkg", "--install", str(package))
         owned = True
+        run("systemd-analyze", "verify", "--man=no", *UNITS)
+        check("installed_units_verified")
         port = 18443
         with socket.socket() as listener:
             listener.bind(("127.0.0.1", port))
@@ -160,6 +162,10 @@ def installed_probe(package, fixture, created):
                     run("systemctl", "is-active", "shinyd-" + name + ".service").stdout.strip()
                     == "active",
                 )
+            check(
+                "configuration_refuses_running_services",
+                run(*configure, check=False).returncode != 0,
+            )
             for name in ("panel", "auth", "gateway"):
                 path = Path("/run/shinyd-" + name + "/http.sock")
                 check(

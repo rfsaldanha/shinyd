@@ -125,6 +125,14 @@ jobs:
         run: |
           set -o pipefail
           sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control1_amd64.deb' | tee dist/builder-report.json
+      - name: Removing the integrated package preserves state
+        run: |
+          sudo -n touch /var/lib/shinyd-control/package-test-sentinel
+          sudo -n dpkg --remove shinyd-control
+          sudo -n test -f /var/lib/shinyd-control/package-test-sentinel
+          test ! -S /run/shinyd-panel/http.sock
+          test ! -S /run/shinyd-auth/http.sock
+          test ! -S /run/shinyd-gateway/http.sock
       - uses: actions/upload-artifact@v4
         if: always()
         with:

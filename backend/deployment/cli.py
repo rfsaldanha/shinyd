@@ -97,6 +97,8 @@ def main():
                     f"shinyd-{name}.service"
                     for name in ("panel", "auth", "worker", "gateway", "ingress", "maintenance")
                 ],
+                *[f"shinyd-{name}.socket" for name in ("panel", "auth", "gateway")],
+                "shinyd-maintenance.timer",
             ]
         )
         if active.returncode == 0:
