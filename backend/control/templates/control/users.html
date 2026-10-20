@@ -1,0 +1,7 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Pessoas e permissões</h1><p class="muted">Contas locais e acesso ao servidor.</p></div><a class="btn btn-primary" href="{% url 'user_create' %}">Nova conta</a></div>
+<section class="panel table-responsive"><table class="table"><thead><tr><th>Conta</th><th>Papel</th><th>Estado</th><th>Ações</th></tr></thead><tbody>
+{% for account in accounts %}<tr><td>{{ account.username }}</td><td>{% if account.is_superuser %}Administrador{% elif account.can_publish %}Publicador{% else %}Usuário de acesso{% endif %}</td><td>{{ account.is_active|yesno:"Ativa,Desativada" }}</td><td><a href="{% url 'user_edit' account.pk %}">Editar</a>{% if account.is_active %}<form class="inline-form" method="post" action="{% url 'recovery_issue' account.pk %}">{% csrf_token %}<button class="link-button">Gerar recuperação</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></section>
+{% endblock %}

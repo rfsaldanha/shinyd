@@ -1,0 +1,14 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">INSPEÇÃO DO ZIP</p><h1>{{ job.app.name }}</h1><p class="muted">Acompanhe a validação do conteúdo enviado.</p></div><a href="{% url 'app_detail' job.app_id %}" class="btn btn-light">Voltar ao app</a></div>
+<section class="panel" id="job-status" {% if job.status == "queued" or job.status == "running" %}hx-get="{% url 'job_detail' job.pk %}" hx-trigger="every 3s" hx-target="this" hx-select="#job-status" hx-swap="outerHTML"{% endif %} aria-live="polite">
+  <p class="eyebrow">{{ job.phase }}</p><h2>{{ job.get_status_display }}</h2>
+  <p>{{ job.message|default:"Aguardando o worker de inspeção. A página será atualizada automaticamente." }}</p>
+  <dl class="meta-list"><dt>Recebido</dt><dd>{{ job.created_at|date:"d/m/Y H:i:s" }} UTC</dd><dt>Tentativas</dt><dd>{{ job.attempts }}</dd><dt>Identificador</dt><dd><code>{{ job.pk }}</code></dd></dl>
+  {% if job.status == "queued" or job.status == "running" %}<form method="post" action="{% url 'job_cancel' job.pk %}">{% csrf_token %}<button class="btn btn-outline-danger">Cancelar inspeção</button></form>{% endif %}
+  {% if job.version.manifest %}
+  <h3>Conteúdo validado</h3><dl class="meta-list"><dt>Pasta de entrada</dt><dd>{{ job.version.manifest.entrypoint }}</dd><dt>Arquivos</dt><dd>{{ job.version.manifest.file_count }}</dd><dt>R no lockfile</dt><dd>{{ job.version.r_version|default:"Não informado" }}</dd></dl>
+  {% for warning in job.version.manifest.warnings %}<p class="notice">{{ warning }}</p>{% endfor %}
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "control/base.html" %}
+{% block title %}Entrar · shinyd{% endblock %}
+{% block content %}
+<div class="login-layout">
+<section class="login-intro"><p class="eyebrow">BEM-VINDO AO SHINYD</p><h1>Seus apps R.<br>Na sua infraestrutura.</h1><p class="muted">Entre para administrar aplicativos, publicações e acesso ao seu servidor.</p></section>
+<section class="panel form-panel">
+  <h2>Acesse sua conta</h2>
+  {% if throttled %}<p class="errorlist" role="alert">{{ throttled }}</p>{% endif %}
+  <form method="post">{% csrf_token %}{{ form.as_p }}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}<button class="btn btn-primary" type="submit">Entrar</button></form>
+  <p class="form-help">Sem acesso? Solicite um link de recuperação ao administrador deste servidor.</p>
+</section>
+</div>
+{% endblock %}

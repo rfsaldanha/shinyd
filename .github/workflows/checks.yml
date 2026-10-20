@@ -13,3 +13,24 @@ jobs:
       - run: go vet ./...
       - run: go test -race ./...
       - run: go build -o dist/shinyd ./cmd/shinyd
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.lock
+      - run: pip install -r requirements.lock
+      - run: ruff check backend tests scripts manage.py
+      - run: ruff format --check backend tests scripts manage.py
+      - run: pytest -q
+      - run: python scripts/bootstrap.py
+      - run: python manage.py migrate --noinput
+        env:
+          SHINYD_DEV: "1"
+      - run: python manage.py makemigrations --check --dry-run
+        env:
+          SHINYD_DEV: "1"
+      - run: python manage.py check --deploy --fail-level WARNING

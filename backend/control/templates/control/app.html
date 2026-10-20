@@ -1,0 +1,21 @@
+{% extends "control/base.html" %}
+{% block title %}{{ app.name }} · shinyd{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">APLICATIVO / {{ app.slug }}</p><h1>{{ app.name }}</h1><p class="muted">{{ app.description|default:"Sem descrição." }}</p></div>{% if manage %}<a class="btn btn-primary" href="{% url 'upload' app.pk %}">Enviar ZIP</a>{% endif %}</div>
+<div class="stats">
+  <div class="stat"><span>Acesso</span><strong class="stat-text">{{ app.get_visibility_display }}</strong><small>Responsável: {{ app.owner.username }}</small></div>
+  <div class="stat"><span>Prioridade desejada</span><strong class="stat-text">{{ app.priority.name }}</strong><small>Peso {{ app.priority.weight }} · sem instâncias ativas</small></div>
+  <div class="stat"><span>Publicação</span><strong class="stat-text">Não publicada</strong><small>Execução aguarda homologação</small></div>
+</div>
+{% if manage %}
+<div class="toolbar"><a class="btn btn-light" href="{% url 'app_edit' app.pk %}">Configurar app</a><a class="btn btn-light" href="{% url 'app_access' app.pk %}">Conceder acesso</a><a class="btn btn-light" href="{% url 'app_config' app.pk %}">Adicionar variável ou segredo</a></div>
+<section class="panel"><h2>Envios e verificações</h2><p class="muted">Validar o ZIP não instala dependências nem publica o app.</p>
+<div class="table-responsive"><table class="table"><thead><tr><th>Envio</th><th>Estado</th><th>Etapa</th><th></th></tr></thead><tbody>
+{% for job in jobs %}<tr><td>{{ job.created_at|date:"d/m/Y H:i" }} UTC</td><td>{{ job.get_status_display }}</td><td>{{ job.phase }}</td><td><a href="{% url 'job_detail' job.pk %}">Ver resultado</a></td></tr>{% empty %}<tr><td colspan="4">Nenhum ZIP enviado.</td></tr>{% endfor %}
+</tbody></table></div></section>
+<div class="detail-grid">
+<section class="panel"><h2>Ambiente</h2><p class="muted">Revisão {{ app.config_revision }}. Os valores não são exibidos.</p><ul class="data-list">{% for item in environment %}<li><code>{{ item.name }}</code><span>{% if item.is_secret %}Segredo{% else %}Variável{% endif %} · revisão {{ item.revision }}</span></li>{% empty %}<li>Nenhuma variável configurada.</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Permissões</h2><ul class="data-list">{% for grant in grants %}<li><span>{% if grant.user %}{{ grant.user.username }}{% else %}{{ grant.group.name }}{% endif %}</span><span>{{ grant.get_role_display }}</span></li>{% empty %}<li>Nenhuma concessão adicional.</li>{% endfor %}</ul><p class="form-help">Responsável e administradores mantêm acesso de gestão.</p></section>
+</div>
+{% endif %}
+{% endblock %}

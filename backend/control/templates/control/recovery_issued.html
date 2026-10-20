@@ -1,0 +1,5 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><h1>Recuperação de {{ account.username }}</h1></div>
+<section class="panel"><p>Entregue este link somente ao titular da conta, por um canal confiável. Ele expira em uma hora e deixa de funcionar após a troca de senha.</p><p class="break-all"><a href="{{ recovery_path }}">{{ request.scheme }}://{{ request.get_host }}{{ recovery_path }}</a></p><p>O conteúdo do link não foi registrado na auditoria.</p></section>
+{% endblock %}

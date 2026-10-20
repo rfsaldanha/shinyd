@@ -1,0 +1,28 @@
+[project]
+name = "shinyd"
+version = "0.1.0"
+description = "Administração de aplicativos Shiny em um servidor Linux"
+requires-python = ">=3.12"
+dependencies = [
+  "Django>=5.2,<5.3",
+  "argon2-cffi>=25",
+  "cryptography>=44",
+  "gunicorn>=23",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "shinyd_web.settings_test"
+pythonpath = ["backend"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["backend", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/shinyd_web/settings_test.py" = ["F403", "F405", "E402"]
+"backend/control/migrations/*.py" = ["E501"]

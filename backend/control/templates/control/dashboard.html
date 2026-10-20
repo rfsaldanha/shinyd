@@ -1,0 +1,24 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">VISÃO GERAL</p><h1>Seus aplicativos</h1><p class="muted">Organize publicações, acesso e configurações em um só lugar.</p></div>
+  {% if can_create %}<a class="btn btn-primary" href="{% url 'app_create' %}">+ Novo aplicativo</a>{% endif %}
+</div>
+<div class="stats">
+  <div class="stat"><span>Aplicativos visíveis</span><strong>{{ apps|length }}</strong><small>No seu catálogo</small></div>
+  <div class="stat"><span>Sob sua gestão</span><strong>{{ managed_count }}</strong><small>Permissão de publicação</small></div>
+  <div class="stat"><span>Inspeções pendentes</span><strong>{{ active_jobs }}</strong><small>Na fila ou em andamento</small></div>
+</div>
+<div class="readiness"><span class="status-dot"></span><div><strong>Fundação administrativa disponível</strong><p>Você já pode cadastrar apps, definir acesso e inspecionar ZIPs. A execução em containers aguarda homologação; nenhum app está sendo servido.</p></div></div>
+<section aria-label="Catálogo de aplicativos" class="app-grid">
+{% for app in apps %}
+  <a class="app-card" href="{% url 'app_detail' app.pk %}">
+    <div class="card-top"><span class="app-initial">{{ app.name|first|upper }}</span><span class="pill">{{ app.get_visibility_display }}</span></div>
+    <h2>{{ app.name }}</h2><p>{{ app.description|default:"Sem descrição."|truncatechars:140 }}</p>
+    <div class="card-bottom"><span>{{ app.priority.name }}</span><span>{{ app.slug }} ↗</span></div>
+  </a>
+{% empty %}
+  <div class="empty-state"><span class="empty-mark">R</span><h2>Um lugar para seus apps Shiny</h2><p>Comece cadastrando um aplicativo. Depois, envie seu código em ZIP para verificar a estrutura.</p>{% if can_create %}<a class="btn btn-primary" href="{% url 'app_create' %}">Cadastrar primeiro app</a>{% else %}<p>Peça a um administrador acesso aos aplicativos da sua equipe.</p>{% endif %}</div>
+{% endfor %}
+</section>
+{% endblock %}

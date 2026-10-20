@@ -7,6 +7,10 @@ O [plano e backlog](docs/PLANO_DESENVOLVIMENTO.md) e o
 [estado da implementação](docs/STATUS.md) distinguem funcionalidades previstas
 de recursos implementados e homologados.
 
+O [guia de desenvolvimento](docs/DESENVOLVIMENTO.md) explica como iniciar o painel
+local, criar contas, cadastrar apps e inspecionar um ZIP. O executor ainda não
+está habilitado; uma inspeção aprovada não publica o app.
+
 ## Diagnóstico do servidor
 
 Em Linux com Go 1.24 ou superior:

@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="htmx-config" content='{"allowEval":false,"includeIndicatorStyles":false}'>
+  <title>{% block title %}shinyd · Administração{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'control/vendor/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'control/app.css' %}">
+  <script src="{% static 'control/vendor/htmx.min.js' %}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Pular para o conteúdo</a>
+<aside class="sidebar">
+  <a href="{% url 'dashboard' %}" class="brand">shiny<span>d</span><small>SEU SERVIDOR. SEUS APPS.</small></a>
+  {% if user.is_authenticated %}
+  <nav aria-label="Principal">
+    <a href="{% url 'dashboard' %}">Aplicativos</a>
+    {% if user.is_superuser %}
+    <a href="{% url 'users' %}">Pessoas e permissões</a>
+    <a href="{% url 'audit' %}">Atividade administrativa</a>
+    {% endif %}
+    <a href="{% url 'password_change' %}">Alterar minha senha</a>
+  </nav>
+  <div class="sidebar-bottom">
+    <span>{{ user.username }}</span>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link-button">Sair</button></form>
+  </div>
+  {% endif %}
+  <p class="sidebar-note">Open source · MIT<br>Um servidor Linux</p>
+</aside>
+<div class="workspace">
+  <header class="topbar"><span>Console de administração</span><span class="release-badge">Em desenvolvimento</span></header>
+  <main id="main" tabindex="-1">
+    {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="page-footer">shinyd · Controle local, com transparência.<span>Execução ainda não homologada</span></footer>
+</div>
+</body>
+</html>

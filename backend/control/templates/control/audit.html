@@ -1,0 +1,5 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">AUDITORIA</p><h1>Atividade administrativa</h1><p class="muted">Últimos 200 eventos. Valores de segredos não são registrados.</p></div></div>
+<section class="panel table-responsive"><table class="table"><thead><tr><th>Horário UTC</th><th>Autor</th><th>Ação</th><th>Alvo</th></tr></thead><tbody>{% for item in events %}<tr><td>{{ item.created_at|date:"d/m/Y H:i:s" }}</td><td>{{ item.actor.username|default:"Sistema local" }}</td><td><code>{{ item.action }}</code></td><td class="break-all">{{ item.target }}</td></tr>{% empty %}<tr><td colspan="4">Nenhum evento registrado.</td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}
