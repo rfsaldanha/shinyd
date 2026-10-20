@@ -386,7 +386,9 @@ def main():
                         )[0]
                         record(
                             "restart_without_duplicate",
-                            value["state"] == "ready" and current["Id"] == container_ids[1],
+                            value["state"] == "ready"
+                            and current["Id"] == container_ids[1]
+                            and current["State"]["Pid"] == pids[1],
                         )
                         browser.stdin.write("restarted\n")
                         browser.stdin.flush()

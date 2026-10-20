@@ -116,6 +116,10 @@ sudo .venv/bin/python scripts/runtime_smoke.py \
 Requer agente já instalado, Podman/rootful homologado, reserva de subuids,
 Playwright e Chrome. A fixture requer baixar a imagem R fixada em
 `experiments/r-images.json`. Não é o fluxo de publicação comum do produto.
+O roteiro passou nas 25 verificações do
+[CI Ubuntu 24.04](https://github.com/rfsaldanha/shinyd/actions/runs/39440034585).
+O [relatório](evidencias/executor-ci.json) registra o ambiente observado e
+as verificações posteriores de preservação do agente de diagnóstico.
 
 ## API e manutenção
 

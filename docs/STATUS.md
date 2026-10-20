@@ -201,9 +201,27 @@ socket canônico vinculado ao UUID. A API não aceita comandos, imagens, volumes
 ou opções de Podman fornecidos pelo chamador.
 
 Validação local: **107 testes Python**, testes Go com detector de concorrência,
-`go vet`, Ruff e verificação das unidades systemd aprovados. Roteiro privilegiado
-com dois Shiny reais preparado; sua execução no CI ainda está pendente neste
-registro. Não declarar rede/execução homologadas antes desse resultado.
+`go vet`, Ruff e verificação das unidades systemd aprovados. O roteiro privilegiado
+passou em **25 verificações** no Ubuntu 24.04 descartável do
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39440034585):
+
+* Dois Shiny para R 4.4.3, atendidos por HTTP/WebSocket no navegador real.
+* AppArmor imposto, inclusive quando combinado ao perfil do `crun`.
+* Sem acesso à rede do host, metadados externos ou sockets de controle.
+* Upload/download, estado reativo e parada de uma instância preservando a sessão da outra.
+* Idempotência, recusa de argumentos arbitrários/UID indevido e admissão limitada.
+* Reinício do executor, reconexão a containers existentes e nova sessão no navegador.
+* Partida malsucedida com limite de tentativas, preservando o outro app.
+* Orçamento de memória agregado e ausência de saída dos containers na auditoria.
+
+As **13 verificações posteriores do agente de diagnóstico** também passaram.
+Evidência: [executor-ci.json](evidencias/executor-ci.json), incluindo versões,
+hardware e perfil de teste. Isso comprova este cenário funcional, sem medir
+capacidade de usuários, pressão de memória ou QoS sob concorrência.
+
+O novo pacote ainda não foi instalado/homologado no host local: `sudo -n`
+exige senha nesta sessão. O pacote e o roteiro estão preparados para execução
+limitada pelo operador, sem alterar sudoers nem as permissões do diagnóstico.
 
 Contrato e limites: [EXECUTOR_CONTAINERS.md](EXECUTOR_CONTAINERS.md).
 Uploads continuam sem execução; faltam builder, registro automático no painel,

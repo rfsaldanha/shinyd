@@ -1,0 +1,277 @@
+{
+  "source": {
+    "kind": "github_actions_job_log",
+    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39440034585",
+    "job_id": 118687128574,
+    "commit": "79d8b1962537441369eb38682fb28c95b9951dd8",
+    "conclusion": "success",
+    "redactions": [
+      "boot_id do runner omitido no relatório do agente"
+    ]
+  },
+  "runtime": {
+    "schema_version": 1,
+    "observed_at": "2026-10-20T14:32:45.084416+00:00",
+    "scope": "Executor rootful, rede none, relay Unix e Shiny real",
+    "production_ready": false,
+    "tests": [
+      {
+        "name": "empty_test_installation",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "subids_prepared",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "package_checksum",
+        "passed": true,
+        "detail": "3a9f5b50083c7d8418929cbe5bf70e7db7d36a962e87683522276344f6d7e799"
+      },
+      {
+        "name": "package_identity",
+        "passed": true,
+        "detail": "shinyd-runtime 0.1.0~runtime1"
+      },
+      {
+        "name": "execution_disabled_after_install",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "instance_0_ready",
+        "passed": true,
+        "detail": {
+          "id": "82edb1cf-832f-46ad-a40b-3ff005425a24",
+          "app_id": "82edb1cf-832f-46ad-a40b-3ff005425a24",
+          "recipe": "probe",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/82edb1cf-832f-46ad-a40b-3ff005425a24.sock"
+        }
+      },
+      {
+        "name": "instance_0_apparmor",
+        "passed": true,
+        "detail": {
+          "process_label": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "required_profile": "containers-default-0.57.4-apparmor1"
+        }
+      },
+      {
+        "name": "instance_0_idempotent",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "instance_1_ready",
+        "passed": true,
+        "detail": {
+          "id": "7ce1ddc7-3c88-486f-9573-2fe36242c018",
+          "app_id": "7ce1ddc7-3c88-486f-9573-2fe36242c018",
+          "recipe": "probe",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/7ce1ddc7-3c88-486f-9573-2fe36242c018.sock"
+        }
+      },
+      {
+        "name": "instance_1_apparmor",
+        "passed": true,
+        "detail": {
+          "process_label": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "required_profile": "containers-default-0.57.4-apparmor1"
+        }
+      },
+      {
+        "name": "instance_1_idempotent",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "aggregate_memory_and_app_hierarchy",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "untyped_arguments_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "server_admission_limit",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "unauthorized_uid",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "distinct_network_namespaces",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "host_metadata_and_control_blocked",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "browser_stop_first",
+        "passed": true,
+        "detail": [
+          {
+            "id": "82edb1cf-832f-46ad-a40b-3ff005425a24",
+            "r": "4.4.3",
+            "shiny": "1.10.0",
+            "pid": "1"
+          },
+          {
+            "id": "7ce1ddc7-3c88-486f-9573-2fe36242c018",
+            "r": "4.4.3",
+            "shiny": "1.10.0",
+            "pid": "1"
+          }
+        ]
+      },
+      {
+        "name": "stop_one_instance",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "browser_restart_executor",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "restart_without_duplicate",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "browser_passed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "failed_start_is_bounded",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "failure_preserves_other_app",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "no_container_output_in_audit",
+        "passed": true,
+        "detail": null
+      }
+    ],
+    "limitations": [
+      "Não publica ZIPs nem homologa TLS, builder, dados persistentes ou QoS sob carga.",
+      "Reinício do executor encerra sessões; não há drenagem nem acesso externo dos apps.",
+      "Não testa reboot; mantém imagens em cache e pacote instalado, executor desabilitado."
+    ],
+    "environment": {
+      "kernel": "6.17.0-1022-azure",
+      "architecture": "x86_64",
+      "logical_cpus": 4,
+      "memory_bytes": 16765378560,
+      "podman": "4.9.3",
+      "cgroup_version": "v2",
+      "profile": "Dois Shiny de teste com sessões reativas; não é teste de capacidade."
+    },
+    "fixture_image": "sha256:16434dba939aba8a7615f3e920767d128bc3a5820473b70603f4d76c305ac9e2",
+    "passed": true
+  },
+  "diagnostic_agent_after_runtime": {
+    "schema_version": 1,
+    "observed_at": "2026-10-20T14:34:47.020977+00:00",
+    "scope": "Pacote e serviço systemd do agente de diagnóstico",
+    "kernel": "6.17.0-1022-azure",
+    "production_ready": false,
+    "tests": [
+      {
+        "name": "systemd_pid1",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "socket_enabled_and_active",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "locked_service_identity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "private_socket_permissions",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "authorized_kernel_identity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "root_not_implicit_caller",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "effective_privilege_restrictions",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "private_network_namespace",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "control_resource_guards",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "agent_restart_recovers",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "socket_removed_on_stop",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "socket_recreation_recovers",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "audit_records",
+        "passed": true,
+        "detail": null
+      }
+    ],
+    "limitations": [
+      "Não executa containers nem instala painel, gateway ou worker.",
+      "Instalação em Linux limpo exige ambiente de homologação separado.",
+      "Reboot ainda não homologado; este roteiro não reinicia o host."
+    ],
+    "package_version": "0.1.0~agent1",
+    "passed": true
+  }
+}
