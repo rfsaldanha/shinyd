@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import pwd
+import re
 import secrets
 import selectors
 import shutil
@@ -26,6 +27,7 @@ from container_subids import inspect_reservation
 ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("/etc/shinyd-runtime/policy.json")
 STATE = Path("/var/lib/shinyd-runtime")
+API_RETRIES = []
 
 
 def command(*args, input=None, check=True, timeout=60):
@@ -40,19 +42,34 @@ def command(*args, input=None, check=True, timeout=60):
 
 
 def api(action, instance, spec=None, check=True):
-    result = command(
-        "runuser",
-        "-u",
-        "shinyd-control",
-        "--",
-        "/usr/bin/shinyd-runtimectl",
-        action,
-        instance,
-        input=json.dumps(spec) if spec is not None else None,
-        check=check,
-        timeout=70,
-    )
-    return json.loads(result.stdout) if check else result
+    for attempt in range(4):
+        result = command(
+            "runuser",
+            "-u",
+            "shinyd-control",
+            "--",
+            "/usr/bin/shinyd-runtimectl",
+            action,
+            instance,
+            input=json.dumps(spec) if spec is not None else None,
+            check=False,
+            timeout=70,
+        )
+        if not check:
+            return result  # Negative tests must observe the first refusal.
+        if result.returncode == 0:
+            return json.loads(result.stdout)
+        error = result.stderr.strip()
+        if error == "executor recusou a operação (HTTP 429)" and attempt < 3:
+            API_RETRIES.append({"action": action, "instance": instance, "http_status": 429})
+            time.sleep(5)  # The API's Retry-After value; bounded, same immutable ID.
+            continue
+        safe = (
+            error
+            if re.fullmatch(r"executor recusou a operação \(HTTP [0-9]{3}\)", error)
+            else "runtime_unavailable"
+        )
+        raise RuntimeError(f"Falha na operação {action}: {safe}")
 
 
 def stop_process(process):
@@ -503,6 +520,7 @@ def main():
                         report["cleanup_error"] = {"executor_stop_failed": True}
                     elif POLICY.exists() and POLICY.read_bytes() == policy_bytes:
                         POLICY.unlink()
+    report["runtime_api_retries"] = API_RETRIES
     report["passed"] = "error" not in report and "cleanup_error" not in report
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["passed"] else 1

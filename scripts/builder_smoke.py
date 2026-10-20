@@ -17,7 +17,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from runtime_smoke import api, command
+from runtime_smoke import API_RETRIES, api, command
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("/etc/shinyd-builder/policy.json")
@@ -254,6 +254,7 @@ def main():
                     repeated.get("passed")
                     and repeated["artifact"]["cache_hit"]
                     and repeated["artifact"]["image"] == artifact["image"],
+                    repeated if not repeated.get("passed") else None,
                 )
             record(
                 "different_r_and_packages",
@@ -534,8 +535,8 @@ def main():
             for instance in created:
                 try:
                     api("remove", instance)
-                except Exception:
-                    cleanup_errors.append("instance:" + instance)
+                except Exception as exc:
+                    cleanup_errors.append("instance:" + instance + ":" + str(exc))
             if own_runtime is not None and not cleanup_errors:
                 stopped = command(
                     "systemctl",
@@ -569,6 +570,7 @@ def main():
                         cleanup_errors.append("restore_budget")
             if cleanup_errors:
                 report["cleanup_error"] = cleanup_errors
+    report["runtime_api_retries"] = API_RETRIES
     report["passed"] = "error" not in report and "cleanup_error" not in report
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["passed"] else 1
