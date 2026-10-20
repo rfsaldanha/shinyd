@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+# Preserve policy, artifact manifests and images, including on package purge.
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+fi

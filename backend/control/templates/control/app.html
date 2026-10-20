@@ -5,7 +5,7 @@
 <div class="stats">
   <div class="stat"><span>Acesso</span><strong class="stat-text">{{ app.get_visibility_display }}</strong><small>Responsável: {{ app.owner.username }}</small></div>
   <div class="stat"><span>Prioridade desejada</span><strong class="stat-text">{{ app.priority.name }}</strong><small>Peso {{ app.priority.weight }} · sem instâncias ativas</small></div>
-  <div class="stat"><span>Publicação</span><strong class="stat-text">Não publicada</strong><small>Execução aguarda homologação</small></div>
+  <div class="stat"><span>Publicação</span><strong class="stat-text">Não publicada</strong><small>Publicação pelo painel em desenvolvimento</small></div>
 </div>
 {% if manage %}
 <div class="toolbar"><a class="btn btn-light" href="{% url 'app_edit' app.pk %}">Configurar app</a><a class="btn btn-light" href="{% url 'app_access' app.pk %}">Conceder acesso</a><a class="btn btn-light" href="{% url 'app_config' app.pk %}">Adicionar variável ou segredo</a></div>

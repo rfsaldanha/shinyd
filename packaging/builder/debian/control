@@ -1,0 +1,9 @@
+Package: shinyd-builder
+Version: 0.1.0~builder1
+Section: web
+Priority: optional
+Architecture: amd64
+Maintainer: shinyd contributors
+Depends: python3 (>= 3.12), shinyd-runtime, podman (>= 4.9), systemd
+Description: Preparação offline e isolada de ZIPs Shiny para R
+ Builder experimental com catálogo local de imagens e sem ativação automática.

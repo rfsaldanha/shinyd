@@ -251,3 +251,21 @@ Isso conclui a homologação local deste executor. Publicação de ZIPs, builder
 TLS, dados persistentes, drenagem, recuperação após reboot e QoS sob carga
 continuam pendentes. O próximo marco é o builder isolado (F2-03), preparando
 artefatos verificados para conectar o fluxo de publicação ao executor.
+
+## Marco 12 — Builder offline de ZIPs (em validação)
+
+Implementados pacote `shinyd-builder` e comando administrativo `shinyd-build`.
+O fluxo valida novamente o ZIP, resolve R/pacotes contra catálogo imutável,
+prepara biblioteca renv privada em container sem rede e sela imagem OCI para o
+executor. Tem exclusão mútua, intenção durável, limpeza por identidade, cache
+por app/código/ambiente e erros sem saída de código publicado.
+
+Os **133 testes Python**, verificações Go e Ruff passaram localmente. O helper
+R restaurou uma biblioteca com 40 pacotes em fixture local sem rede. Esse teste
+rootless do helper não homologa o isolamento rootful do builder; a execução
+com pacote, controles do kernel e dois ambientes está no novo job `builder` do CI.
+
+Este é um recorte de F2-03: exige lockfile e pacotes já disponíveis na base;
+não instala dependências externas nem conecta o builder ao painel. A API tipada
+de build, integração com worker e ativação de candidatas continuam pendentes.
+Contrato e demonstração: [BUILDER_OFFLINE.md](BUILDER_OFFLINE.md).

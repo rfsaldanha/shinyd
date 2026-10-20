@@ -268,7 +268,7 @@ def upload(request, pk):
             "form": form,
             "title": f"Enviar ZIP · {app.name}",
             "description": "Nesta etapa, o ZIP será inspecionado sem executar R. "
-            "A publicação depende da homologação do executor.",
+            "A publicação pelo painel ainda está em desenvolvimento.",
         },
         status=status,
     )

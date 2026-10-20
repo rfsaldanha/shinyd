@@ -17,7 +17,9 @@ tem um roteiro separado com apps de teste.
 O [executor de containers](docs/EXECUTOR_CONTAINERS.md) acrescenta operações
 restritas de ciclo de vida e atendimento por sockets Unix, em pacote separado.
 Suas 25 verificações funcionais passaram no CI e no host local.
-Ele ainda não está conectado à publicação de ZIPs pelo painel.
+O [builder offline](docs/BUILDER_OFFLINE.md) prepara ZIPs com `renv.lock` usando
+um catálogo de ambientes aprovado. A integração desses componentes à publicação
+pelo painel ainda está em desenvolvimento.
 
 ## Diagnóstico do servidor
 

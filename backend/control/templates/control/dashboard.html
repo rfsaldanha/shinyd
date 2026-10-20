@@ -9,7 +9,7 @@
   <div class="stat"><span>Sob sua gestão</span><strong>{{ managed_count }}</strong><small>Permissão de publicação</small></div>
   <div class="stat"><span>Inspeções pendentes</span><strong>{{ active_jobs }}</strong><small>Na fila ou em andamento</small></div>
 </div>
-<div class="readiness"><span class="status-dot"></span><div><strong>Fundação administrativa disponível</strong><p>Você já pode cadastrar apps, definir acesso e inspecionar ZIPs. A execução em containers aguarda homologação; nenhum app está sendo servido.</p></div></div>
+<div class="readiness"><span class="status-dot"></span><div><strong>Fundação administrativa disponível</strong><p>Você já pode cadastrar apps, definir acesso e inspecionar ZIPs. A publicação pelo painel ainda está em desenvolvimento.</p></div></div>
 <section aria-label="Catálogo de aplicativos" class="app-grid">
 {% for app in apps %}
   <a class="app-card" href="{% url 'app_detail' app.pk %}">

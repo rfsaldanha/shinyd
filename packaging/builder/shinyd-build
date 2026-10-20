@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+if [ "$(id -u)" != 0 ]; then
+    echo 'Use a conta administrativa do servidor para este builder experimental.' >&2
+    exit 1
+fi
+exec /usr/bin/systemd-run --quiet --scope --slice=shinyd-workloads-maintenance.slice \
+    /usr/bin/python3 -I /usr/lib/shinyd-builder/main.py "$@"

@@ -67,7 +67,7 @@ def finish(job, *, manifest=None, error=None):
         current.status, current.phase = Job.Status.SUCCEEDED, "validated"
         current.message = (
             "ZIP validado. Nenhum código foi executado. "
-            "Build e publicação aguardam a homologação do executor."
+            "A preparação e a publicação ainda não estão conectadas a este fluxo."
         )
         Version.objects.filter(pk=current.version_id).update(
             status="validated",

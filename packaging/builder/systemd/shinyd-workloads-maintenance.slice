@@ -1,0 +1,9 @@
+[Unit]
+Description=Preparação e manutenção de apps shinyd
+
+[Slice]
+CPUWeight=50
+MemoryHigh=768M
+MemoryMax=1G
+MemorySwapMax=0
+TasksMax=256

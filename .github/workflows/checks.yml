@@ -100,3 +100,35 @@ jobs:
             dist/*.sha256
             dist/*report.json
             dist/agent-after-runtime.json
+  builder:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.3"
+      - name: Prepare disposable builder runner
+        run: |
+          sudo -n apt-get update -qq
+          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.64.0
+          sudo -n python3 scripts/container_subids.py --apply
+      - run: python3 scripts/build_agent_package.py
+      - run: python3 scripts/build_agent_package.py --component runtime
+      - run: python3 scripts/build_builder_package.py
+      - run: go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
+      - run: sudo -n dpkg --install 'dist/shinyd-agent_0.1.0~agent1_amd64.deb' 'dist/shinyd-runtime_0.1.0~runtime1_amd64.deb'
+      - name: Verify ZIP, offline restoration, cache, failures and actual Shiny
+        run: |
+          set -o pipefail
+          sudo -n .venv/bin/python scripts/builder_smoke.py --install-package 'dist/shinyd-builder_0.1.0~builder1_amd64.deb' | tee dist/builder-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: builder-package-and-report
+          path: |
+            dist/*.deb
+            dist/*.sha256
+            dist/builder-report.json
