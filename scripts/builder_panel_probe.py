@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 from pathlib import Path
 
@@ -143,4 +144,20 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        # Only fixture locations/types, never values, locals or credentials.
+        print(
+            json.dumps(
+                {
+                    "passed": False,
+                    "exception": type(exc).__name__,
+                    "frames": [
+                        {"file": Path(frame.filename).name, "line": frame.lineno}
+                        for frame in traceback.extract_tb(exc.__traceback__)
+                    ],
+                }
+            )
+        )
+        raise SystemExit(1) from None

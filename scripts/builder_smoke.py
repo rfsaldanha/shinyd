@@ -418,12 +418,37 @@ def main():
             )
             # This separate database never opens the developer's panel state.
             record("empty_api_jobs", not any(p.is_dir() for p in (STATE / "jobs").iterdir()))
-            panel_state = Path("/var/lib/shinyd") / ("builder-probe-" + uuid.uuid4().hex)
+            # /var/lib/shinyd belongs to the diagnostic agent (root:root 0750).
+            # The control account needs its own disposable state directory.
+            panel_state = Path("/var/lib") / ("shinyd-builder-probe-" + uuid.uuid4().hex)
             control = pwd.getpwnam("shinyd-control")
             panel_state.mkdir(mode=0o700)
             os.chown(panel_state, control.pw_uid, control.pw_gid)
             shutil.copyfile(temporary / "app-0.zip", panel_state / "fixture.zip")
             os.chown(panel_state / "fixture.zip", control.pw_uid, control.pw_gid)
+            # A developer/runner home can be 0750. Never weaken its permissions
+            # to let the service account import the panel or its dependencies.
+            project = panel_state / "project"
+            project.mkdir()
+            shutil.copytree(
+                ROOT / "backend", project / "backend", ignore=shutil.ignore_patterns("__pycache__")
+            )
+            (project / "scripts").mkdir()
+            for name in ("bootstrap.py", "builder_panel_probe.py"):
+                shutil.copyfile(ROOT / "scripts" / name, project / "scripts" / name)
+            interpreter = panel_state / "venv/bin/python"
+            command(sys.executable, "-m", "venv", str(panel_state / "venv"))
+            command(
+                str(interpreter),
+                "-m",
+                "pip",
+                "install",
+                "-r",
+                str(ROOT / "requirements.lock"),
+                timeout=180,
+            )
+            for path in panel_state.rglob("*"):
+                os.chown(path, control.pw_uid, control.pw_gid, follow_symlinks=False)
             command("systemctl", "start", "shinyd-builder.socket")
             builder_started = True
             probe = [
@@ -431,16 +456,28 @@ def main():
                 "-u",
                 "shinyd-control",
                 "--",
-                sys.executable,
-                str(ROOT / "scripts/builder_panel_probe.py"),
+                str(interpreter),
+                str(project / "scripts/builder_panel_probe.py"),
                 "--state",
                 str(panel_state),
             ]
-            submitted = json.loads(command(*probe, "--stage", "submit", timeout=90).stdout)
+
+            def run_panel(stage, timeout):
+                value = command(*probe, "--stage", stage, timeout=timeout, check=False)
+                try:
+                    result = json.loads(value.stdout)
+                except ValueError:
+                    result = {"passed": False, "stage": stage, "exit_code": value.returncode}
+                if value.returncode or not result.get("passed"):
+                    report["panel_diagnostic"] = result
+                    raise RuntimeError("Falha no roteiro isolado do painel: " + stage)
+                return result
+
+            submitted = run_panel("submit", 90)
             panel_jobs.append(submitted["job_id"])
             record("api_submission_from_control_identity", submitted["passed"])
             command("systemctl", "restart", "shinyd-builder.service")
-            completed = json.loads(command(*probe, "--stage", "complete", timeout=660).stdout)
+            completed = run_panel("complete", 660)
             panel_jobs = completed["job_ids"]
             artifacts.append(completed["artifact"]["cache_key"])
             for name in completed["checks"]:
