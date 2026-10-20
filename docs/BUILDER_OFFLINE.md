@@ -109,7 +109,12 @@ pelo executor já instalado. Verifica concorrência, memória/peso de manutenç�
 interrompido simulado. Remove somente política/instâncias/manifestos de
 teste e restaura os limites agregados anteriores. Mantém pacotes e imagens em
 cache; não reinicia o host. Requer Playwright, Chrome e `dist/shinyd-proxy-probe`.
-Homologação real e resultados observados são registrados em [STATUS.md](STATUS.md).
+O [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39449102048) passou nas
+25 verificações; o [relatório](evidencias/builder-ci.json) registra os resultados
+reais, com kernel `7.0.0-1017-azure`, Podman 4.9.3 e os dois ambientes R.
+A homologação local do pacote ainda está pendente. Uma falha inicial de partida
+em outro kernel do CI não teve causa confirmada; [STATUS.md](STATUS.md) registra
+essa limitação para a matriz de compatibilidade anterior ao MVP.
 
 ## Próximos passos
 

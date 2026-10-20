@@ -252,7 +252,7 @@ TLS, dados persistentes, drenagem, recuperação após reboot e QoS sob carga
 continuam pendentes. O próximo marco é o builder isolado (F2-03), preparando
 artefatos verificados para conectar o fluxo de publicação ao executor.
 
-## Marco 12 — Builder offline de ZIPs (em validação)
+## Marco 12 — Builder offline de ZIPs validado no CI
 
 Implementados pacote `shinyd-builder` e comando administrativo `shinyd-build`.
 O fluxo valida novamente o ZIP, resolve R/pacotes contra catálogo imutável,
@@ -260,12 +260,41 @@ prepara biblioteca renv privada em container sem rede e sela imagem OCI para o
 executor. Tem exclusão mútua, intenção durável, limpeza por identidade, cache
 por app/código/ambiente e erros sem saída de código publicado.
 
-Os **133 testes Python**, verificações Go e Ruff passaram localmente. O helper
-R restaurou uma biblioteca com 40 pacotes em fixture local sem rede. Esse teste
-rootless do helper não homologa o isolamento rootful do builder; a execução
-com pacote, controles do kernel e dois ambientes está no novo job `builder` do CI.
+Os **141 testes Python**, verificações Go, Ruff e verificações Django passaram.
+O helper R restaurou uma biblioteca com 40 pacotes em fixture local sem rede;
+este experimento rootless valida o helper, não o isolamento rootful instalado.
+
+As **25 verificações do pacote e fluxo real** passaram no
+[CI Ubuntu 24.04](https://github.com/rfsaldanha/shinyd/actions/runs/39449102048):
+
+* R 4.4.3/Shiny 1.10.0 e R 4.5.2/Shiny 1.13.0 preparados a partir de ZIPs e locks.
+* AppArmor imposto, identidades remapeadas, rede isolada e biblioteca privada.
+* Cache repetido preservando o ID da imagem; recusa de checksum diferente.
+* Duas imagens iniciadas pelo executor, com reatividade, upload e download em Chrome.
+* Concorrência recusada, operador sem privilégio recusado e recuperação de um
+  container/registro interrompido simulado, sem reiniciar o host.
+* CPUWeight=50 e memória agregada de 1 GiB no grupo de manutenção.
+* ZIP inseguro, R incompatível, pacote ausente e restauração inválida recusados,
+  preservando os artefatos anteriores e os PIDs dos dois processos R existentes.
+
+Evidência: [builder-ci.json](evidencias/builder-ci.json), com commit, kernel,
+CPU/RAM, Podman, imagens e inventários. Os cinco jobs do CI passaram, incluindo
+as verificações anteriores do executor e agente. Não é medição de capacidade.
+
+A revisão também corrigiu o limite inicial de `shinyd-workloads.slice`:
+`MemoryMax=0` era ignorado pelo parser do systemd. O pacote agora usa o mínimo
+positivo `1` até o executor aplicar o orçamento real; o builder recusa orçamento
+não configurado. Isso não habilita execução automaticamente.
+
+Uma execução inicial no CI, com kernel `6.17.0-1022-azure`, retornou
+`runtime_unavailable` ao iniciar o primeiro artefato. Foram acrescentados
+diagnósticos para as fixtures. As duas execuções seguintes passaram com kernel
+`7.0.0-1017-azure`; a causa da primeira falha não foi confirmada. Partidas frias
+e a matriz de kernels precisam de nova verificação antes do MVP operacional.
 
 Este é um recorte de F2-03: exige lockfile e pacotes já disponíveis na base;
 não instala dependências externas nem conecta o builder ao painel. A API tipada
 de build, integração com worker e ativação de candidatas continuam pendentes.
+O pacote foi preparado localmente, mas sua homologação privilegiada neste host
+continua pendente: `sudo` exige senha nesta sessão.
 Contrato e demonstração: [BUILDER_OFFLINE.md](BUILDER_OFFLINE.md).
