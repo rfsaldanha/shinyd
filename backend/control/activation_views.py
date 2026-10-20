@@ -43,6 +43,7 @@ def activate(request, pk):
             "form": form,
             "service_error": error,
             "title": f"Ativar versão · {version.app.name}",
+            "submit_label": "Ativar versão",
             "description": "A versão candidata será iniciada e verificada antes da troca. "
             "Falha ou falta de recursos preserva a publicação anterior. "
             "Após a troca, usuários conectados precisarão abrir o app novamente. "

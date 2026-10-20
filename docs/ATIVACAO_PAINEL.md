@@ -104,3 +104,9 @@ Ao terminar, o roteiro encerra os serviços de teste e restaura políticas e
 limites. Apaga somente as marcas de encerramento dos UUIDs da fixture, depois
 que seus processos de controle e executor já terminaram. Imagens ficam no cache.
 O relatório registra as verificações e não é uma medição de capacidade.
+
+As 49 verificações do roteiro ampliado passaram no
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39471110057).
+O [relatório](evidencias/activation-ci.json) registra o commit, o ambiente
+observado e a limpeza sem erros. A homologação de `runtime2` no host do operador
+ainda está pendente.

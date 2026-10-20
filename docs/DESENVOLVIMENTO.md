@@ -57,7 +57,9 @@ O código operacional usa Argon2id. Não use `settings_test` para servir o paine
 O código de metadados, autorização e inspeção é independente do contrato de
 execução. O isolamento rootful inicial passou; as verificações completas
 F0-03–06 ainda têm itens pendentes.
-`SHINYD_RUNTIME_ENABLED` permanece falso; não há botão que simule execução.
+`SHINYD_RUNTIME_ENABLED` permanece falso por padrão. A
+[ativação pelo painel](ATIVACAO_PAINEL.md) exige configuração explícita, pacote
+`runtime2` e identidade de serviço autorizada; o botão usa o executor real.
 As fases dependentes desse contrato não estão concluídas.
 
 O [gateway com login central](GATEWAY_ACESSO.md) tem um experimento separado

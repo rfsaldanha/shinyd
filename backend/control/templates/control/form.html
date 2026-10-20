@@ -6,7 +6,7 @@
   <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {{ form.as_p }}
-    <div class="form-actions"><button class="btn btn-primary" type="submit" {% if service_error %}disabled{% endif %}>Salvar</button><a class="btn btn-light" href="{% url 'dashboard' %}">Voltar ao catálogo</a></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit" {% if service_error %}disabled{% endif %}>{{ submit_label|default:"Salvar" }}</button><a class="btn btn-light" href="{% url 'dashboard' %}">Voltar ao catálogo</a></div>
   </form>
 </section>
 {% endblock %}

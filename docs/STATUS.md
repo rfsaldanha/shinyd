@@ -455,3 +455,74 @@ O próximo marco é o contrato de ativação: reconhecer artefato preparado,
 iniciar a candidata, verificar funcionamento e registrar a rota no gateway,
 preservando a publicação anterior em caso de falha. Ativação, reboot, capacidade,
 QoS sob carga, downloads externos e os demais itens do plano continuam pendentes.
+
+## Marco 16 — Ativação de versões pelo painel
+
+Implementada ativação explícita de versões preparadas, com confirmação do
+impacto sobre sessões. O trabalho cria uma candidata com UUID persistente,
+consulta/solicita a partida e confere o resultado antes de trocar publicação
+e rota na mesma transação. A candidata que falha não substitui a anterior.
+
+O pacote `shinyd-runtime 0.1.0~runtime2` aceita chaves de artefatos somente
+quando a política habilita `builder_artifacts`. Confere manifesto protegido
+do builder, app, checksum do código, digest e rótulos da imagem local.
+O controle não fornece imagens, caminhos ou comandos. A partida mantém o
+isolamento e as verificações de funcionamento do executor existente.
+
+Cancelamento e limpeza usam encerramento definitivo persistente, inclusive
+antes da primeira partida. Um pedido atrasado não recria a instância removida.
+Tentativas sobre artefatos não relançam automaticamente processos que falharam.
+Perda de resposta e retomada do worker usam o mesmo UUID. Mudança de permissão,
+configuração ou cancelamento durante a partida impede a troca.
+
+Após a troca, a rota anterior é desabilitada e seu container é removido.
+Limpeza pendente permanece visível e é retomada; não bloqueia o atendimento
+da versão já ativada. Uma nova ativação do mesmo app aguarda essa limpeza.
+O botão **Abrir aplicativo** usa o login central e a autorização existentes.
+Não há drenagem: a interface informa que a troca interrompe sessões antigas.
+
+Os **192 testes Python** passaram localmente, incluindo respostas inválidas do
+executor, imagem divergente, domínio inválido sem candidata residual, perda de
+resposta, cancelamento, expiração, configuração/conta alterada durante a partida,
+limpeza pendente e impedimento de conclusão por worker com lease antigo.
+Go passou em `go test -race ./...` e `go vet ./...`, incluindo manifestos
+inseguros, artefato de outro app e encerramento definitivo após recuperação.
+Ruff, migrações e verificações Django passaram.
+
+A migração `0006` foi aplicada ao banco local após backup privado em
+`var/backups/metadata-before-activation-20261020T175633Z.sqlite3`.
+O pacote `runtime2` foi gerado e suas unidades verificadas pelo systemd.
+A instalação e a homologação desse pacote no host local ainda dependem do
+operador; `sudo` continua exigindo senha nesta sessão.
+
+O primeiro [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39470308455),
+no commit `94787e3`, passou nos cinco jobs e nas **49 verificações** do roteiro
+ampliado. Incluiu partida real, negação de artefato alheio, autorização pública
+e restrita, falha de inicialização preservando a publicação anterior,
+cancelamento, recusa de partida atrasada, troca e retirada da instância antiga.
+Chrome confirmou reatividade, upload e download da instância ativada por meio
+do proxy de teste e do transporte Unix do executor.
+
+A rodada do commit `6144f72` também passou nos cinco jobs e nas 49 verificações:
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39471110057) e
+[relatório integral](evidencias/activation-ci.json). O runner usou kernel
+`7.0.0-1017-azure`, 4 CPUs lógicas, 16.760.344.576 bytes de RAM e Podman 4.9.3.
+Não houve erro de limpeza nem repetição por executor ocupado nessa execução.
+O roteiro limita a quatro tentativas as verificações de recusa que recebem
+`runtime_busy`, sempre sobre o mesmo identificador, e registra as repetições.
+
+A revisão final atualizou os textos do catálogo, upload e configurações,
+identificou o botão de confirmação como **Ativar versão** e preservou quebra
+de linha do digest em telas pequenas. Os 41 testes pertinentes de ativação,
+acesso e segredos passaram após esses ajustes. O smoke local no Chrome passou
+por login, cadastro, upload, worker, atualização da página e viewport de 360 px;
+isso não substitui o ensaio completo de ativação no navegador.
+
+Limites: não injeta variáveis/segredos (apps com valores configurados têm
+ativação bloqueada), não oferece volumes persistentes nem rede externa,
+entrada estável por app ou TLS instalado. Estado contínuo no painel e drenagem
+continuam pendentes. Marcas de encerramento contam no limite de 256 registros
+do executor; coleta segura exige trabalho posterior. Não há medição de
+capacidade, nem homologação de reboot ou do fluxo visual completo de
+painel/gateway/TLS neste ensaio. O MVP e a fase 2 completa não estão concluídos.
+Contrato, configuração e comando de homologação: [ATIVACAO_PAINEL.md](ATIVACAO_PAINEL.md).

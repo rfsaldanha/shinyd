@@ -24,7 +24,7 @@ def eligible(app):
         raise ValidationError("Ativação desabilitada. Consulte o administrador.")
     if app.environment.exists():
         raise ValidationError(
-            "Este marco ainda não aplica variáveis e segredos ao processo. "
+            "A aplicação de variáveis e segredos ao processo ainda não está disponível. "
             "A ativação de apps com esses valores configurados está bloqueada."
         )
 

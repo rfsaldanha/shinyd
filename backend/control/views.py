@@ -225,7 +225,11 @@ def app_config(request, pk):
                 form.cleaned_data["value"],
                 form.cleaned_data["is_secret"],
             )
-            messages.success(request, "Valor salvo. Novas instâncias usarão a nova configuração.")
+            messages.success(
+                request,
+                "Valor salvo. A ativação de apps com variáveis e segredos "
+                "ainda não está disponível.",
+            )
             return redirect("app_detail", pk=pk)
         except Conflict as exc:
             form.add_error(None, str(exc))
@@ -273,7 +277,7 @@ def upload(request, pk):
             "form": form,
             "title": f"Enviar ZIP · {app.name}",
             "description": "Nesta etapa, o ZIP será inspecionado sem executar R. "
-            "A publicação pelo painel ainda está em desenvolvimento.",
+            "Após validar, prepare a versão e solicite sua ativação.",
         },
         status=status,
     )
