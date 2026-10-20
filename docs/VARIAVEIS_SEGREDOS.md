@@ -20,6 +20,9 @@ Requer os pacotes experimentais `shinyd-runtime 0.1.0~runtime3` e
 5. **Remover** exige confirmação e revisão atual. A variável só desaparece do
    ambiente em execução depois de aplicar a configuração.
 
+As cópias cifradas das publicações anteriores permanecem no histórico. Remover uma
+variável não apaga essas cópias nem backups já feitos.
+
 Usuários com apenas acesso ao app não podem configurar, remover ou aplicar valores.
 As mesmas regras de autorização se aplicam às chamadas diretas aos serviços.
 Alterar configuração, permissões ou cancelar durante a ativação invalida a candidata.
@@ -93,6 +96,21 @@ O roteiro integrado verifica também os valores recebidos pelo R por impressões
 digitais de dados sintéticos, rotação sem upload, manutenção dos demais processos,
 remoção, ausência em metadados/logs e persistência cifrada. Resultados efetivamente
 executados são registrados em [STATUS.md](STATUS.md), separados da homologação local.
+
+Para repetir o ensaio no host local após construir os pacotes (instalação
+configurada e dados existentes são recusados pelo roteiro):
+
+```sh
+set -o pipefail
+sudo .venv/bin/python scripts/builder_smoke.py --activation \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
+  --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control2_amd64.deb \
+  | tee var/secrets-report.json
+```
+
+O roteiro remove somente sua configuração e dados descartáveis; pacotes e cache
+permanecem. Não altera o banco de desenvolvimento em `var/`.
 
 Fontes oficiais consultadas em 20/10/2026: o
 [Podman 4.9.3](https://docs.podman.io/en/v4.9.3/markdown/podman-run.1.html#preserve-fds-n)

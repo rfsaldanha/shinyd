@@ -145,7 +145,7 @@ passaram, incluindo preservação da sessão durante o reinício de painel/worke
 O job também removeu o pacote e confirmou a preservação de um arquivo de estado.
 [Relatório integral](evidencias/installed-https-ci.json).
 
-A execução no host do operador passou em **88 verificações**, em 20/10/2026.
+Ainda na revisão anterior, a execução no host do operador passou em **88 verificações**, em 20/10/2026.
 As duas verificações adicionais conferem checksum e identidade do pacote local
 do executor. O [relatório local integral](evidencias/installed-https-local.json)
 registra preservação da sessão Shiny, dos processos de atendimento e ausência
@@ -153,3 +153,11 @@ de erro de limpeza. Uma remoção recebeu HTTP 429 e foi repetida com sucesso.
 Ambiente, versões instaladas e hashes estão no marco 19 de [STATUS.md](STATUS.md).
 Os serviços do ensaio ficaram parados ao terminar; isso não deixa uma instalação
 configurada para atender usuários.
+
+
+O contrato atual, com `control2`/`runtime3`, passou nas **99 verificações** do
+[CI de segredos](https://github.com/rfsaldanha/shinyd/actions/runs/39486005117),
+incluindo injeção, rotação sem ZIP e remoção de variável. O
+[relatório integral](evidencias/secrets-runtime-ci.json) registra o resultado.
+A homologação local dessa revisão permanece pendente; use o comando de
+[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para gerar um relatório separado.

@@ -699,12 +699,55 @@ Contratos antigos sem configuração permanecem compatíveis. Pacotes novos:
 `runtime3` (crun explícito e descritor de memória) e `control2` (migração 0007).
 O builder permanece na versão 2.
 
-Passaram localmente 233 testes Python, testes Go com detector de concorrência,
-`go vet` e Ruff. O roteiro privilegiado foi ampliado para testar valores reais
-no R, rotação sem ZIP, remoção, preservação dos demais processos e ausência em
-metadados/logs. Nesta gravação inicial, a execução desse roteiro ainda está
-pendente no CI e no host local; os relatórios dos marcos anteriores não validam
-esta implementação. O sudo local continua solicitando senha.
+Passaram localmente 235 testes Python, testes Go com detector de concorrência,
+`go vet`, Ruff, verificação de migrações e diagnóstico Django de produção. A
+migração 0007 foi aplicada ao banco de desenvolvimento depois do backup privado
+`var/backups/metadata-before-environment-20261020T193521Z.sqlite3`.
+
+O primeiro [ensaio de CI](https://github.com/rfsaldanha/shinyd/actions/runs/39484654440)
+comprovou partida com configuração cifrada, valores recebidos pelo R (inclusive
+UTF-8 e quebras de linha), rotação sem ZIP e preservação da sessão durante reinício
+do painel/worker. O roteiro parou na asserção seguinte: exigia 403 para a rota
+anterior, embora o contrato do gateway retorne 404 para publicações desativadas.
+O relatório integral com `passed: false` está em
+[secrets-initial-ci.json](evidencias/secrets-initial-ci.json). A correção do roteiro
+em `366eaaa` exige 404 e registra o status HTTP observado.
+
+A [execução final](https://github.com/rfsaldanha/shinyd/actions/runs/39486005117),
+no commit `366eaaaddd71d1b19e41ecf7f662e6823d142165`, passou em **todos os cinco jobs**.
+O ensaio integrado passou nas **99 verificações**, sem erro de limpeza nem
+repetições por executor ocupado. O relatório completo está em
+[secrets-runtime-ci.json](evidencias/secrets-runtime-ci.json), extraído do job
+`118846469452`. A rota anterior retornou HTTP 404, como esperado.
+
+O navegador confirmou a entrega de valores ao R, rotação sem reenviar ZIP
+(permanece uma única versão de código), remoção aplicada na nova instância,
+revisão antiga mantida até a confirmação, acesso privado/público por HTTP e
+WebSocket e manutenção dos demais processos. Os valores sintéticos não apareceram
+em metadados/logs dos containers, logs dos serviços ou banco SQLite em texto claro.
+As outras aplicações continuaram reativas e sem a variável do app de teste.
+Os PIDs de auth/gateway/ingress permaneceram `11447`/`11448`/`11449` durante o
+reinício de painel/worker; o processo e a sessão Shiny foram preservados.
+
+Ambiente do ensaio: Ubuntu 24.04 do workflow, kernel `7.0.0-1017-azure`,
+4 CPUs lógicas, 16.760.344.576 bytes de RAM e Podman 4.9.3. Isso é validação
+funcional, sem medição de capacidade, reboot ou disputa de QoS.
+O job também removeu o pacote do controle e verificou a preservação do estado.
+
+A homologação no host local ainda está pendente: o sudo continua exigindo senha.
+Os pacotes foram construídos e as unidades conferidas, sem alterar os serviços
+instalados. O ensaio local das versões anteriores não comprova a nova injeção.
+Os arquivos disponíveis neste host têm estes hashes (o CI identifica seus
+próprios pacotes no relatório):
+
+| Pacote local | SHA-256 do `.deb` |
+|---|---|
+| `shinyd-runtime 0.1.0~runtime3` | `30f2dfaf50ea57ad2e6b84de986e0cabbb0283269bb8a3f3e40f5096268771b5` |
+| `shinyd-control 0.1.0~control2` | `d3c59d34dce5c035f903047931dcaf3490eea2bf7bc01738cd15684970440b81` |
+
+Comando local: [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md), com relatório em
+`var/secrets-report.json`. O roteiro preserva instalações existentes recusando
+prosseguir quando encontra configuração ou dados de controle.
 
 Contrato, operação, limites e fontes: [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md).
 Persistência dos dados dos apps (F3-02), rollback, drenagem e recuperação após

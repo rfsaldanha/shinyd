@@ -60,3 +60,5 @@ Commits e pushes são feitos por marcos verificáveis, com os testes pertinentes
 
 O marco F3-01 acrescenta [variáveis e segredos em execução](docs/VARIAVEIS_SEGREDOS.md),
 com aplicação explícita sem novo ZIP e revisão desejada/aplicada no painel.
+O fluxo passou em 99 verificações integradas no CI; a homologação local dessa
+revisão está pendente. Consulte o marco 20 em [STATUS.md](docs/STATUS.md).
