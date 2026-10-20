@@ -25,7 +25,9 @@ progresso e cancelamento. O roteiro ampliado passou nas 33 verificações no CI 
 no host local. A [ativação pelo painel](docs/ATIVACAO_PAINEL.md) acrescenta
 partida da candidata, verificação, troca de rota e preservação da publicação
 anterior em caso de falha. Exige o pacote `runtime2` e configuração explícita;
-as evidências e limitações deste novo marco estão em [STATUS.md](docs/STATUS.md).
+o roteiro passou em 49 verificações no CI e 51 no host local, que também
+conferiu o pacote do executor antes de instalá-lo. As evidências e limitações
+estão em [STATUS.md](docs/STATUS.md).
 
 ## Diagnóstico do servidor
 

@@ -108,5 +108,12 @@ O relatório registra as verificações e não é uma medição de capacidade.
 As 49 verificações do roteiro ampliado passaram no
 [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39471110057).
 O [relatório](evidencias/activation-ci.json) registra o commit, o ambiente
-observado e a limpeza sem erros. A homologação de `runtime2` no host do operador
-ainda está pendente.
+observado e a limpeza sem erros.
+
+A homologação no host do operador passou em **51 verificações**, em 20/10/2026,
+com instalação de `runtime2` e `builder2`. As duas verificações adicionais
+conferem o checksum e a identidade do pacote local do executor. O
+[relatório local integral](evidencias/activation-local.json) registra ausência
+de erro de limpeza e de repetições da API. Os serviços de teste e seus sockets
+ficaram inativos ao terminar. Ambiente, hashes conferidos e limites estão no
+[marco 17 de STATUS.md](STATUS.md#marco-17--ativação-pelo-painel-homologada-localmente).

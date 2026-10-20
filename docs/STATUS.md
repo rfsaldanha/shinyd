@@ -492,8 +492,9 @@ Ruff, migrações e verificações Django passaram.
 A migração `0006` foi aplicada ao banco local após backup privado em
 `var/backups/metadata-before-activation-20261020T175633Z.sqlite3`.
 O pacote `runtime2` foi gerado e suas unidades verificadas pelo systemd.
-A instalação e a homologação desse pacote no host local ainda dependem do
-operador; `sudo` continua exigindo senha nesta sessão.
+Naquela rodada, a instalação e a homologação desse pacote no host local
+dependiam do operador, pois `sudo` exigia senha. O resultado da execução local
+está registrado no marco seguinte.
 
 O primeiro [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39470308455),
 no commit `94787e3`, passou nos cinco jobs e nas **49 verificações** do roteiro
@@ -526,3 +527,53 @@ do executor; coleta segura exige trabalho posterior. Não há medição de
 capacidade, nem homologação de reboot ou do fluxo visual completo de
 painel/gateway/TLS neste ensaio. O MVP e a fase 2 completa não estão concluídos.
 Contrato, configuração e comando de homologação: [ATIVACAO_PAINEL.md](ATIVACAO_PAINEL.md).
+
+## Marco 17 — Ativação pelo painel homologada localmente
+
+O operador executou o roteiro com `--activation` e instalação dos dois pacotes
+em 20/10/2026. As **51 verificações passaram**, com `passed: true`, sem erro de
+limpeza e sem repetição por executor ocupado. Evidência:
+[activation-local.json](evidencias/activation-local.json), cópia integral de
+`var/activation-report.json`, iniciado às 18:17:44 UTC.
+São as 49 verificações do CI mais a conferência do checksum e da identidade
+do pacote local do executor.
+
+O inventário instalado e os SHA-256 dos arquivos locais foram conferidos com
+o relatório:
+
+| Pacote instalado | SHA-256 do `.deb` |
+|---|---|
+| `shinyd-runtime 0.1.0~runtime2` | `d1e9f9b7302036e5a8d1dcb8e52a25037fe79bc3eb5122d3f047be47706f3da6` |
+| `shinyd-builder 0.1.0~builder2` | `c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9` |
+
+O host usou kernel `7.0.0-38-generic`, 16 CPUs lógicas,
+66.735.198.208 bytes de RAM e Podman 4.9.3. Os ambientes R
+4.4.3/Shiny 1.10.0 e 4.5.2/Shiny 1.13.0 funcionaram simultaneamente.
+A preparação Python descartável também terminou sem erro.
+
+Além dos cenários de preparação, o ensaio confirmou:
+
+* Ativação pelo worker e autorização de rotas públicas/restritas.
+* Recusa de artefato alheio e de ativação com segredos ainda não aplicáveis.
+* Falha de inicialização preservando a publicação anterior, com mensagem segura.
+* Cancelamento confirmado e recusa de partida atrasada.
+* Troca de publicação, retirada da instância anterior e revogação de seu host.
+* Reatividade, upload e download da instância ativada no Chrome.
+
+A consulta posterior ao systemd confirmou builder e executor inativos, ambos
+com resultado `success`, e seus sockets desabilitados. O socket do agente de
+diagnóstico permaneceu habilitado e escutando; seu serviço estava inativo.
+Esse é o estado esperado após a limpeza da demonstração, não uma instalação
+completa do produto em atendimento.
+
+As operações do painel foram exercitadas pelo cliente HTTP Django, enquanto
+o navegador acessou os apps pelo proxy de teste. O fluxo visual completo
+painel/gateway/HTTPS ainda não foi homologado. Este ensaio não mede capacidade,
+QoS sob carga ou recuperação após reboot. Permanecem os limites do marco 16.
+
+O próximo marco prioritário é integrar os serviços de painel, worker,
+autorização e gateway em uma instalação reproduzível, com HTTPS e demonstração
+completa no navegador (partes de F1-03/F2-05). O aceite deve percorrer upload,
+preparação, ativação e acesso público/restrito, incluindo recusa por URL direta
+e WebSocket. Isso precede a declaração de conclusão da fase 2; injeção de
+segredos, volumes persistentes e demais itens da fase 3 continuam no backlog.
