@@ -77,7 +77,9 @@ a 1 KiB. Falhas negam acesso, inclusive a novos acessos públicos.
 `bootstrap.py` cria a chave adicional sem sobrescrever chaves existentes.
 Ela é diferente das chaves Django e de segredos. Arquivo regular 0600 ou 0640;
 permissões dos diretórios/socket devem permitir somente os serviços necessários.
-O empacotamento com usuários Unix separados e systemd continua pendente.
+O [pacote integrado](INSTALACAO_INTEGRADA.md) fornece identidades separadas,
+sockets criados pelo systemd e serviço de entrada HTTPS. A homologação executada
+está registrada em STATUS.md.
 
 As tabelas novas são `AppInstance`, `GatewayTicket` e `GatewaySession`.
 Tickets e sessões guardam hashes dos tokens; a associação à sessão Django permite
@@ -94,13 +96,14 @@ SHINYD_DEV=1 .venv/bin/python manage.py cleargateway
 SHINYD_DEV=1 .venv/bin/python manage.py clearsessions
 ```
 
-O agendamento dessa manutenção fará parte do pacote instalável. A configuração
+O pacote integrado agenda essa manutenção por timer systemd. A configuração
 de produção exige `SHINYD_PANEL_ORIGIN=https://painel.exemplo.org` e
 `SHINYD_APP_DOMAIN=apps.exemplo.org`; painel e apps devem ter hosts distintos,
 mesmo no desenvolvimento. HTTP de desenvolvimento aceita somente `localhost`
 e subdomínios de `.localhost`.
 
-O binário `shinyd-gateway` escuta em loopback, destinado à futura entrada HTTPS.
+O binário `shinyd-gateway` aceita loopback para experimentos. No pacote integrado,
+herda somente um socket Unix privado; Caddy recebe HTTPS.
 Sua chave e a do autorizador devem coincidir. Alterar a chave exige reiniciar
 ambos; reiniciar o gateway interrompe WebSockets e requer janela de manutenção.
 
@@ -129,7 +132,8 @@ ao revogar a permissão, 19,958 s no logout e 20,004 s na queda do autorizador.
 São observações desse ensaio, não uma medição de capacidade sob carga.
 
 O executor e o builder agora têm contratos separados de execução e preparação.
-Ainda faltam instalação completa, TLS real, entrada estável por app, drenagem,
-política de renovação e medição de capacidade.
+O pacote integrado acrescenta a instalação dos serviços e o transporte HTTPS.
+Ainda faltam instalação assistida completa, emissão automática de certificado,
+entrada estável por app, drenagem, política de renovação e medição de capacidade.
 Há uma consulta ao controle por requisição HTTP e por revalidação de WebSocket;
 não foi medida capacidade de usuários nem homologado uso em produção.

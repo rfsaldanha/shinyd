@@ -592,16 +592,43 @@ e cria backup privado de metadados antes das migrações. A remoção preserva d
 Painel, worker e autorizador usam a conta de controle; gateway e entrada HTTPS
 possuem identidades próprias. Sockets privados substituem listeners TCP internos.
 
-Os 212 testes Python passaram, incluindo rejeição de configurações ambíguas,
+Os 217 testes Python passaram localmente, incluindo rejeição de configurações ambíguas,
 injeção em nomes de host, certificado sem cobertura, chave divergente e porta
-HTTPS na ativação. Go passou em `go test -race ./...` e `go vet ./...`.
+HTTPS na ativação e preservação do socket herdado durante dois reinícios reais
+do Gunicorn. Go passou em `go test -race ./...` e `go vet ./...`.
 Ruff, migrações e `check --deploy` passaram. O pacote local foi gerado.
 
 O roteiro ampliado de homologação usa os serviços instalados e Chrome para
 cadastro, upload, preparação, ativação e uso de Shiny por HTTPS. Inclui acesso
 público/restrito, recusa de URL/WebSocket, cookies, transferências, reinício de
-painel/worker sem encerrar Shiny e limpeza. A execução integrada ainda precisa
-ser confirmada; estes testes unitários não a substituem.
+painel/worker sem encerrar Shiny e limpeza. A execução integrada passou nas **86 verificações** do
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39478265938), no commit
+`11f41faf9f75f2bacd91248605840e5c87f1a9df`. Os cinco jobs passaram, incluindo
+a verificação separada de remoção do pacote preservando um arquivo de estado.
+Evidência integral: [installed-https-ci.json](evidencias/installed-https-ci.json).
+
+O runner usou kernel `7.0.0-1017-azure`, 4 CPUs lógicas,
+16.760.336.384 bytes de RAM e Podman 4.9.3. Não houve erro de limpeza nem repetição
+da API do executor. O pacote de controle testado teve SHA-256
+`f53342a32df85ede1634933a2e478acb76584ef2789a9fd5cbbb9909c1730b2a`.
+O navegador usou HTTPS com certificado de teste fixado por chave pública;
+o socket TLS também foi verificado com confiança explícita e conferência de hostname.
+
+O ensaio inicial chegou à publicação e ao controle de acesso, mas perdeu a sessão
+após reiniciar painel/worker. O [relatório inicial](evidencias/installed-initial-ci.json)
+registra essa falha. A dependência `Requires` do target propagava o reinício
+à pilha; foi substituída por `Wants`, mantendo `PartOf` nos componentes.
+No ensaio aprovado, os PIDs de autorizador, gateway e entrada HTTPS ficaram
+idênticos antes/depois do reinício, e o Shiny manteve processo e estado da sessão.
+Gunicorn também preserva o socket herdado do systemd, com regressão local real.
+
+A revisão final acrescentou quatro testes de recusa de instalação preexistente
+ou parcial: dados, configuração, certificado e link pendente são preservados.
+Esses testes compõem o total local de 217; o CI citado executou os 213 testes
+anteriores e o mesmo código dos serviços instalados.
+
+A homologação no host local ainda depende da execução privilegiada pelo operador,
+pois `sudo` solicita senha. O pacote foi preparado sem alterar os serviços locais.
 
 Guia e comando: [INSTALACAO_INTEGRADA.md](INSTALACAO_INTEGRADA.md).
 Emissão/renovação automática de certificados, assistente de catálogo, instalação

@@ -21,7 +21,6 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
-from playwright.sync_api import sync_playwright
 
 STATE = Path("/var/lib/shinyd-control")
 CONFIG = Path("/etc/shinyd/control.json")
@@ -75,7 +74,16 @@ def certificate(directory):
     return base64.b64encode(hashlib.sha256(spki).digest()).decode()
 
 
+def require_empty_control(state, configuration_paths):
+    if state.is_symlink() or (state.exists() and (not state.is_dir() or any(state.iterdir()))):
+        raise RuntimeError("installed_control_not_empty")
+    if any(path.exists() or path.is_symlink() for path in configuration_paths):
+        raise RuntimeError("installed_control_not_empty")
+
+
 def installed_probe(package, fixture, created):
+    from playwright.sync_api import sync_playwright
+
     report = {
         "passed": False,
         "checks": [],
@@ -98,8 +106,14 @@ def installed_probe(package, fixture, created):
         return run("/usr/bin/shinyd-admin", "shell", "--interface", "python", input=code).stdout
 
     try:
-        if CONFIG.exists() or (STATE.exists() and any(STATE.iterdir())):
-            raise RuntimeError("installed_control_not_empty")
+        require_empty_control(
+            STATE,
+            [
+                CONFIG,
+                Path("/etc/shinyd-gateway/key"),
+                *[Path("/etc/shinyd-tls") / name for name in ("cert.pem", "key.pem", "Caddyfile")],
+            ],
+        )
         check("installed_empty_control")
         package = package.resolve(strict=True)
         checksum = hashlib.sha256(package.read_bytes()).hexdigest()

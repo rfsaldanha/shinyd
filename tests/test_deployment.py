@@ -176,3 +176,28 @@ serve.main()
             assert path.exists() and path.stat().st_ino == inode
     finally:
         listener.close()
+
+
+@pytest.mark.parametrize("existing", ["certificate", "configuration", "data", "dangling_link"])
+def test_installed_probe_refuses_existing_or_partial_installation(tmp_path, existing):
+    from installed_browser_probe import require_empty_control
+
+    state = tmp_path / "state"
+    state.mkdir()
+    config, certificate = tmp_path / "config", tmp_path / "cert"
+    require_empty_control(state, [config, certificate])
+    if existing == "dangling_link":
+        certificate.symlink_to(tmp_path / "absent")
+    else:
+        target = {
+            "certificate": certificate,
+            "configuration": config,
+            "data": state / "metadata.sqlite3",
+        }[existing]
+        target.write_bytes(b"operator-data")
+    with pytest.raises(RuntimeError, match="installed_control_not_empty"):
+        require_empty_control(state, [config, certificate])
+    if existing == "dangling_link":
+        assert certificate.is_symlink()
+    else:
+        assert target.read_bytes() == b"operator-data"

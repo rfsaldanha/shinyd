@@ -1,0 +1,902 @@
+{
+  "source": {
+    "kind": "github_actions_job_log",
+    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39477105806",
+    "job_id": 118815800515,
+    "commit": "e370f03e3b9d123fcda66bd71a183ef5417f708b",
+    "conclusion": "failure"
+  },
+  "builder": {
+    "schema_version": 1,
+    "observed_at": "2026-10-20T18:43:58.056648+00:00",
+    "scope": "Builder offline ZIP/renv, imagens imutáveis e integração com executor",
+    "production_ready": false,
+    "tests": [
+      {
+        "name": "empty_test_installation",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_runtime_installed",
+        "passed": true,
+        "detail": "0.1.0~runtime2"
+      },
+      {
+        "name": "package_checksum",
+        "passed": true,
+        "detail": "01f9b094bc0a4767452fceca07a664473fe1fdb171f585656205d546423e1ce3"
+      },
+      {
+        "name": "package_identity",
+        "passed": true,
+        "detail": "shinyd-builder 0.1.0~builder2"
+      },
+      {
+        "name": "build_0_prepared",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_0_isolation",
+        "passed": true,
+        "detail": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        }
+      },
+      {
+        "name": "build_0_cache",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_1_prepared",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_1_isolation",
+        "passed": true,
+        "detail": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        }
+      },
+      {
+        "name": "build_1_cache",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "different_r_and_packages",
+        "passed": true,
+        "detail": [
+          {
+            "r": "4.4.3",
+            "shiny": "1.10.0",
+            "image": "sha256:fcbc50a5ae4714dfcf704cb6ba90615516fab60942b8c117f6a1062958f2dbb1"
+          },
+          {
+            "r": "4.5.2",
+            "shiny": "1.13.0",
+            "image": "sha256:908fa2b763193ce2255a0651e8900bd108c6b7038e0f39c9789c189d918b7caf"
+          }
+        ]
+      },
+      {
+        "name": "artifact_0_ready",
+        "passed": true,
+        "detail": {
+          "id": "20f33294-6518-4056-8888-45654b41d8f0",
+          "app_id": "20f33294-6518-4056-8888-45654b41d8f0",
+          "recipe": "built-0",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/20f33294-6518-4056-8888-45654b41d8f0.sock"
+        }
+      },
+      {
+        "name": "artifact_1_ready",
+        "passed": true,
+        "detail": {
+          "id": "4f43ed43-1e63-4570-8a5e-2b5ec7beccdb",
+          "app_id": "4f43ed43-1e63-4570-8a5e-2b5ec7beccdb",
+          "recipe": "built-1",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/4f43ed43-1e63-4570-8a5e-2b5ec7beccdb.sock"
+        }
+      },
+      {
+        "name": "browser_reactivity_upload_download",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "concurrent_build_refused",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "source_checksum_mismatch",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "unprivileged_builder_refused",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "maintenance_weight_and_memory",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "recover_recorded_orphan",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "invalid_zip",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "archive",
+          "message": "ZIP inválido, inseguro ou fora dos limites permitidos."
+        }
+      },
+      {
+        "name": "wrong_r",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "r_unavailable",
+          "message": "A versão exata do R não corresponde ao ambiente selecionado."
+        }
+      },
+      {
+        "name": "missing_package",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "package_unavailable",
+          "message": "Há pacote ou versão ausente no ambiente offline aprovado."
+        }
+      },
+      {
+        "name": "restore_failure",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "restore",
+          "message": "Falha na restauração offline. Verifique o lockfile e o ambiente aprovado."
+        }
+      },
+      {
+        "name": "failure_preserves_artifacts_and_apps",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "failure_preserves_r_processes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "no_pending_build",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "empty_api_jobs",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "api_submission_from_control_identity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_upload_prepare",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "worker_reconciles_after_api_restart",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "fresh_artifact",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_cancel_confirmed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_object_permissions",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "no_secret_in_build_or_page",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_activation_probe",
+        "passed": true,
+        "detail": {
+          "passed": true,
+          "checks": [
+            "activation_refuses_unapplied_secrets",
+            "panel_activation_ready",
+            "activation_private_route_denied",
+            "activation_authenticated_route",
+            "activation_public_route",
+            "activation_other_user_denied",
+            "activation_cross_app_artifact_denied",
+            "activation_failed_start_preserves_previous",
+            "activation_failure_has_safe_message",
+            "activation_cancel_confirmed",
+            "activation_late_launch_denied",
+            "activation_switch_and_retirement",
+            "activation_old_host_revoked"
+          ],
+          "instances": [
+            "ffc381cb-a283-42d5-b975-f46311d0ff75",
+            "0d91d08d-5170-4fe8-a691-12c395a2a5b2",
+            "3400653e-3ebf-4e80-b664-fb3807ef02b0",
+            "d3bdbb13-1d7a-4d84-bf5b-af94255a3742"
+          ],
+          "active_instance": "d3bdbb13-1d7a-4d84-bf5b-af94255a3742",
+          "busy_retries": []
+        }
+      },
+      {
+        "name": "activation_refuses_unapplied_secrets",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_activation_ready",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_private_route_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_authenticated_route",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_public_route",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_other_user_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_cross_app_artifact_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_failed_start_preserves_previous",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_failure_has_safe_message",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_cancel_confirmed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_late_launch_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_switch_and_retirement",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_old_host_revoked",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activated_app_browser_reactivity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "installed_https_probe",
+        "passed": false,
+        "detail": {
+          "passed": false,
+          "checks": [
+            "installed_empty_control",
+            "control_package_checksum",
+            "control_package_identity",
+            "configuration_preserves_keys",
+            "configuration_private_backup",
+            "installed_service_panel",
+            "installed_service_auth",
+            "installed_service_worker",
+            "installed_service_gateway",
+            "installed_service_ingress",
+            "private_socket_panel",
+            "private_socket_auth",
+            "private_socket_gateway",
+            "unprivileged_panel_socket_denied",
+            "tls_hostname_and_certificate",
+            "https_login_and_static_assets",
+            "internal_api_not_exposed",
+            "browser_upload_and_inspection",
+            "browser_prepare_real_image",
+            "browser_activate_real_instance",
+            "production_cookie_boundary",
+            "secure_cookie___Host-shinyd_session",
+            "secure_cookie___Host-shinyd_app",
+            "https_shiny_affinity_upload_download",
+            "https_private_direct_url_denied",
+            "https_private_websocket_denied",
+            "installed_cleanup_instances_recorded"
+          ],
+          "limitations": [
+            "Certificado de teste fixado por SPKI no Chrome; não testa emissão ACME ou DNS público.",
+            "Serviços instalados e reiniciados; não reinicia a máquina nem mede capacidade."
+          ],
+          "package_sha256": "1088848931f2af1a8a99e607b7a2470538d0a96408598194a923f3af6a4b6a2d",
+          "error": {
+            "stage": "service_restart",
+            "type": "TimeoutError",
+            "frames": [
+              {
+                "file": "installed_browser_probe.py",
+                "line": 315
+              },
+              {
+                "file": "_generated.py",
+                "line": 21235
+              },
+              {
+                "file": "_sync_base.py",
+                "line": 111
+              },
+              {
+                "file": "_page.py",
+                "line": 1158
+              },
+              {
+                "file": "_frame.py",
+                "line": 945
+              },
+              {
+                "file": "_connection.py",
+                "line": 78
+              },
+              {
+                "file": "_connection.py",
+                "line": 636
+              }
+            ]
+          },
+          "services": [
+            "Id=shinyd.target",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "Id=shinyd-maintenance.timer",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-maintenance.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-ingress.service",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-gateway.service",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-worker.service",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-auth.service",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-panel.service",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "Id=shinyd-gateway.socket",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "Id=shinyd-auth.socket",
+            "ActiveState=active",
+            "",
+            "Result=success",
+            "Id=shinyd-panel.socket",
+            "ActiveState=active"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "kernel": "7.0.0-1017-azure",
+      "architecture": "x86_64",
+      "logical_cpus": 4,
+      "memory_bytes": 16760344576,
+      "profile": "Dois apps, builds offline e operações reativas; sem teste de capacidade.",
+      "podman": "4.9.3"
+    },
+    "limitations": [
+      "Não baixa pacotes externos; ativação só é testada com --activation.",
+      "Não homologa reboot, capacidade, QoS sob carga ou quotas de disco."
+    ],
+    "panel_setup": {
+      "stage": "dependencies",
+      "passed": true
+    },
+    "artifacts": [
+      {
+        "schema_version": 1,
+        "recipe_version": 1,
+        "created_at": "2026-10-20T18:45:03.040832+00:00",
+        "app_id": "20f33294-6518-4056-8888-45654b41d8f0",
+        "cache_key": "a8c08da0b502615fb0e410f7c15ccdd87fd6e950151938091df9dd6db0317ea5",
+        "source_hash": "d8ff615c261ce1735c313a7199038626f69bf80603eaacafa433f4e4cc3e7ea8",
+        "entrypoint": "project",
+        "base_image": "sha256:c44889ed1078034c5a2f4a3b92b9585b175bc000e2ad8c7df074e67d0963496f",
+        "image": "sha256:fcbc50a5ae4714dfcf704cb6ba90615516fab60942b8c117f6a1062958f2dbb1",
+        "r_version": "4.4.3",
+        "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
+        "packages": {
+          "R6": "2.6.1",
+          "Rcpp": "1.0.14",
+          "base64enc": "0.1-3",
+          "bslib": "0.9.0",
+          "cachem": "1.1.0",
+          "cli": "3.6.4",
+          "commonmark": "1.9.5",
+          "crayon": "1.5.3",
+          "digest": "0.6.37",
+          "docopt": "0.7.2",
+          "evaluate": "1.0.3",
+          "fastmap": "1.2.0",
+          "fontawesome": "0.5.3",
+          "fs": "1.6.5",
+          "glue": "1.8.0",
+          "highr": "0.11",
+          "htmltools": "0.5.8.1",
+          "httpuv": "1.6.15",
+          "jquerylib": "0.1.4",
+          "jsonlite": "2.0.0",
+          "knitr": "1.50",
+          "later": "1.4.2",
+          "lifecycle": "1.0.4",
+          "littler": "0.3.21",
+          "magrittr": "2.0.3",
+          "memoise": "2.0.1",
+          "mime": "0.13",
+          "promises": "1.3.2",
+          "rappdirs": "0.3.3",
+          "renv": "1.1.5",
+          "rlang": "1.1.5",
+          "rmarkdown": "2.29",
+          "sass": "0.4.9",
+          "shiny": "1.10.0",
+          "sourcetools": "0.1.7-1",
+          "tinytex": "0.56",
+          "withr": "3.0.2",
+          "xfun": "0.52",
+          "xtable": "1.8-4",
+          "yaml": "2.3.10"
+        },
+        "protection": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        },
+        "cache_hit": false
+      },
+      {
+        "schema_version": 1,
+        "recipe_version": 1,
+        "created_at": "2026-10-20T18:45:14.653761+00:00",
+        "app_id": "4f43ed43-1e63-4570-8a5e-2b5ec7beccdb",
+        "cache_key": "7e837705e9944ae1fbf11c29ec0b0f8ae4ddc9afe3540eb7eee6333059dc3265",
+        "source_hash": "3886aff9f9e8b995b6d95aec33ec4d6ec58250122af214882bf527c78f48d76a",
+        "entrypoint": "project",
+        "base_image": "sha256:e82d05b8dd9336f0c14d7188adbb32d8f89b7ac7fa124efda11c23fd7b940619",
+        "image": "sha256:908fa2b763193ce2255a0651e8900bd108c6b7038e0f39c9789c189d918b7caf",
+        "r_version": "4.5.2",
+        "lock_hash": "b8f2a7373b8320fab390ee9c4df52cfd0e8eb8db71b38cd4bdcddf944cd25fa9",
+        "packages": {
+          "R6": "2.6.1",
+          "Rcpp": "1.1.1",
+          "base64enc": "0.1-6",
+          "bslib": "0.10.0",
+          "cachem": "1.1.0",
+          "cli": "3.6.5",
+          "commonmark": "2.0.0",
+          "digest": "0.6.39",
+          "docopt": "0.7.2",
+          "evaluate": "1.0.5",
+          "fastmap": "1.2.0",
+          "fontawesome": "0.5.3",
+          "fs": "1.6.7",
+          "glue": "1.8.0",
+          "highr": "0.12",
+          "htmltools": "0.5.9",
+          "httpuv": "1.6.16",
+          "jquerylib": "0.1.4",
+          "jsonlite": "2.0.0",
+          "knitr": "1.51",
+          "later": "1.4.8",
+          "lifecycle": "1.0.5",
+          "littler": "0.3.22",
+          "magrittr": "2.0.4",
+          "memoise": "2.0.1",
+          "mime": "0.13",
+          "otel": "0.2.0",
+          "promises": "1.5.0",
+          "rappdirs": "0.3.4",
+          "renv": "1.1.5",
+          "rlang": "1.1.7",
+          "rmarkdown": "2.30",
+          "sass": "0.4.10",
+          "shiny": "1.13.0",
+          "sourcetools": "0.1.7-1",
+          "tinytex": "0.58",
+          "withr": "3.0.2",
+          "xfun": "0.56",
+          "xtable": "1.8-8",
+          "yaml": "2.3.12"
+        },
+        "protection": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        },
+        "cache_hit": false
+      }
+    ],
+    "panel_artifact": {
+      "app_id": "eba06ab7-ee5c-4a04-aac9-011e933d21f9",
+      "base_image": "sha256:c44889ed1078034c5a2f4a3b92b9585b175bc000e2ad8c7df074e67d0963496f",
+      "cache_hit": false,
+      "cache_key": "dccdb5cd1600767f165b0d7c2ac5f2409105a3eb102a545b35ce557574d10fb8",
+      "created_at": "2026-10-20T18:46:02.602330+00:00",
+      "entrypoint": "project",
+      "image": "sha256:c378252ce81515decd8bbcc267e05f12abf8d6cd9531c9ffe157f77fa3453e90",
+      "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
+      "packages": {
+        "R6": "2.6.1",
+        "Rcpp": "1.0.14",
+        "base64enc": "0.1-3",
+        "bslib": "0.9.0",
+        "cachem": "1.1.0",
+        "cli": "3.6.4",
+        "commonmark": "1.9.5",
+        "crayon": "1.5.3",
+        "digest": "0.6.37",
+        "docopt": "0.7.2",
+        "evaluate": "1.0.3",
+        "fastmap": "1.2.0",
+        "fontawesome": "0.5.3",
+        "fs": "1.6.5",
+        "glue": "1.8.0",
+        "highr": "0.11",
+        "htmltools": "0.5.8.1",
+        "httpuv": "1.6.15",
+        "jquerylib": "0.1.4",
+        "jsonlite": "2.0.0",
+        "knitr": "1.50",
+        "later": "1.4.2",
+        "lifecycle": "1.0.4",
+        "littler": "0.3.21",
+        "magrittr": "2.0.3",
+        "memoise": "2.0.1",
+        "mime": "0.13",
+        "promises": "1.3.2",
+        "rappdirs": "0.3.3",
+        "renv": "1.1.5",
+        "rlang": "1.1.5",
+        "rmarkdown": "2.29",
+        "sass": "0.4.9",
+        "shiny": "1.10.0",
+        "sourcetools": "0.1.7-1",
+        "tinytex": "0.56",
+        "withr": "3.0.2",
+        "xfun": "0.52",
+        "xtable": "1.8-4",
+        "yaml": "2.3.10"
+      },
+      "protection": {
+        "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+        "maintenance": true,
+        "mapped_uid": true,
+        "network": "none"
+      },
+      "r_version": "4.4.3",
+      "recipe_version": 1,
+      "schema_version": 1,
+      "source_hash": "d8ff615c261ce1735c313a7199038626f69bf80603eaacafa433f4e4cc3e7ea8"
+    },
+    "activation": {
+      "passed": true,
+      "checks": [
+        "activation_refuses_unapplied_secrets",
+        "panel_activation_ready",
+        "activation_private_route_denied",
+        "activation_authenticated_route",
+        "activation_public_route",
+        "activation_other_user_denied",
+        "activation_cross_app_artifact_denied",
+        "activation_failed_start_preserves_previous",
+        "activation_failure_has_safe_message",
+        "activation_cancel_confirmed",
+        "activation_late_launch_denied",
+        "activation_switch_and_retirement",
+        "activation_old_host_revoked"
+      ],
+      "instances": [
+        "ffc381cb-a283-42d5-b975-f46311d0ff75",
+        "0d91d08d-5170-4fe8-a691-12c395a2a5b2",
+        "3400653e-3ebf-4e80-b664-fb3807ef02b0",
+        "d3bdbb13-1d7a-4d84-bf5b-af94255a3742"
+      ],
+      "active_instance": "d3bdbb13-1d7a-4d84-bf5b-af94255a3742",
+      "busy_retries": []
+    },
+    "installed": {
+      "passed": false,
+      "checks": [
+        "installed_empty_control",
+        "control_package_checksum",
+        "control_package_identity",
+        "configuration_preserves_keys",
+        "configuration_private_backup",
+        "installed_service_panel",
+        "installed_service_auth",
+        "installed_service_worker",
+        "installed_service_gateway",
+        "installed_service_ingress",
+        "private_socket_panel",
+        "private_socket_auth",
+        "private_socket_gateway",
+        "unprivileged_panel_socket_denied",
+        "tls_hostname_and_certificate",
+        "https_login_and_static_assets",
+        "internal_api_not_exposed",
+        "browser_upload_and_inspection",
+        "browser_prepare_real_image",
+        "browser_activate_real_instance",
+        "production_cookie_boundary",
+        "secure_cookie___Host-shinyd_session",
+        "secure_cookie___Host-shinyd_app",
+        "https_shiny_affinity_upload_download",
+        "https_private_direct_url_denied",
+        "https_private_websocket_denied",
+        "installed_cleanup_instances_recorded"
+      ],
+      "limitations": [
+        "Certificado de teste fixado por SPKI no Chrome; não testa emissão ACME ou DNS público.",
+        "Serviços instalados e reiniciados; não reinicia a máquina nem mede capacidade."
+      ],
+      "package_sha256": "1088848931f2af1a8a99e607b7a2470538d0a96408598194a923f3af6a4b6a2d",
+      "error": {
+        "stage": "service_restart",
+        "type": "TimeoutError",
+        "frames": [
+          {
+            "file": "installed_browser_probe.py",
+            "line": 315
+          },
+          {
+            "file": "_generated.py",
+            "line": 21235
+          },
+          {
+            "file": "_sync_base.py",
+            "line": 111
+          },
+          {
+            "file": "_page.py",
+            "line": 1158
+          },
+          {
+            "file": "_frame.py",
+            "line": 945
+          },
+          {
+            "file": "_connection.py",
+            "line": 78
+          },
+          {
+            "file": "_connection.py",
+            "line": 636
+          }
+        ]
+      },
+      "services": [
+        "Id=shinyd.target",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "Id=shinyd-maintenance.timer",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-maintenance.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-ingress.service",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-gateway.service",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-worker.service",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-auth.service",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-panel.service",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "Id=shinyd-gateway.socket",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "Id=shinyd-auth.socket",
+        "ActiveState=active",
+        "",
+        "Result=success",
+        "Id=shinyd-panel.socket",
+        "ActiveState=active"
+      ]
+    },
+    "error": "Verificação falhou: installed_https_probe",
+    "fixture_diagnostics": [
+      {
+        "instance": "20f33294-6518-4056-8888-45654b41d8f0",
+        "state": {
+          "OciVersion": "1.1.0",
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 7364,
+          "ConmonPid": 7361,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-20T18:45:15.918379625Z",
+          "FinishedAt": "0001-01-01T00:00:00Z",
+          "Health": {
+            "Status": "",
+            "FailingStreak": 0,
+            "Log": null
+          },
+          "CgroupPath": "/shinyd.slice/shinyd-workloads.slice/shinyd-workloads-interactive.slice/shinyd-workloads-interactive-normal.slice/shinyd-workloads-interactive-normal-app20f3329465184056888845654b41d8f0.slice/libpod-d1a7685a835e55959ebaf95f5d114e5803598ad9c36afc5062604cb752fa0db3.scope",
+          "CheckpointedAt": "0001-01-01T00:00:00Z",
+          "RestoredAt": "0001-01-01T00:00:00Z"
+        },
+        "fixture_log": "Loading required package: shiny\n\nListening on http://0.0.0.0:3838\n"
+      },
+      {
+        "instance": "4f43ed43-1e63-4570-8a5e-2b5ec7beccdb",
+        "state": {
+          "OciVersion": "1.1.0",
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 7430,
+          "ConmonPid": 7427,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-20T18:45:16.481037916Z",
+          "FinishedAt": "0001-01-01T00:00:00Z",
+          "Health": {
+            "Status": "",
+            "FailingStreak": 0,
+            "Log": null
+          },
+          "CgroupPath": "/shinyd.slice/shinyd-workloads.slice/shinyd-workloads-interactive.slice/shinyd-workloads-interactive-normal.slice/shinyd-workloads-interactive-normal-app4f43ed431e6345708a5e2b5ec7beccdb.slice/libpod-6ac254392cd19faf2e99d816b00fc3168c9bff568bf8ad91de8bbe98c8c5576c.scope",
+          "CheckpointedAt": "0001-01-01T00:00:00Z",
+          "RestoredAt": "0001-01-01T00:00:00Z"
+        },
+        "fixture_log": "Loading required package: shiny\n\nListening on http://0.0.0.0:3838\n"
+      },
+      {
+        "instance": "c244c16a-c63c-42ed-94f1-9fa4021cdae6",
+        "state": {
+          "OciVersion": "1.1.0",
+          "Status": "running",
+          "Running": true,
+          "Paused": false,
+          "Restarting": false,
+          "OOMKilled": false,
+          "Dead": false,
+          "Pid": 12401,
+          "ConmonPid": 12398,
+          "ExitCode": 0,
+          "Error": "",
+          "StartedAt": "2026-10-20T18:47:31.113305188Z",
+          "FinishedAt": "0001-01-01T00:00:00Z",
+          "Health": {
+            "Status": "",
+            "FailingStreak": 0,
+            "Log": null
+          },
+          "CgroupPath": "/shinyd.slice/shinyd-workloads.slice/shinyd-workloads-interactive.slice/shinyd-workloads-interactive-normal.slice/shinyd-workloads-interactive-normal-app14ef1f100a874136be447bc109611612.slice/libpod-1c925573efc9bd7139c5d8aae63419e382882d14d82bd7bc926331a09b365f20.scope",
+          "CheckpointedAt": "0001-01-01T00:00:00Z",
+          "RestoredAt": "0001-01-01T00:00:00Z"
+        },
+        "fixture_log": "Loading required package: shiny\n\nListening on http://0.0.0.0:3838\n"
+      }
+    ],
+    "runtime_api_retries": [],
+    "passed": false
+  }
+}

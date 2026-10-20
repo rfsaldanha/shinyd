@@ -113,7 +113,8 @@ Um target ativo não é uma verificação de saúde: consulte cada serviço e o 
 
 ## Homologação descartável
 
-O roteiro recusa instalação com configuração ou dados existentes. Instala o
+O roteiro recusa instalação com configuração, certificados ou dados existentes,
+inclusive arquivos e links de uma preparação parcial. Instala o
 pacote, configura HTTPS em `127.0.0.1:18443`, com certificado descartável e nomes
 `.test` resolvidos somente no Chrome de teste. Confere TLS e hostname usando a
 confiança explícita no certificado; o Chrome aceita somente a chave de teste
@@ -137,3 +138,10 @@ dados e configurações descartáveis. Pacotes e cache de imagens permanecem.
 O teste não usa certificado público, emissão ACME, DNS público, reinício da máquina,
 medição de capacidade ou QoS sob carga. Segredos de runtime, volumes persistentes,
 drenagem e entrada estável por app continuam pendentes.
+
+As 86 verificações do [CI de 20/10/2026](https://github.com/rfsaldanha/shinyd/actions/runs/39478265938)
+passaram, incluindo preservação da sessão durante o reinício de painel/worker.
+O job também removeu o pacote e confirmou a preservação de um arquivo de estado.
+[Relatório integral](evidencias/installed-https-ci.json). A execução local ainda
+está pendente; o comando acima acrescenta duas conferências do pacote local do
+executor às verificações realizadas no CI.

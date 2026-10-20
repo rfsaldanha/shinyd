@@ -72,8 +72,9 @@ SHINYD_APP_DOMAIN=apps.exemplo.org
 ```
 
 Os hosts gerados são `p<UUID sem hífens>.apps.exemplo.org`. DNS e HTTPS precisam
-cobrir esse domínio. Empacotamento completo, configuração assistida e TLS ainda
-não estão concluídos. Modo de desenvolvimento exige hosts `.localhost`
+cobrir esse domínio. O [pacote integrado](INSTALACAO_INTEGRADA.md) reúne os serviços
+e HTTPS com certificado fornecido pelo operador. Assistência completa de instalação
+e emissão automática ainda estão pendentes. Modo de desenvolvimento exige hosts `.localhost`
 separados. A opção habilita a funcionalidade; não instala nem inicia serviços.
 Aplique a migração `0006` após backup do banco.
 
