@@ -105,6 +105,11 @@ permanente deve ser uma ação deliberada do operador. Contas do sistema são ma
 O target habilitado reúne os serviços no boot. Recuperação após reboot real
 precisa de ensaio próprio; um restart de serviços não comprova esse requisito.
 Uma tarefa systemd remove periodicamente sessões e credenciais expiradas.
+O target usa `Wants` para iniciar os componentes e estes usam `PartOf` para
+acompanhar sua parada explícita. Assim, reiniciar somente painel ou worker
+não deve reiniciar o gateway/HTTPS. Essa distinção segue as
+[dependências do systemd](https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#Wants=).
+Um target ativo não é uma verificação de saúde: consulte cada serviço e o painel.
 
 ## Homologação descartável
 

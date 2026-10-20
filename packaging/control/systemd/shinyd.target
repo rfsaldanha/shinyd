@@ -1,6 +1,6 @@
 [Unit]
 Description=Painel e atendimento HTTPS do shinyd
-Requires=shinyd-panel.service shinyd-auth.service shinyd-worker.service shinyd-gateway.service shinyd-ingress.service
+Wants=shinyd-panel.service shinyd-auth.service shinyd-worker.service shinyd-gateway.service shinyd-ingress.service
 Wants=shinyd-maintenance.timer shinyd-runtime.socket shinyd-builder.socket
 After=shinyd-panel.service shinyd-auth.service shinyd-worker.service shinyd-gateway.service shinyd-ingress.service
 

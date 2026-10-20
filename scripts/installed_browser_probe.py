@@ -316,7 +316,27 @@ def installed_probe(package, fixture, created):
                 )
                 check("https_private_websocket_denied", outcome == "denied")
                 stage = "service_restart"
+
+                def data_service_pids():
+                    return {
+                        name: run(
+                            "systemctl",
+                            "show",
+                            f"shinyd-{name}.service",
+                            "--property=MainPID",
+                            "--value",
+                        ).stdout.strip()
+                        for name in ("auth", "gateway", "ingress")
+                    }
+
+                data_pids = data_service_pids()
                 run("systemctl", "restart", "shinyd-panel.service", "shinyd-worker.service")
+                after_pids = data_service_pids()
+                report["service_restart"] = {"before": data_pids, "after": after_pids}
+                check(
+                    "panel_restart_does_not_restart_data_services",
+                    data_pids == after_pids and "0" not in after_pids.values(),
+                )
                 page.get_by_role("button", name="Somar", exact=True).click()
                 page.wait_for_function(
                     "document.querySelector('#state').textContent.endsWith('|2')"
