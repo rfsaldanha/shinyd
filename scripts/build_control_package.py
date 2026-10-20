@@ -32,7 +32,7 @@ def main():
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 12):
         parser.error("Use Python 3.12 para gerar o pacote Ubuntu 24.04.")
-    output = ROOT / "dist/shinyd-control_0.1.0~control1_amd64.deb"
+    output = ROOT / "dist/shinyd-control_0.1.0~control2_amd64.deb"
     output.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="shinyd-control-package-") as temporary:
         work = Path(temporary)

@@ -52,6 +52,7 @@ def browse(config):
                 initial = page.locator("#state").inner_text().split("|")
                 assert initial[0] == route["id"]
                 assert page.locator("#credential_boundary").inner_text() == "credential-boundary-ok"
+                assert page.locator("#environment_fingerprint").inner_text() == "environment-unset"
                 page.get_by_role("button", name="Somar", exact=True).click()
                 page.wait_for_function(
                     "document.querySelector('#state').textContent.endsWith('|1')"

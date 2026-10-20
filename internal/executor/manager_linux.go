@@ -18,17 +18,18 @@ var ErrBusy = errors.New("runtime_busy")
 type Endpoint interface{ Close() }
 type Attachment func(context.Context, Record, *Inspection) (Endpoint, error)
 type View struct {
-	ID         string `json:"id"`
-	AppID      string `json:"app_id"`
-	Recipe     string `json:"recipe"`
-	Priority   string `json:"priority"`
-	Desired    string `json:"desired"`
-	State      string `json:"state"`
-	Target     string `json:"target,omitempty"`
-	Error      string `json:"error,omitempty"`
-	Artifact   string `json:"artifact,omitempty"`
-	SourceHash string `json:"source_hash,omitempty"`
-	Image      string `json:"image,omitempty"`
+	ID             string `json:"id"`
+	AppID          string `json:"app_id"`
+	Recipe         string `json:"recipe"`
+	Priority       string `json:"priority"`
+	Desired        string `json:"desired"`
+	State          string `json:"state"`
+	Target         string `json:"target,omitempty"`
+	Error          string `json:"error,omitempty"`
+	Artifact       string `json:"artifact,omitempty"`
+	SourceHash     string `json:"source_hash,omitempty"`
+	Image          string `json:"image,omitempty"`
+	ConfigRevision uint32 `json:"config_revision,omitempty"`
 }
 type managed struct {
 	record        Record
@@ -64,6 +65,7 @@ func NewManager(policy Policy, store *Store, backend Backend, attach Attachment,
 func (m *Manager) view(item *managed) View {
 	r := item.record
 	v := View{ID: r.ID, AppID: r.Spec.AppID, Recipe: r.Spec.Recipe, Priority: r.Spec.Priority, Desired: r.Desired, State: item.state, Error: item.reason}
+	v.ConfigRevision = r.Spec.ConfigRevision
 	if r.Spec.Artifact != "" {
 		v.Artifact, v.SourceHash, v.Image = r.Spec.Artifact, r.Spec.SourceHash, r.Image
 	}
@@ -96,8 +98,12 @@ func (m *Manager) save(item *managed, record Record) error {
 	m.mu.Unlock()
 	return nil
 }
-func (m *Manager) Ensure(ctx context.Context, id string, spec Spec) (View, error) {
-	if !IDPattern.MatchString(id) || spec.Validate() != nil {
+func (m *Manager) Ensure(ctx context.Context, id string, spec Spec, environments ...map[string]string) (View, error) {
+	var environment map[string]string
+	if len(environments) == 1 {
+		environment = environments[0]
+	}
+	if !IDPattern.MatchString(id) || spec.Validate() != nil || len(environments) > 1 || validateEnvironment(spec, environment) != nil {
 		return View{}, ErrInvalid
 	}
 	if !m.operation.TryLock() {
@@ -184,7 +190,7 @@ func (m *Manager) Ensure(ctx context.Context, id string, spec Spec) (View, error
 		item.endpoint.Close()
 		item.endpoint = nil
 	}
-	err := m.backend.Start(ctx, record)
+	err := m.backend.Start(ctx, record, environment)
 	if err == nil {
 		var value *Inspection
 		value, err = m.backend.Inspect(ctx, record)

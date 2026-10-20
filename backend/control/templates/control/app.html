@@ -15,7 +15,10 @@
 {% for job in jobs %}<tr><td>{{ job.created_at|date:"d/m/Y H:i" }} UTC</td><td>{{ job.get_status_display }}</td><td>{{ job.phase }}</td><td><a href="{% url 'job_detail' job.pk %}">Ver resultado</a></td></tr>{% empty %}<tr><td colspan="4">Nenhum ZIP enviado.</td></tr>{% endfor %}
 </tbody></table></div></section>
 <div class="detail-grid">
-<section class="panel"><h2>Ambiente</h2><p class="muted">Revisão {{ app.config_revision }}. Os valores não são exibidos.</p><ul class="data-list">{% for item in environment %}<li><code>{{ item.name }}</code><span>{% if item.is_secret %}Segredo{% else %}Variável{% endif %} · revisão {{ item.revision }}</span></li>{% empty %}<li>Nenhuma variável configurada.</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Ambiente</h2><p class="muted">Revisão desejada {{ app.config_revision }}. Os valores não são exibidos.</p>
+{% if app.active_publication_id %}<p>Revisão aplicada: {{ app.active_publication.config_revision }}.</p>
+{% if app.config_revision != app.active_publication.config_revision %}<p class="notice">Há alterações pendentes. Aplicá-las reinicia este app e encerra suas sessões atuais.</p><p><a class="btn btn-primary" href="{% url 'version_activate' app.active_publication.version_id %}">Aplicar configuração</a></p>{% endif %}
+{% else %}<p>A configuração será aplicada ao ativar uma versão.</p>{% endif %}<ul class="data-list">{% for item in environment %}<li><code>{{ item.name }}</code><span>{% if item.is_secret %}Segredo{% else %}Variável{% endif %} · revisão {{ item.revision }} · <a href="{% url 'environment_remove' app.pk item.name %}">Remover</a></span></li>{% empty %}<li>Nenhuma variável configurada.</li>{% endfor %}</ul></section>
 <section class="panel"><h2>Permissões</h2><ul class="data-list">{% for grant in grants %}<li><span>{% if grant.user %}{{ grant.user.username }}{% else %}{{ grant.group.name }}{% endif %}</span><span>{{ grant.get_role_display }}</span></li>{% empty %}<li>Nenhuma concessão adicional.</li>{% endfor %}</ul><p class="form-help">Responsável e administradores mantêm acesso de gestão.</p></section>
 </div>
 {% endif %}

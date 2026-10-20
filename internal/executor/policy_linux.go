@@ -112,8 +112,11 @@ func LoadPolicy(path string) (Policy, error) {
 // Reject duplicate JSON object keys as well as unknown fields and trailing JSON.
 func decodeStrict(data []byte, value any) error {
 	d := json.NewDecoder(bytes.NewReader(data))
-	var walk func() error
-	walk = func() error {
+	var walk func(int) error
+	walk = func(depth int) error {
+		if depth > 16 {
+			return ErrInvalid
+		}
 		token, err := d.Token()
 		if err != nil {
 			return err
@@ -128,7 +131,7 @@ func decodeStrict(data []byte, value any) error {
 					return ErrInvalid
 				}
 				seen[name] = true
-				if err = walk(); err != nil {
+				if err = walk(depth + 1); err != nil {
 					return err
 				}
 			}
@@ -136,7 +139,7 @@ func decodeStrict(data []byte, value any) error {
 			return err
 		case json.Delim('['):
 			for d.More() {
-				if err := walk(); err != nil {
+				if err := walk(depth + 1); err != nil {
 					return err
 				}
 			}
@@ -145,7 +148,7 @@ func decodeStrict(data []byte, value any) error {
 		}
 		return nil
 	}
-	if walk() != nil {
+	if walk(0) != nil {
 		return ErrInvalid
 	}
 	if _, err := d.Token(); err != io.EOF {
@@ -160,11 +163,12 @@ func decodeStrict(data []byte, value any) error {
 }
 
 type Spec struct {
-	AppID      string `json:"app_id"`
-	Recipe     string `json:"recipe"`
-	Priority   string `json:"priority"`
-	Artifact   string `json:"artifact,omitempty"`
-	SourceHash string `json:"source_hash,omitempty"`
+	AppID          string `json:"app_id"`
+	Recipe         string `json:"recipe"`
+	Priority       string `json:"priority"`
+	Artifact       string `json:"artifact,omitempty"`
+	SourceHash     string `json:"source_hash,omitempty"`
+	ConfigRevision uint32 `json:"config_revision,omitempty"`
 }
 
 func (s Spec) Validate() error {
@@ -172,7 +176,7 @@ func (s Spec) Validate() error {
 	if s.Recipe == "" && digestPattern.MatchString(s.Artifact) && digestPattern.MatchString(s.SourceHash) {
 		validSource = true
 	}
-	if !IDPattern.MatchString(s.AppID) || !validSource ||
+	if !IDPattern.MatchString(s.AppID) || !validSource || s.ConfigRevision > 2147483647 || (s.ConfigRevision != 0 && s.Artifact == "") ||
 		(s.Priority != "high" && s.Priority != "normal" && s.Priority != "low") {
 		return ErrInvalid
 	}

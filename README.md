@@ -24,7 +24,7 @@ host local, com dois ambientes R distintos. A nova
 progresso e cancelamento. O roteiro ampliado passou nas 33 verificações no CI e
 no host local. A [ativação pelo painel](docs/ATIVACAO_PAINEL.md) acrescenta
 partida da candidata, verificação, troca de rota e preservação da publicação
-anterior em caso de falha. Exige o pacote `runtime2` e configuração explícita;
+anterior em caso de falha. Exige o pacote `runtime3` e configuração explícita;
 o roteiro passou em 49 verificações no CI e 51 no host local, que também
 conferiu o pacote do executor antes de instalá-lo. As evidências e limitações
 estão em [STATUS.md](docs/STATUS.md).
@@ -57,3 +57,6 @@ Um resultado positivo não homologa isolamento, delegação de cgroups, rede,
 runtime ou capacidade. O diretório de dados informado deve existir.
 
 Commits e pushes são feitos por marcos verificáveis, com os testes pertinentes.
+
+O marco F3-01 acrescenta [variáveis e segredos em execução](docs/VARIAVEIS_SEGREDOS.md),
+com aplicação explícita sem novo ZIP e revisão desejada/aplicada no painel.

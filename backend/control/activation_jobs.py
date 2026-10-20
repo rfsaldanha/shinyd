@@ -13,6 +13,7 @@ from builder.policy import IMAGE
 from builder.protocol import DIGEST
 
 from . import runtime_client
+from .environment import snapshot
 from .gateway_auth import instance_origin
 from .models import AppInstance, Application, Job, Publication, Version
 from .permissions import manageable_apps
@@ -22,11 +23,6 @@ from .services import Conflict, event, require_publish
 def eligible(app):
     if not settings.SHINYD_RUNTIME_ENABLED:
         raise ValidationError("Ativação desabilitada. Consulte o administrador.")
-    if app.environment.exists():
-        raise ValidationError(
-            "A aplicação de variáveis e segredos ao processo ainda não está disponível. "
-            "A ativação de apps com esses valores configurados está bloqueada."
-        )
 
 
 @transaction.atomic
@@ -61,9 +57,13 @@ def enqueue(actor, version_id, key):
         raise Conflict("Este app já tem uma ativação ou limpeza em andamento.")
     if Job.objects.filter(status__in=["queued", "running"]).count() >= 100:
         raise ValidationError("Fila cheia. Aguarde a conclusão dos trabalhos anteriores.")
-    if app.active_publication_id and app.active_publication.version_id == version.pk:
-        raise Conflict("Esta versão já está ativa.")
-    publication = Publication.objects.create(
+    if (
+        app.active_publication_id
+        and app.active_publication.version_id == version.pk
+        and app.active_publication.config_revision == app.config_revision
+    ):
+        raise Conflict("Esta versão e revisão de configuração já estão ativas.")
+    publication = Publication(
         app=app,
         version=version,
         created_by=actor,
@@ -76,8 +76,11 @@ def enqueue(actor, version_id, key):
             "priority": app.priority.slug,
             "artifact": artifact["cache_key"],
             "source_hash": version.source_hash,
+            **({"config_revision": app.config_revision} if app.config_revision else {}),
         },
     )
+    publication.environment_snapshot = snapshot(publication)
+    publication.save()
     instance = AppInstance(
         id=publication.pk,
         app=app,
@@ -161,7 +164,6 @@ def invalidated(job):
         return "failed", "Prazo de ativação excedido. A publicação anterior foi preservada."
     if (
         not settings.SHINYD_RUNTIME_ENABLED
-        or app.environment.exists()
         or app.revision != pub.app_revision
         or app.config_revision != pub.config_revision
         or app.active_publication_id != pub.previous_id

@@ -50,17 +50,16 @@ a partida impede a troca. Mudanças posteriores valem para a próxima ativação
 Monitoramento contínuo do estado no painel, drenagem, rollback com dados
 persistentes e métricas de sessões ainda exigem os próximos marcos.
 
-**Variáveis e segredos:** armazenamento cifrado já existe, mas a injeção no
-processo ainda não faz parte deste contrato. Apps com valores configurados têm
-ativação bloqueada explicitamente. Nenhum valor é enviado ao executor nem ao
-builder. Não se deve apagar configurações de um app real para contornar essa
-restrição; a demonstração remove somente o segredo de sua fixture descartável.
+**Variáveis e segredos:** o contrato atual permite injeção na partida, cópia
+cifrada por publicação e aplicação de nova revisão sem ZIP. O builder não recebe
+valores. Consulte [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para a fronteira
+de segurança e o efeito do reinício sobre as sessões.
 Dados gravados em `/tmp` são temporários; volumes persistentes e saída de rede
 continuam indisponíveis.
 
 ## Configuração e demonstração
 
-Requer `shinyd-runtime 0.1.0~runtime2`, builder, catálogo aprovado, painel,
+Requer `shinyd-runtime 0.1.0~runtime3`, builder, catálogo aprovado, painel,
 worker, autorizador e gateway com identidades e sockets privados. No runtime,
 a política deve incluir `builder_artifacts: true`; a opção é falsa por padrão.
 No controle, configurar:
@@ -88,7 +87,7 @@ python3 scripts/build_builder_package.py
 go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
 set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
-  --install-runtime-package 'dist/shinyd-runtime_0.1.0~runtime2_amd64.deb' \
+  --install-runtime-package 'dist/shinyd-runtime_0.1.0~runtime3_amd64.deb' \
   --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' \
   | tee var/activation-report.json
 ```

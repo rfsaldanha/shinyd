@@ -248,13 +248,13 @@ def main():
                 ).stdout
                 record(
                     "runtime_package_identity",
-                    identity == "shinyd-runtime 0.1.0~runtime2",
+                    identity == "shinyd-runtime 0.1.0~runtime3",
                     identity,
                 )
                 command("dpkg", "--install", str(package), timeout=120)
             if args.activation:
                 identity = command("dpkg-query", "-W", "-f=${Version}", "shinyd-runtime").stdout
-                record("activation_runtime_installed", identity == "0.1.0~runtime2", identity)
+                record("activation_runtime_installed", identity == "0.1.0~runtime3", identity)
             package = args.install_package.resolve()
             checksum = hashlib.sha256(package.read_bytes()).hexdigest()
             record(
@@ -584,6 +584,9 @@ def main():
             if args.install_control_package:
                 from installed_browser_probe import installed_probe
 
+                # Leave room for active + replacement within the existing four-slot budget.
+                api("remove", ids[1])
+                record("release_second_fixture_before_configuration_rotation", True)
                 installed = installed_probe(
                     args.install_control_package, temporary / "app-0.zip", created
                 )
@@ -591,6 +594,18 @@ def main():
                 record("installed_https_probe", installed.get("passed"), installed)
                 for name in installed["checks"]:
                     record(name, True)
+                browser = command(
+                    sys.executable,
+                    str(ROOT / "scripts/builder_browser_probe.py"),
+                    "--instances",
+                    activated["active_instance"],
+                    ids[0],
+                    timeout=120,
+                )
+                record(
+                    "other_apps_reactive_and_without_installed_secrets",
+                    json.loads(browser.stdout).get("passed"),
+                )
         except Exception as exc:
             report["error"] = str(exc)
             # Only repository-owned fixtures, never uploads or app environments.
@@ -600,6 +615,11 @@ def main():
                 if inspected.returncode == 0:
                     metadata = json.loads(inspected.stdout)[0]
                     diagnostic = {"instance": instance, "state": metadata["State"]}
+                    # Installed candidates carry secrets. Never copy their raw logs
+                    # or manually restart a descriptor-based launch for diagnostics.
+                    if instance not in ids:
+                        report["fixture_diagnostics"].append(diagnostic)
+                        continue
                     diagnostic["fixture_log"] = command(
                         "podman", "logs", "--tail=10", "shinyd-" + instance, check=False
                     ).stderr[-3000:]

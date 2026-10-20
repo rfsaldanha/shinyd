@@ -151,7 +151,7 @@ def main():
                 metadata = command(
                     "dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)
                 ).stdout
-                record("package_identity", metadata == "shinyd-runtime 0.1.0~runtime2", metadata)
+                record("package_identity", metadata == "shinyd-runtime 0.1.0~runtime3", metadata)
                 command("dpkg", "--install", str(package), timeout=90)
             record(
                 "execution_disabled_after_install",

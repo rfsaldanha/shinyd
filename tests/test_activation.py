@@ -239,10 +239,9 @@ def test_authorization_idempotency_and_configuration_limits(app, accounts, local
     with pytest.raises(PermissionDenied):
         activation.enqueue(accounts["viewer"], version.pk, key)
     set_environment(accounts["publisher"], app.pk, 0, "TOKEN", "PRIVATE_SENTINEL", True)
-    with pytest.raises(ValidationError):
-        activation.enqueue(accounts["publisher"], version.pk, key)
-    app.environment.all().delete()  # fixture only; the product has no deletion flow yet
     job = activation.enqueue(accounts["publisher"], version.pk, key)
+    assert job.publication.config_revision == 1
+    assert b"PRIVATE_SENTINEL" not in bytes(job.publication.environment_snapshot)
     assert activation.enqueue(accounts["publisher"], version.pk, key).pk == job.pk
     with pytest.raises(Conflict):
         activation.enqueue(accounts["publisher"], version.pk, uuid.uuid4())
@@ -294,7 +293,9 @@ def test_post_requires_acknowledgement_and_cancel_after_switch_is_refused(
     assert not second.cancel_requested
 
 
-@pytest.mark.parametrize("mutation", ["target", "app_id", "artifact", "extra", "duplicate"])
+@pytest.mark.parametrize(
+    "mutation", ["target", "app_id", "artifact", "extra", "duplicate", "config_revision"]
+)
 def test_runtime_client_rejects_mismatched_or_unsafe_responses(
     app, accounts, monkeypatch, mutation
 ):
@@ -312,6 +313,8 @@ def test_runtime_client_rejects_mismatched_or_unsafe_responses(
         value["artifact"] = "f" * 64
     elif mutation == "extra":
         value["private"] = "PRIVATE_SENTINEL"
+    elif mutation == "config_revision":
+        value["config_revision"] = 99
     raw = json.dumps(value)
     if mutation == "duplicate":
         raw = raw.replace('"state": "ready"', '"state": "ready", "state": "ready"')

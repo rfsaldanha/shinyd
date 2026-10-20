@@ -688,3 +688,24 @@ e informando a necessidade de reinício. O armazenamento cifrado existente será
 preservado; hoje a ativação de apps com valores configurados continua bloqueada.
 Volumes persistentes, rollback com dados, drenagem e demais itens do MVP seguem
 no backlog.
+
+
+## Marco 20 — Configuração cifrada aplicada ao runtime (F3-01)
+
+Implementados injeção de variáveis/segredos na partida, cópia cifrada por
+publicação, remoção e aplicação explícita sem upload/rebuild. O painel distingue
+revisão desejada e aplicada e exige confirmação da interrupção de sessões.
+Contratos antigos sem configuração permanecem compatíveis. Pacotes novos:
+`runtime3` (crun explícito e descritor de memória) e `control2` (migração 0007).
+O builder permanece na versão 2.
+
+Passaram localmente 233 testes Python, testes Go com detector de concorrência,
+`go vet` e Ruff. O roteiro privilegiado foi ampliado para testar valores reais
+no R, rotação sem ZIP, remoção, preservação dos demais processos e ausência em
+metadados/logs. Nesta gravação inicial, a execução desse roteiro ainda está
+pendente no CI e no host local; os relatórios dos marcos anteriores não validam
+esta implementação. O sudo local continua solicitando senha.
+
+Contrato, operação, limites e fontes: [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md).
+Persistência dos dados dos apps (F3-02), rollback, drenagem e recuperação após
+reboot seguem no backlog; esta entrega não declara a fase 3 inteira concluída.

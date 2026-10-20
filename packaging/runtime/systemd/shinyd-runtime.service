@@ -19,6 +19,7 @@ MemoryHigh=384M
 MemoryMax=512M
 TasksMax=256
 LimitNOFILE=2048
+LimitCORE=0
 # The rootful storage helper needs to establish subordinate UID mappings.
 # no-new-privileges is imposed on every app, not inherited by Podman itself.
 NoNewPrivileges=no

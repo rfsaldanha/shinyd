@@ -26,6 +26,7 @@ from .services import (
     create_app,
     event,
     receive_upload,
+    remove_environment,
     set_environment,
     update_app,
 )
@@ -227,8 +228,7 @@ def app_config(request, pk):
             )
             messages.success(
                 request,
-                "Valor salvo. A ativação de apps com variáveis e segredos "
-                "ainda não está disponível.",
+                "Valor salvo. Aplique a configuração para reiniciar o app com a nova revisão.",
             )
             return redirect("app_detail", pk=pk)
         except Conflict as exc:
@@ -244,6 +244,41 @@ def app_config(request, pk):
             "form": form,
             "title": "Configuração de ambiente",
             "description": "O valor não será exibido novamente. Trocas exigirão reinício do app.",
+        },
+        status=status,
+    )
+
+
+@login_required
+def environment_remove(request, pk, name):
+    app = get_object_or_404(manageable_apps(request.user), pk=pk)
+    from django import forms
+
+    class RemoveForm(forms.Form):
+        revision = forms.IntegerField(widget=forms.HiddenInput, min_value=0)
+        acknowledge = forms.BooleanField(label="Confirmo a remoção desta variável.")
+
+    form = RemoveForm(request.POST or None, initial={"revision": app.config_revision})
+    status = 200
+    if request.method == "POST" and form.is_valid():
+        try:
+            remove_environment(request.user, pk, form.cleaned_data["revision"], name)
+            messages.success(
+                request, "Variável removida. Aplique a configuração para reiniciar o app."
+            )
+            return redirect("app_detail", pk=pk)
+        except Conflict as exc:
+            form.add_error(None, str(exc))
+            status = 409
+    return render(
+        request,
+        "control/form.html",
+        {
+            "form": form,
+            "title": f"Remover variável · {name}",
+            "description": "A remoção será aplicada na próxima ativação. "
+            "O processo atual mantém o valor.",
+            "submit_label": "Remover variável",
         },
         status=status,
     )

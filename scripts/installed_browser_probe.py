@@ -96,6 +96,9 @@ def installed_probe(package, fixture, created):
     stage, owned = "preflight", False
     start = datetime.now(UTC).isoformat()
     password = secrets.token_urlsafe(32)
+    app_token = secrets.token_urlsafe(32)
+    rotated_token = secrets.token_urlsafe(32)
+    app_message = "fixture-" + secrets.token_hex(16) + "\nç='quoted'\\value\r\nsecond line"
 
     def check(name, value=True):
         if not value:
@@ -125,7 +128,7 @@ def installed_probe(package, fixture, created):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control1",
+            == "shinyd-control 0.1.0~control2",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))
@@ -254,6 +257,18 @@ def installed_probe(package, fixture, created):
                 page.locator("#id_visibility").select_option("private")
                 page.get_by_role("button", name="Salvar", exact=True).click()
                 app_url = page.url
+                page.get_by_role("link", name="Adicionar variável ou segredo", exact=True).click()
+                page.get_by_label("Nome:", exact=True).fill("APP_TOKEN")
+                page.get_by_label("Novo valor:", exact=True).fill(app_token)
+                page.get_by_role("button", name="Salvar", exact=True).click()
+                check("secret_not_rendered_after_save", app_token not in page.content())
+                # Exercise multiline UTF-8 through the same service, supplied on stdin.
+                admin(
+                    "from control.models import Application\n"
+                    "from control.services import set_environment\n"
+                    "a=Application.objects.get(slug='installed-fixture')\n"
+                    f"set_environment(a.owner,a.pk,a.config_revision,'APP_MESSAGE',{app_message!r},True)\n"
+                )
                 page.get_by_role("link", name="Enviar ZIP", exact=True).click()
                 page.get_by_label("Aplicativo em ZIP:", exact=True).set_input_files(str(fixture))
                 page.get_by_role("button", name="Salvar", exact=True).click()
@@ -277,6 +292,29 @@ def installed_probe(package, fixture, created):
                 )
                 app_origin = urlsplit(page.url)._replace(path="", query="", fragment="").geturl()
                 before = page.locator("#state").inner_text().split("|")
+
+                def fingerprint(token):
+                    return (
+                        hashlib.sha256(token.encode()).hexdigest()
+                        + "|"
+                        + hashlib.sha256(app_message.encode()).hexdigest()
+                    )
+
+                page.wait_for_function(
+                    "value => document.querySelector('#environment_fingerprint')"
+                    "?.textContent === value",
+                    arg=fingerprint(app_token),
+                )
+                check("r_receives_secret_and_multiline_utf8")
+                existing_pids = {}
+                for identity in created:
+                    inspected = run("podman", "inspect", "shinyd-" + identity, check=False)
+                    if inspected.returncode:
+                        continue  # A fixture was deliberately removed to free a slot.
+                    metadata = json.loads(inspected.stdout)[0]
+                    if metadata["State"]["Running"]:
+                        existing_pids[identity] = metadata["State"]["Pid"]
+                check("other_app_present_for_configuration_test", bool(existing_pids))
                 check(
                     "production_cookie_boundary",
                     page.locator("#credential_boundary").inner_text() == "credential-boundary-ok",
@@ -359,8 +397,101 @@ def installed_probe(package, fixture, created):
                     "panel_worker_restart_preserves_shiny",
                     page.locator("#state").inner_text().split("|")[:4] == before[:4],
                 )
-                stage = "browser_public"
+                stage = "browser_environment_rotation"
                 panel_page = session.new_page()
+                panel_page.goto(app_url)
+                panel_page.get_by_role(
+                    "link", name="Adicionar variável ou segredo", exact=True
+                ).click()
+                panel_page.get_by_label("Nome:", exact=True).fill("APP_TOKEN")
+                panel_page.get_by_label("Novo valor:", exact=True).fill(rotated_token)
+                panel_page.get_by_role("button", name="Salvar", exact=True).click()
+                check(
+                    "saved_secret_waits_for_explicit_apply",
+                    page.locator("#environment_fingerprint").inner_text() == fingerprint(app_token),
+                )
+
+                def apply_and_open():
+                    panel_page.get_by_role("link", name="Aplicar configuração", exact=True).click()
+                    panel_page.get_by_label("Entendo que a troca interrompe", exact=False).check()
+                    panel_page.get_by_role(
+                        "button", name="Aplicar configuração e reiniciar", exact=True
+                    ).click()
+                    panel_page.get_by_role("heading", name="Concluído", exact=True).wait_for(
+                        timeout=180000
+                    )
+                    panel_page.get_by_role("link", name="Voltar ao app", exact=True).click()
+                    panel_page.get_by_role("link", name="Abrir aplicativo", exact=True).click()
+                    panel_page.get_by_role("button", name="Abrir aplicativo", exact=True).click()
+                    panel_page.wait_for_function(
+                        "document.querySelector('#state')?.textContent.split('|').length === 5"
+                    )
+                    return (
+                        urlsplit(panel_page.url)._replace(path="", query="", fragment="").geturl()
+                    )
+
+                previous_origin = app_origin
+                app_origin = apply_and_open()
+                panel_page.wait_for_function(
+                    "value => document.querySelector('#environment_fingerprint')"
+                    "?.textContent === value",
+                    arg=fingerprint(rotated_token),
+                )
+                check("secret_rotated_without_zip", app_origin != previous_origin)
+                check("previous_config_route_revoked", page.goto(previous_origin).status == 403)
+                check(
+                    "single_source_version_after_rotation",
+                    "VERSION_COUNT=1"
+                    in admin(
+                        "from control.models import Version\n"
+                        "print('VERSION_COUNT='+str(Version.objects.count()))\n"
+                    ),
+                )
+
+                active_id = panel_page.locator("#state").inner_text().split("|")[0]
+                metadata = run("podman", "inspect", "shinyd-" + active_id).stdout
+                container_log = run("podman", "logs", "shinyd-" + active_id)
+                sensitive_values = [app_token, rotated_token, app_message]
+                check(
+                    "secrets_absent_from_container_metadata_and_logs",
+                    all(
+                        value not in metadata + container_log.stdout + container_log.stderr
+                        for value in sensitive_values
+                    ),
+                )
+                check(
+                    "secrets_absent_from_sqlite_plaintext",
+                    all(
+                        value.encode() not in path.read_bytes()
+                        for path in STATE.glob("metadata.sqlite3*")
+                        if path.is_file()
+                        for value in sensitive_values
+                    ),
+                )
+                check(
+                    "other_apps_keep_processes_during_secret_rotation",
+                    all(
+                        json.loads(run("podman", "inspect", "shinyd-" + identity).stdout)[0][
+                            "State"
+                        ]["Pid"]
+                        == pid
+                        for identity, pid in existing_pids.items()
+                    ),
+                )
+
+                panel_page.goto(app_url)
+                panel_page.locator(".data-list li").filter(has_text="APP_TOKEN").get_by_role(
+                    "link", name="Remover", exact=True
+                ).click()
+                panel_page.get_by_label("Confirmo a remoção desta variável.", exact=True).check()
+                panel_page.get_by_role("button", name="Remover variável", exact=True).click()
+                app_origin = apply_and_open()
+                panel_page.wait_for_function(
+                    "document.querySelector('#environment_fingerprint')"
+                    "?.textContent === 'environment-unset'"
+                )
+                check("removed_secret_unset_after_apply")
+                stage = "browser_public"
                 panel_page.goto(app_url)
                 panel_page.get_by_role("link", name="Configurar app", exact=True).click()
                 panel_page.locator("#id_visibility").select_option("public")
@@ -378,6 +509,9 @@ def installed_probe(package, fixture, created):
                 check("browser_no_javascript_errors", not errors)
                 sensitive = [
                     password,
+                    app_token,
+                    rotated_token,
+                    app_message,
                     *[c["value"] for c in cookies],
                     *[v.decode() for k, v in keys.items() if k != "secrets.key"],
                 ]
@@ -390,7 +524,7 @@ def installed_probe(package, fixture, created):
                     "cat",
                     *[
                         arg
-                        for name in ("panel", "auth", "worker", "gateway", "ingress")
+                        for name in ("panel", "auth", "worker", "gateway", "ingress", "runtime")
                         for arg in ("-u", "shinyd-" + name + ".service")
                     ],
                 ).stdout

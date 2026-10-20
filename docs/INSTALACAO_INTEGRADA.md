@@ -1,8 +1,8 @@
 # Instalação integrada experimental
 
-O pacote `shinyd-control 0.1.0~control1` reúne painel, worker, autorizador,
+O pacote `shinyd-control 0.1.0~control2` reúne painel, worker, autorizador,
 gateway e entrada HTTPS. Plataforma de referência: Ubuntu 24.04 amd64,
-Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime2`
+Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime3`
 e builder `builder2`. Não constitui declaração de prontidão para produção.
 As evidências executadas e os limites estão em [STATUS.md](STATUS.md).
 
@@ -46,9 +46,9 @@ python3 scripts/build_builder_package.py
 .venv/bin/python scripts/build_control_package.py
 sudo apt-get install caddy
 sudo dpkg --install dist/shinyd-agent_0.1.0~agent1_amd64.deb \
-  dist/shinyd-runtime_0.1.0~runtime2_amd64.deb \
+  dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
   dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  dist/shinyd-control_0.1.0~control1_amd64.deb
+  dist/shinyd-control_0.1.0~control2_amd64.deb
 ```
 
 O pacote não inicia o painel automaticamente antes da configuração. Não modifica
@@ -124,9 +124,9 @@ fixada por SPKI, sem desativar globalmente validação de certificados.
 go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
 set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
-  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime2_amd64.deb \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control1_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control2_amd64.deb \
   | tee var/installed-report.json
 ```
 
@@ -136,10 +136,11 @@ acesso público, reatividade, afinidade, upload/download e reinício do painel/w
 preservando o processo Shiny. Ao terminar para os serviços e remove somente seus
 dados e configurações descartáveis. Pacotes e cache de imagens permanecem.
 O teste não usa certificado público, emissão ACME, DNS público, reinício da máquina,
-medição de capacidade ou QoS sob carga. Segredos de runtime, volumes persistentes,
-drenagem e entrada estável por app continuam pendentes.
+medição de capacidade ou QoS sob carga. O roteiro atual inclui
+[segredos em execução](VARIAVEIS_SEGREDOS.md), rotação sem ZIP e remoção.
+Volumes persistentes, drenagem e entrada estável por app continuam pendentes.
 
-As 86 verificações do [CI de 20/10/2026](https://github.com/rfsaldanha/shinyd/actions/runs/39478265938)
+Na revisão anterior (`control1`/`runtime2`), as 86 verificações do [CI de 20/10/2026](https://github.com/rfsaldanha/shinyd/actions/runs/39478265938)
 passaram, incluindo preservação da sessão durante o reinício de painel/worker.
 O job também removeu o pacote e confirmou a preservação de um arquivo de estado.
 [Relatório integral](evidencias/installed-https-ci.json).

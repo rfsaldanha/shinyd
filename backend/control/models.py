@@ -130,6 +130,7 @@ class Publication(models.Model):
     previous = models.ForeignKey("self", null=True, on_delete=models.PROTECT, related_name="+")
     app_revision = models.PositiveIntegerField(default=1)
     runtime_spec = models.JSONField(default=dict)
+    environment_snapshot = models.BinaryField(default=bytes)
 
 
 class EnvironmentValue(models.Model):

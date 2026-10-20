@@ -6,12 +6,22 @@ ui <- fluidPage(
   actionButton("increment", "Somar"),
   verbatimTextOutput("state"),
   verbatimTextOutput("credential_boundary"),
+  verbatimTextOutput("environment_fingerprint"),
   fileInput("upload", "Arquivo de teste"),
   verbatimTextOutput("uploaded"),
   downloadButton("download", "Baixar estado")
 )
 
 server <- function(input, output, session) {
+  output$environment_fingerprint <- renderText({
+    # Only synthetic high-entropy values in this fixture. Never echo secrets.
+    if (identical(Sys.getenv("APP_TOKEN", unset=NA_character_), NA_character_)) {
+      "environment-unset"
+    } else {
+      paste(digest::digest(Sys.getenv("APP_TOKEN"), algo="sha256", serialize=FALSE),
+        digest::digest(Sys.getenv("APP_MESSAGE"), algo="sha256", serialize=FALSE), sep="|")
+    }
+  })
   count <- reactiveVal(0L)
   observeEvent(input$increment, count(count() + 1L))
   state <- reactive(paste(

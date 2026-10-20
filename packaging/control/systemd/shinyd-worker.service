@@ -20,6 +20,7 @@ MemoryHigh=256M
 MemoryMax=384M
 TasksMax=128
 LimitNOFILE=4096
+LimitCORE=0
 NoNewPrivileges=yes
 CapabilityBoundingSet=
 ProtectSystem=strict

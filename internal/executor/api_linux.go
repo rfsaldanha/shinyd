@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/rfsaldanha/shinyd/internal/agent"
 )
@@ -71,21 +72,29 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 			value, err = manager.Get(id)
 		case (len(parts) == 1 && r.Method == "PUT") || (len(parts) == 2 && parts[1] == "retire" && r.Method == "POST"):
 			event.Operation = "ensure"
-			if r.Header.Get("Content-Type") != "application/json" || r.ContentLength < 1 || r.ContentLength > 1024 {
+			if r.Header.Get("Content-Type") != "application/json" || r.ContentLength < 1 || r.ContentLength > maxEnvironmentRequest {
 				fail(400, ErrInvalid)
 				return
 			}
-			body, readErr := io.ReadAll(http.MaxBytesReader(w, r.Body, 1024))
-			var spec Spec
-			if readErr != nil || decodeStrict(body, &spec) != nil || spec.Validate() != nil {
+			body, readErr := io.ReadAll(http.MaxBytesReader(w, r.Body, maxEnvironmentRequest))
+			defer clear(body)
+			var input struct {
+				Spec
+				Environment map[string]string `json:"environment,omitempty"`
+			}
+			if readErr != nil || !utf8.Valid(body) || decodeStrict(body, &input) != nil || input.Spec.Validate() != nil {
 				fail(400, ErrInvalid)
 				return
 			}
 			if len(parts) == 2 {
+				if input.Environment != nil {
+					fail(400, ErrInvalid)
+					return
+				}
 				event.Operation = "retire"
-				value, err = manager.Retire(ctx, id, spec)
+				value, err = manager.Retire(ctx, id, input.Spec)
 			} else {
-				value, err = manager.Ensure(ctx, id, spec)
+				value, err = manager.Ensure(ctx, id, input.Spec, input.Environment)
 			}
 		case len(parts) == 2 && parts[1] == "stop" && r.Method == "POST" && r.ContentLength == 0:
 			event.Operation = "stop"

@@ -25,6 +25,11 @@ urlpatterns = [
     path("apps/<uuid:pk>/edit/", views.app_edit, name="app_edit"),
     path("apps/<uuid:pk>/access/", views.app_access, name="app_access"),
     path("apps/<uuid:pk>/config/", views.app_config, name="app_config"),
+    path(
+        "apps/<uuid:pk>/config/<str:name>/remove/",
+        views.environment_remove,
+        name="environment_remove",
+    ),
     path("apps/<uuid:pk>/upload/", views.upload, name="upload"),
     path("jobs/<uuid:pk>/", views.job_detail, name="job_detail"),
     path("versions/<uuid:pk>/prepare/", build_views.prepare, name="version_prepare"),

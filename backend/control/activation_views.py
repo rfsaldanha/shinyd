@@ -26,6 +26,10 @@ def activate(request, pk):
     version = get_object_or_404(Version, pk=pk, app__in=manageable_apps(request.user))
     form = ActivateForm(request.POST or None)
     status, error = 200, ""
+    applying = (
+        version.app.active_publication_id
+        and version.app.active_publication.version_id == version.pk
+    )
     try:
         eligible(version.app)
         if request.method == "POST" and form.is_valid():
@@ -36,14 +40,15 @@ def activate(request, pk):
     except Conflict as exc:
         form.add_error(None, str(exc))
         status = 409
+    title = "Aplicar configuração" if applying else "Ativar versão"
     return render(
         request,
         "control/form.html",
         {
             "form": form,
             "service_error": error,
-            "title": f"Ativar versão · {version.app.name}",
-            "submit_label": "Ativar versão",
+            "title": f"{title} · {version.app.name}",
+            "submit_label": "Aplicar configuração e reiniciar" if applying else "Ativar versão",
             "description": "A versão candidata será iniciada e verificada antes da troca. "
             "Falha ou falta de recursos preserva a publicação anterior. "
             "Após a troca, usuários conectados precisarão abrir o app novamente. "

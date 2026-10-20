@@ -45,7 +45,7 @@ func (f *fakeBackend) Inspect(_ context.Context, r Record) (*Inspection, error) 
 	copy := *value
 	return &copy, nil
 }
-func (f *fakeBackend) Start(_ context.Context, r Record) error {
+func (f *fakeBackend) Start(_ context.Context, r Record, _ map[string]string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.starts++
@@ -305,7 +305,7 @@ func TestPodmanArgumentsAreClosedAndImmutable(t *testing.T) {
 		return []byte("created"), nil
 	}}
 	record := Record{SchemaVersion: 1, ID: firstID, Spec: testSpec, Image: testImage, Desired: "running"}
-	if err := p.Start(context.Background(), record); err != nil {
+	if err := p.Start(context.Background(), record, nil); err != nil {
 		t.Fatal(err)
 	}
 	args := strings.Join(calls[len(calls)-1], " ")

@@ -2,13 +2,17 @@
 
 import http.client
 
+from cryptography.exceptions import InvalidTag
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.views.decorators.debug import sensitive_variables
 
 from builder.policy import canonical, strict_json
 
 from .agent_client import AgentUnavailable, UnixConnection
 
 MESSAGES = {
+    "environment_unavailable": "Não foi possível ler a configuração cifrada. Verifique a chave.",
     "artifact_rejected": "O executor recusou o artefato. Confira o builder e a política instalada.",
     "invalid_request": "O executor recusou o contrato de ativação.",
     "instance_conflict": "O identificador já pertence a outra operação ou foi encerrado.",
@@ -35,7 +39,8 @@ class RuntimeRejected(Exception):
         super().__init__(MESSAGES[self.code])
 
 
-def request(method, identity, spec, *, retire=False):
+@sensitive_variables()
+def request(method, identity, spec, *, retire=False, environment=None):
     connection = UnixConnection(settings.SHINYD_RUNTIME_SOCKET, 0)
     connection.host, connection.timeout = "runtime", 65
     path = f"/v1/instances/{identity}" + ("/retire" if retire else "")
@@ -43,7 +48,11 @@ def request(method, identity, spec, *, retire=False):
         connection.request(
             method,
             path,
-            body=canonical(spec) if method != "GET" else None,
+            body=canonical(
+                {**spec, **({"environment": environment} if environment is not None else {})}
+            )
+            if method != "GET"
+            else None,
             headers={"Connection": "close", "Content-Type": "application/json"},
         )
         response = connection.getresponse()
@@ -70,10 +79,11 @@ def request(method, identity, spec, *, retire=False):
         if (
             not isinstance(value, dict)
             or not required <= value.keys()
-            or value.keys() - required - {"target", "error", "image"}
+            or value.keys() - required - {"target", "error", "image", "config_revision"}
             or value["id"] != str(identity)
             or value["recipe"] != ""
             or any(value.get(k) != v for k, v in spec.items())
+            or value.get("config_revision", 0) != spec.get("config_revision", 0)
             or value["state"]
             not in {
                 "ready",
@@ -115,8 +125,15 @@ def inspect(publication):
     return request("GET", publication.pk, publication.runtime_spec)
 
 
+@sensitive_variables()
 def ensure(publication):
-    return request("PUT", publication.pk, publication.runtime_spec)
+    from .environment import reveal
+
+    try:
+        environment = reveal(publication)
+    except (InvalidTag, ValidationError, OSError, ValueError, TypeError) as exc:
+        raise RuntimeRejected("environment_unavailable") from exc
+    return request("PUT", publication.pk, publication.runtime_spec, environment=environment)
 
 
 def retire(publication):

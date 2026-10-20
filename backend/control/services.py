@@ -3,10 +3,12 @@ import os
 import uuid
 from pathlib import Path
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.views.decorators.debug import sensitive_variables
 
 from .models import Application, AuditEvent, EnvironmentValue, Job, Version
 from .permissions import can_create, manageable_apps
@@ -68,6 +70,7 @@ def master_key():
 
 
 @transaction.atomic
+@sensitive_variables()
 def set_environment(actor, app_id, expected_revision, name, value, is_secret):
     require_publish(actor, app_id)
     # Validation is also enforced outside the HTML form boundary.
@@ -81,6 +84,16 @@ def set_environment(actor, app_id, expected_revision, name, value, is_secret):
     app = Application.objects.get(pk=app_id)
     if app.config_revision != expected_revision:
         raise Conflict("A configuração mudou. Recarregue antes de salvar.")
+    from .environment import validate
+
+    # Bound the combined payload before saving, including values already configured.
+    try:
+        values = {v.name: decrypt_environment(v) for v in app.environment.exclude(name=name)}
+    except (InvalidTag, ValueError) as exc:
+        raise ValidationError(
+            "Não foi possível ler a configuração cifrada. Verifique a chave."
+        ) from exc
+    validate({**values, name: value})
     app.config_revision += 1
     nonce = os.urandom(12)
     aad = f"{app.pk}:{name}:{app.config_revision}".encode()
@@ -98,11 +111,25 @@ def set_environment(actor, app_id, expected_revision, name, value, is_secret):
     event(actor, "environment.updated", app.pk, name=name, revision=app.config_revision)
 
 
+@sensitive_variables()
 def decrypt_environment(value):
     """Internal runtime boundary only; never expose from a view or export."""
     raw = bytes(value.ciphertext)
     aad = f"{value.app_id}:{value.name}:{value.revision}".encode()
     return AESGCM(master_key()).decrypt(raw[:12], raw[12:], aad).decode()
+
+
+@transaction.atomic
+def remove_environment(actor, app_id, expected_revision, name):
+    app = require_publish(actor, app_id)
+    if app.config_revision != expected_revision:
+        raise Conflict("A configuração mudou. Recarregue antes de salvar.")
+    deleted, _ = app.environment.filter(name=name).delete()
+    if not deleted:
+        raise Conflict("Variável não encontrada. Recarregue a página.")
+    app.config_revision += 1
+    app.save(update_fields=["config_revision", "updated_at"])
+    event(actor, "environment.removed", app.pk, name=name, revision=app.config_revision)
 
 
 def receive_upload(actor, app_id, upload, idempotency_key, entrypoint=""):

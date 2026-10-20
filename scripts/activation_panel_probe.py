@@ -93,18 +93,9 @@ def main():
         return job
 
     version = Version.objects.get(app=app, status="prepared")
-    response = client.post(
-        reverse("version_activate", args=[version.pk]),
-        {
-            "idempotency_key": str(uuid.uuid4()),
-            "acknowledge": True,
-        },
-    )
-    check("activation_refuses_unapplied_secrets", response.status_code == 409)
-    # This is a disposable fixture. Production activation never deletes configuration.
-    app.environment.all().delete()
     first = wait(activate(version))
     check("panel_activation_ready", first.status == "succeeded")
+    check("activation_with_encrypted_environment", first.publication.config_revision > 0)
     app.refresh_from_db()
     instance = AppInstance.objects.get(pk=first.publication_id)
     check("activation_private_route_denied", not authorize(instance.host, "")["allowed"])
@@ -130,7 +121,7 @@ def main():
     rejected(
         "activation_cross_app_artifact_denied",
         "artifact_rejected",
-        lambda: runtime_client.request("PUT", foreign_id, foreign),
+        lambda: runtime_client.request("PUT", foreign_id, foreign, environment={}),
     )
 
     def prepare(data):

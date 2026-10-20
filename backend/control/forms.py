@@ -55,6 +55,7 @@ class EnvironmentForm(forms.Form):
         max_length=16384,
         strip=False,
         widget=forms.PasswordInput(render_value=False),
+        required=False,
     )
     is_secret = forms.BooleanField(label="Segredo", initial=True, required=False)
 
@@ -71,14 +72,20 @@ class EnvironmentForm(forms.Form):
             "ENV",
             "NODE_OPTIONS",
             "IFS",
+            "PORT",
+            "RHOME",
         }:
             raise forms.ValidationError("Nome reservado ao ambiente de execução.")
         return name
 
     def clean_value(self):
         value = self.cleaned_data["value"]
-        if "\x00" in value:
-            raise forms.ValidationError("O valor não pode conter NUL.")
+        try:
+            size = len(value.encode("utf-8"))
+        except UnicodeEncodeError as exc:
+            raise forms.ValidationError("Use texto UTF-8 válido.") from exc
+        if "\x00" in value or size > 16384:
+            raise forms.ValidationError("Use até 16 KiB em UTF-8, sem NUL.")
         return value
 
 

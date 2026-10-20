@@ -86,7 +86,7 @@ jobs:
       - name: Verify actual Shiny, lifecycle and namespace isolation
         run: |
           set -o pipefail
-          sudo -n .venv/bin/python scripts/runtime_smoke.py --install-package 'dist/shinyd-runtime_0.1.0~runtime2_amd64.deb' | tee dist/runtime-report.json
+          sudo -n .venv/bin/python scripts/runtime_smoke.py --install-package 'dist/shinyd-runtime_0.1.0~runtime3_amd64.deb' | tee dist/runtime-report.json
       - name: Diagnostic agent retains its original restrictions
         run: |
           set -o pipefail
@@ -120,11 +120,11 @@ jobs:
       - run: python3 scripts/build_builder_package.py
       - run: .venv/bin/python scripts/build_control_package.py
       - run: go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
-      - run: sudo -n dpkg --install 'dist/shinyd-agent_0.1.0~agent1_amd64.deb' 'dist/shinyd-runtime_0.1.0~runtime2_amd64.deb'
+      - run: sudo -n dpkg --install 'dist/shinyd-agent_0.1.0~agent1_amd64.deb' 'dist/shinyd-runtime_0.1.0~runtime3_amd64.deb'
       - name: Verify ZIP, offline restoration, cache, failures and actual Shiny
         run: |
           set -o pipefail
-          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control1_amd64.deb' | tee dist/builder-report.json
+          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control2_amd64.deb' | tee dist/builder-report.json
       - name: Removing the integrated package preserves state
         run: |
           sudo -n touch /var/lib/shinyd-control/package-test-sentinel

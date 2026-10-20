@@ -34,12 +34,15 @@ type Inspection struct {
 }
 type Backend interface {
 	Inspect(context.Context, Record) (*Inspection, error)
-	Start(context.Context, Record) error
+	Start(context.Context, Record, map[string]string) error
 	Stop(context.Context, Record) error
 	Remove(context.Context, Record) error
 }
 type Runner func(context.Context, string, ...string) ([]byte, error)
-type Podman struct{ Run Runner }
+type Podman struct {
+	Run            Runner
+	RunEnvironment func(context.Context, map[string]string, ...string) ([]byte, error)
+}
 
 type cappedOutput struct{ bytes.Buffer }
 
@@ -50,6 +53,9 @@ func (b *cappedOutput) Write(p []byte) (int, error) {
 	return b.Buffer.Write(p)
 }
 func RunCommand(ctx context.Context, binary string, args ...string) ([]byte, error) {
+	return runCommand(ctx, binary, nil, args...)
+}
+func runCommand(ctx context.Context, binary string, files []*os.File, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	if binary == "/usr/bin/podman" {
@@ -59,6 +65,7 @@ func RunCommand(ctx context.Context, binary string, args ...string) ([]byte, err
 	}
 	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin", "HOME=/root", "LANG=C.UTF-8"}
+	cmd.ExtraFiles = files
 	var out cappedOutput
 	cmd.Stdout = &out
 	// Never return Podman's stderr, container output, env or arguments to callers.
@@ -106,7 +113,10 @@ func (p Podman) Inspect(ctx context.Context, r Record) (*Inspection, error) {
 	}
 	return &value, nil
 }
-func (p Podman) Start(ctx context.Context, r Record) error {
+func (p Podman) Start(ctx context.Context, r Record, environment map[string]string) error {
+	if validateEnvironment(r.Spec, environment) != nil {
+		return ErrInvalid
+	}
 	existing, err := p.Inspect(ctx, r)
 	if err != nil {
 		return err
@@ -115,6 +125,11 @@ func (p Podman) Start(ctx context.Context, r Record) error {
 		if existing.State.Running {
 			return nil
 		}
+		// Inherited descriptors only exist during the initial launch. Artifact
+		// instances are once-only and need a fresh publication after failure.
+		if r.Spec.ConfigRevision != 0 {
+			return ErrConflict
+		}
 		_, err = p.Run(ctx, "/usr/bin/podman", "start", ContainerName(r.ID))
 		return err
 	}
@@ -122,12 +137,22 @@ func (p Podman) Start(ctx context.Context, r Record) error {
 		"--label=org.shinyd.managed=executor-v1", "--label=org.shinyd.instance=" + r.ID, "--label=org.shinyd.spec=" + signature(r),
 		"--network=none", "--userns=auto:size=65536", "--user=65534:65534",
 		"--read-only", "--read-only-tmpfs=false", "--image-volume=ignore", "--cap-drop=all",
-		"--security-opt=no-new-privileges", "--pids-limit=128", "--cgroups=enabled", "--cgroupns=private",
+		"--security-opt=no-new-privileges", "--ulimit=core=0:0", "--pids-limit=128", "--cgroups=enabled", "--cgroupns=private",
 		"--cgroup-parent=" + Slice(r.Spec), "--restart=no",
 		"--log-driver=k8s-file", "--log-opt=max-size=1mb",
 		"--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777", "--env=HOME=/tmp",
 		"--env=SHINYD_INSTANCE_ID=" + r.ID, "--env=PORT=3838", r.Image}
-	_, err = p.Run(ctx, "/usr/bin/podman", args...)
+	if r.Spec.ConfigRevision != 0 {
+		if p.RunEnvironment == nil {
+			return ErrUnavailable
+		}
+		args = args[:len(args)-1]
+		args = append([]string{"--runtime=/usr/bin/crun"}, args...)
+		args = append(args, "--preserve-fds=1", "--entrypoint=Rscript", r.Image, "--vanilla", "-e", environmentLaunch)
+		_, err = p.RunEnvironment(ctx, environment, args...)
+	} else {
+		_, err = p.Run(ctx, "/usr/bin/podman", args...)
+	}
 	return err
 }
 func (p Podman) Stop(ctx context.Context, r Record) error {

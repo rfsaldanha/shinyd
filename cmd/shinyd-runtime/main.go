@@ -76,7 +76,7 @@ func run() error {
 	if err = executor.ConfigureBudget(ctx, executor.RunCommand, policy); err != nil {
 		return fmt.Errorf("pré-requisitos do executor indisponíveis: %s", err)
 	}
-	manager, err := executor.NewManager(policy, store, executor.Podman{Run: executor.RunCommand},
+	manager, err := executor.NewManager(policy, store, executor.Podman{Run: executor.RunCommand, RunEnvironment: executor.RunWithEnvironment},
 		executor.RealAttachment("/run/shinyd-runtime/apps", gid), executor.AdmissionAvailable,
 		executor.BuilderArtifactResolver(executor.RunCommand))
 	if err != nil {
