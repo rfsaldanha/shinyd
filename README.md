@@ -19,7 +19,8 @@ tem um roteiro separado com apps de teste.
 
 O [agente de diagnóstico](docs/AGENTE_EXECUCAO.md) tem pacote `.deb`, socket
 privado e integração com a página administrativa “Diagnóstico do servidor”.
-Instalação e recuperação do serviço foram verificadas em Ubuntu 24.04 no CI.
+Instalação e recuperação do serviço foram verificadas no CI e no host local;
+recuperação após reboot continua pendente.
 O pacote ainda instala somente esse componente, sem executar uploads.
 
 Em Linux com Go 1.24 ou superior:

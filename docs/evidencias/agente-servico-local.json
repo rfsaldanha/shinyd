@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T13:36:47.100348+00:00",
+  "scope": "Pacote e serviço systemd do agente de diagnóstico",
+  "kernel": "7.0.0-38-generic",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "systemd_pid1",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "package_checksum",
+      "passed": true,
+      "detail": "1b08d1644db96cff96b5564372c904dd21a6a5e3440e16851d7fc68d0b5fd2a8"
+    },
+    {
+      "name": "package_identity",
+      "passed": true,
+      "detail": "shinyd-agent 0.1.0~agent1 amd64"
+    },
+    {
+      "name": "socket_enabled_and_active",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "locked_service_identity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "private_socket_permissions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "authorized_kernel_identity",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "root_not_implicit_caller",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "effective_privilege_restrictions",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "private_network_namespace",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "control_resource_guards",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "agent_restart_recovers",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "socket_removed_on_stop",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "socket_recreation_recovers",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "audit_records",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "limitations": [
+    "Não executa containers nem instala painel, gateway ou worker.",
+    "Instalação em Linux limpo exige ambiente de homologação separado.",
+    "Reboot ainda não homologado; este roteiro não reinicia o host."
+  ],
+  "package_version": "0.1.0~agent1",
+  "passed": true,
+  "redacted_fields": [
+    "boot_id"
+  ]
+}

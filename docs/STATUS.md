@@ -141,7 +141,7 @@ concorrência e as demais fases do plano continuam pendentes.
 * Roteiro privilegiado aprovado no Ubuntu 24.04 descartável do CI: instalação,
   identidade autorizada/negada, limites e restrições observados no kernel,
   reinício do agente e recriação do socket. Remoção preservou arquivo de teste
-  em `/var/lib/shinyd`. O host de desenvolvimento não foi alterado.
+  em `/var/lib/shinyd`. Esse teste de CI não alterou o host de desenvolvimento.
 
 Contrato, instalação e limites: [AGENTE_EXECUCAO.md](AGENTE_EXECUCAO.md).
 Evidência sem privilégios: [agente-diagnostico.json](evidencias/agente-diagnostico.json).
@@ -166,3 +166,24 @@ do controle completo, registro no gateway e reboot continuam pendentes.
 Esta é uma parte de F1-06. Não substitui observação de instâncias, métricas de
 apps nem a instalação do painel como serviço. Próximo marco: operações tipadas
 de containers e isolamento da rede, antes da conexão com o fluxo de publicação.
+
+## Marco 9 — Agente instalado e homologado localmente
+
+O operador instalou `shinyd-agent 0.1.0~agent1` e executou o roteiro privilegiado
+em 20/10/2026. As **15 verificações passaram**, incluindo:
+
+* Checksum e identidade do pacote; conta bloqueada e socket privado.
+* Consulta pela identidade autorizada e recusa de root como chamador implícito.
+* Capacidades removidas, no-new-privileges e seccomp observados no processo.
+* Namespace de rede separado e limites de memória/processos no cgroup de controle.
+* Recuperação após reiniciar o agente e recriar o socket, com auditoria.
+
+A conferência posterior confirmou serviço/socket ativos, socket habilitado,
+permissão `0660` e dono `root:shinyd-control`. O checksum do pacote local confere
+com o relatório. Evidência: [agente-servico-local.json](evidencias/agente-servico-local.json),
+sem o identificador do boot do host; o original permanece em `var/`.
+
+Isso conclui a homologação local da capacidade de diagnóstico. Não comprova
+recuperação após reboot, instalação do painel/worker/gateway ou execução de
+containers pelo agente. O painel de desenvolvimento continua sob o usuário do
+desenvolvedor e não ganha autorização para o socket de sistema.

@@ -8,8 +8,15 @@ entregas e homologação. Uploads continuam sem execução.
 
 A instalação e os reinícios do serviço passaram no
 [CI Ubuntu 24.04](https://github.com/rfsaldanha/shinyd/actions/runs/39430925787),
-incluindo remoção que preserva estado. Isso não comprova instalação no servidor
-do operador, Linux mínimo sem ferramentas adicionais ou recuperação após reboot.
+incluindo remoção que preserva estado. A instalação local pelo operador também
+passou nas **15 verificações** em 20/10/2026:
+[relatório do serviço local](evidencias/agente-servico-local.json).
+Serviço e socket foram confirmados ativos; socket habilitado para iniciar com
+o sistema, com dono `root:shinyd-control` e permissão `0660`.
+Linux mínimo sem ferramentas adicionais e recuperação após reboot continuam
+pendentes. O relatório original em `var/agent-service-report.json` conserva o
+`boot_id` necessário ao teste posterior de reboot; essa identificação foi omitida
+da cópia pública.
 
 ## Contrato e fronteira de confiança
 
