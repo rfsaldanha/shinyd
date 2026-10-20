@@ -31,8 +31,8 @@ estão em [STATUS.md](docs/STATUS.md).
 
 A [instalação integrada experimental](docs/INSTALACAO_INTEGRADA.md) reúne painel,
 worker, autorizador, gateway e HTTPS em serviços systemd. Requer configuração
-explícita e certificado. O fluxo instalado passou em 86 verificações no CI;
-a homologação local deste pacote ainda está pendente.
+explícita e certificado. O fluxo instalado passou em 86 verificações no CI e
+88 no host local, que também conferiu o pacote do executor antes de instalá-lo.
 
 ## Diagnóstico do servidor
 

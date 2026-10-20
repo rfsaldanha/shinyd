@@ -627,11 +627,64 @@ ou parcial: dados, configuração, certificado e link pendente são preservados.
 Esses testes compõem o total local de 217; o CI citado executou os 213 testes
 anteriores e o mesmo código dos serviços instalados.
 
-A homologação no host local ainda depende da execução privilegiada pelo operador,
-pois `sudo` solicita senha. O pacote foi preparado sem alterar os serviços locais.
+Naquela rodada, a homologação no host local dependia da execução privilegiada
+pelo operador, pois `sudo` solicitava senha. O resultado está no marco seguinte.
 
 Guia e comando: [INSTALACAO_INTEGRADA.md](INSTALACAO_INTEGRADA.md).
 Emissão/renovação automática de certificados, assistente de catálogo, instalação
 em um comando, reboot real, recuperação de atualização e demais itens do MVP
 continuam pendentes. A configuração exige políticas aprovadas e certificado
 fornecido, e recusa mudanças de domínio de uma instalação existente.
+
+## Marco 19 — Instalação integrada homologada localmente
+
+O operador executou o roteiro integrado em 20/10/2026. As **88 verificações
+passaram**, com `passed: true` e sem erro de limpeza. Evidência:
+[installed-https-local.json](evidencias/installed-https-local.json), cópia integral
+de `var/installed-report.json`, iniciado às 19:05:18 UTC.
+São as 86 verificações do CI mais checksum e identidade do pacote local do executor.
+
+Os três pacotes instalados e os hashes dos arquivos locais foram conferidos
+com o relatório:
+
+| Pacote instalado | SHA-256 do `.deb` |
+|---|---|
+| `shinyd-control 0.1.0~control1` | `0c2223b57c3099c647b40c58fd9b871c0bfd7e60563244f1068d4a8c276fe8db` |
+| `shinyd-runtime 0.1.0~runtime2` | `d1e9f9b7302036e5a8d1dcb8e52a25037fe79bc3eb5122d3f047be47706f3da6` |
+| `shinyd-builder 0.1.0~builder2` | `c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9` |
+
+O host usou kernel `7.0.0-38-generic`, 16 CPUs lógicas,
+66.735.198.208 bytes de RAM e Podman 4.9.3. A consulta ao inventário instalado
+confirmou Caddy `2.6.2-6ubuntu0.24.04.3`. Os ambientes R
+4.4.3/Shiny 1.10.0 e 4.5.2/Shiny 1.13.0 funcionaram simultaneamente.
+
+O navegador percorreu login, cadastro, envio de ZIP, inspeção, preparação,
+ativação e uso de Shiny pelos serviços instalados e HTTPS. Foram confirmados
+cookies seguros, bloqueio de URL direta e WebSocket privados, acesso público,
+reatividade, afinidade, upload/download e apresentação do painel em 360 px.
+A configuração preservou as chaves existentes e criou backup privado de
+metadados; uma tentativa de configurar serviços ativos foi recusada.
+
+O reinício do painel e do worker preservou o processo e o estado da sessão
+Shiny. Os PIDs do autorizador (`210195`), gateway (`210196`) e entrada HTTPS
+(`210197`) permaneceram iguais antes/depois. A remoção de uma fixture recebeu
+uma resposta HTTP 429 do executor; a repetição limitada prevista no roteiro
+concluiu a operação. Não houve repetição nas verificações negativas de ativação.
+
+A consulta posterior ao systemd confirmou painel, autorizador, worker, gateway,
+entrada HTTPS, manutenção, builder e executor inativos, com resultado `success`.
+Seus sockets estavam inativos e `shinyd.target` desabilitado. O socket do agente
+de diagnóstico continuou habilitado e escutando. Os pacotes permanecem instalados;
+o ensaio descartável não deixa o painel configurado para atendimento permanente.
+
+Isso conclui a homologação local deste marco. O teste usa certificado descartável
+e nomes `.test`; não comprova DNS público, emissão/renovação automática, reboot,
+capacidade ou QoS sob carga. A remoção do pacote preservando um arquivo de estado
+foi verificada separadamente no CI, não repetida nesta execução local.
+
+O próximo marco de implementação é F3-01: aplicar variáveis e segredos ao
+processo isolado, com autorização e revisão de configuração, sem reenviar o ZIP
+e informando a necessidade de reinício. O armazenamento cifrado existente será
+preservado; hoje a ativação de apps com valores configurados continua bloqueada.
+Volumes persistentes, rollback com dados, drenagem e demais itens do MVP seguem
+no backlog.

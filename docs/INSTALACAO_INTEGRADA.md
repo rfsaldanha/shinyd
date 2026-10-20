@@ -142,6 +142,13 @@ drenagem e entrada estável por app continuam pendentes.
 As 86 verificações do [CI de 20/10/2026](https://github.com/rfsaldanha/shinyd/actions/runs/39478265938)
 passaram, incluindo preservação da sessão durante o reinício de painel/worker.
 O job também removeu o pacote e confirmou a preservação de um arquivo de estado.
-[Relatório integral](evidencias/installed-https-ci.json). A execução local ainda
-está pendente; o comando acima acrescenta duas conferências do pacote local do
-executor às verificações realizadas no CI.
+[Relatório integral](evidencias/installed-https-ci.json).
+
+A execução no host do operador passou em **88 verificações**, em 20/10/2026.
+As duas verificações adicionais conferem checksum e identidade do pacote local
+do executor. O [relatório local integral](evidencias/installed-https-local.json)
+registra preservação da sessão Shiny, dos processos de atendimento e ausência
+de erro de limpeza. Uma remoção recebeu HTTP 429 e foi repetida com sucesso.
+Ambiente, versões instaladas e hashes estão no marco 19 de [STATUS.md](STATUS.md).
+Os serviços do ensaio ficaram parados ao terminar; isso não deixa uma instalação
+configurada para atender usuários.
