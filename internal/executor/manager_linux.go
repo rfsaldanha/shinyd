@@ -223,7 +223,8 @@ func (m *Manager) Stop(ctx context.Context, id string, remove bool) (View, error
 	return m.Get(id)
 }
 func safeError(err error) string {
-	for _, allowed := range []error{ErrInvalid, ErrConflict, ErrAdmission, ErrOwnership, ErrNotFound, ErrBusy} {
+	for _, allowed := range []error{ErrInvalid, ErrConflict, ErrAdmission, ErrOwnership, ErrNotFound, ErrBusy,
+		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness} {
 		if errors.Is(err, allowed) {
 			return allowed.Error()
 		}
@@ -315,12 +316,12 @@ func RealAttachment(appsDir string, gid int) Attachment {
 			}
 			if time.Now().After(deadline) || ctx.Err() != nil {
 				namespace.Close()
-				return nil, ErrUnavailable
+				return nil, ErrReadiness
 			}
 			select {
 			case <-ctx.Done():
 				namespace.Close()
-				return nil, ErrUnavailable
+				return nil, ErrReadiness
 			case <-time.After(100 * time.Millisecond):
 			}
 		}

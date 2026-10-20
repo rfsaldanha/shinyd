@@ -6,6 +6,7 @@ import grp
 import hashlib
 import json
 import os
+import platform
 import pwd
 import secrets
 import selectors
@@ -112,6 +113,16 @@ def main():
             )
             reservation, _ = inspect_reservation()
             record("subids_prepared", reservation["action"] == "unchanged")
+            info = json.loads(command("podman", "info", "--format", "json").stdout)
+            report["environment"] = {
+                "kernel": platform.release(),
+                "architecture": platform.machine(),
+                "logical_cpus": os.cpu_count(),
+                "memory_bytes": info["host"]["memTotal"],
+                "podman": info["version"]["Version"],
+                "cgroup_version": info["host"]["cgroupVersion"],
+                "profile": "Dois Shiny de teste com sessões reativas; não é teste de capacidade.",
+            }
             if args.install_package:
                 package = args.install_package.resolve(strict=True)
                 digest = hashlib.sha256(package.read_bytes()).hexdigest()
@@ -414,6 +425,16 @@ def main():
                                 "error": state.get("Error"),
                                 "exit_code": state.get("ExitCode"),
                             }
+                            if instance in ids[:2]:
+                                # These two fixtures contain no secrets or uploaded
+                                # code. Application logs are never returned by the API.
+                                diagnosis["trusted_fixture_log"] = command(
+                                    "podman",
+                                    "logs",
+                                    "--tail=20",
+                                    "shinyd-" + instance,
+                                    check=False,
+                                ).stderr[-4000:]
                             if state.get("Status") == "created":
                                 # A failed fixture start may leave no OCI error in
                                 # inspect. Retry only this trusted test container,
@@ -443,7 +464,7 @@ def main():
                 if cleanup_errors:
                     report["cleanup_error"] = {"instances": cleanup_errors}
                 else:
-                    command(
+                    stopped = command(
                         "systemctl",
                         "stop",
                         "shinyd-runtime.service",
@@ -451,7 +472,9 @@ def main():
                         check=False,
                         timeout=80,
                     )
-                    if POLICY.exists() and POLICY.read_bytes() == policy_bytes:
+                    if stopped.returncode:
+                        report["cleanup_error"] = {"executor_stop_failed": True}
+                    elif POLICY.exists() and POLICY.read_bytes() == policy_bytes:
                         POLICY.unlink()
     report["passed"] = "error" not in report and "cleanup_error" not in report
     print(json.dumps(report, ensure_ascii=False, indent=2))

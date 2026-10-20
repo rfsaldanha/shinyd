@@ -239,12 +239,12 @@ func (r *Relay) Close() {
 // The descriptor pins the namespace, so later PID reuse cannot redirect traffic.
 func PinNamespace(value *Inspection, record Record) (*os.File, error) {
 	if value == nil || !value.State.Running || value.State.Pid <= 1 {
-		return nil, ErrUnavailable
+		return nil, ErrProcess
 	}
 	prefix := fmt.Sprintf("/proc/%d", value.State.Pid)
 	status, err := os.ReadFile(prefix + "/status")
 	if err != nil {
-		return nil, ErrUnavailable
+		return nil, ErrProcess
 	}
 	required := map[string]string{"NoNewPrivs": "1", "Seccomp": "2", "CapEff": "0000000000000000"}
 	for _, line := range strings.Split(string(status), "\n") {
@@ -253,45 +253,45 @@ func PinNamespace(value *Inspection, record Record) (*os.File, error) {
 		if ok {
 			if expected, exists := required[key]; exists {
 				if val != expected {
-					return nil, ErrUnavailable
+					return nil, ErrProcess
 				}
 				delete(required, key)
 			}
 		}
 	}
 	if len(required) != 0 {
-		return nil, ErrUnavailable
+		return nil, ErrProcess
 	}
 	profile, err := os.ReadFile(prefix + "/attr/current")
 	if err != nil || !strings.Contains(string(profile), "(enforce)") {
-		return nil, ErrUnavailable
+		return nil, ErrProfile
 	}
 	mapping, err := os.ReadFile(prefix + "/uid_map")
 	if err != nil {
-		return nil, ErrUnavailable
+		return nil, ErrMapping
 	}
 	var inside, outside, count uint64
 	if _, err = fmt.Sscanf(string(mapping), "%d %d %d", &inside, &outside, &count); err != nil || inside != 0 || outside == 0 || count < 65536 {
-		return nil, ErrUnavailable
+		return nil, ErrMapping
 	}
 	cgroup, err := os.ReadFile(prefix + "/cgroup")
 	if err != nil || !strings.Contains(string(cgroup), "/"+Slice(record.Spec)+"/") ||
 		len(value.ID) != 64 || !strings.Contains(string(cgroup), "/libpod-"+value.ID+".scope") {
-		return nil, ErrUnavailable
+		return nil, ErrCgroup
 	}
 	namespace, err := os.Open(prefix + "/ns/net")
 	if err != nil {
-		return nil, ErrUnavailable
+		return nil, ErrNamespace
 	}
 	var target, host unix.Stat_t
 	if unix.Fstat(int(namespace.Fd()), &target) != nil || unix.Stat("/proc/1/ns/net", &host) != nil || target.Ino == host.Ino {
 		namespace.Close()
-		return nil, ErrUnavailable
+		return nil, ErrNamespace
 	}
 	after, err := os.ReadFile(prefix + "/cgroup")
 	if err != nil || string(after) != string(cgroup) {
 		namespace.Close()
-		return nil, ErrUnavailable
+		return nil, ErrCgroup
 	}
 	return namespace, nil
 }

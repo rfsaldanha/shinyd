@@ -23,6 +23,12 @@ var (
 	ErrAdmission   = errors.New("admission_denied")
 	ErrOwnership   = errors.New("ownership_mismatch")
 	ErrNotFound    = errors.New("instance_not_found")
+	ErrProcess     = errors.New("process_protection_failed")
+	ErrProfile     = errors.New("apparmor_verification_failed")
+	ErrMapping     = errors.New("user_mapping_verification_failed")
+	ErrCgroup      = errors.New("cgroup_verification_failed")
+	ErrNamespace   = errors.New("network_namespace_verification_failed")
+	ErrReadiness   = errors.New("application_readiness_failed")
 )
 
 type Policy struct {
