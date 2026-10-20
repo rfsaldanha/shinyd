@@ -1,0 +1,17 @@
+[Unit]
+Description=Socket privado de execução do shinyd
+ConditionPathExists=/etc/shinyd-runtime/policy.json
+
+[Socket]
+ListenStream=/run/shinyd-runtime/control.sock
+SocketUser=root
+SocketGroup=shinyd-control
+SocketMode=0660
+DirectoryMode=0755
+FileDescriptorName=control
+Accept=no
+Backlog=32
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

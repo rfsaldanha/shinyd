@@ -1,0 +1,10 @@
+Package: shinyd-runtime
+Version: 0.1.0~runtime1
+Section: admin
+Priority: optional
+Architecture: amd64
+Maintainer: shinyd contributors <noreply@github.com>
+Depends: shinyd-agent (>= 0.1.0~agent1), podman (>= 4.9), uidmap, systemd (>= 249)
+Description: Restricted local container executor for shinyd
+ Uses operator-approved local images and private Unix sockets.
+ Disabled until an operator provides a policy and enables its socket.

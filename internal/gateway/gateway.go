@@ -40,15 +40,24 @@ func New(routes []Route, authorize Authorizer, scheme string, interval time.Dura
 	}
 	g := &Gateway{make(map[string]Route), authorize, scheme, interval}
 	for _, route := range routes {
-		if route.Target == nil || route.Target.Scheme != "http" ||
-			route.Target.User != nil || route.Target.RawQuery != "" ||
-			(route.Target.Path != "" && route.Target.Path != "/") ||
-			route.Target.Fragment != "" {
+		if route.Target == nil {
 			return nil, errors.New("invalid target")
 		}
-		ip := net.ParseIP(route.Target.Hostname())
-		if ip == nil || !ip.IsLoopback() || route.Target.Port() == "" {
-			return nil, errors.New("target must be an explicit loopback address and port")
+		if route.Target.Scheme == "unix" {
+			if !validUnixTarget(route.Target, route.InstanceID) {
+				return nil, errors.New("invalid runtime socket")
+			}
+		} else {
+			if route.Target.Scheme != "http" ||
+				route.Target.User != nil || route.Target.RawQuery != "" ||
+				(route.Target.Path != "" && route.Target.Path != "/") ||
+				route.Target.Fragment != "" {
+				return nil, errors.New("invalid target")
+			}
+			ip := net.ParseIP(route.Target.Hostname())
+			if ip == nil || !ip.IsLoopback() || route.Target.Port() == "" {
+				return nil, errors.New("target must be an explicit loopback address and port")
+			}
 		}
 		if route.Host == "" || strings.ContainsAny(route.Host, "/\\ \r\n") ||
 			route.InstanceID == "" {
@@ -131,9 +140,16 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 	}
+	target := route.Target
+	var transport http.RoundTripper
+	if target.Scheme == "unix" {
+		transport = unixTransport(target.Path, 0)
+		target = &url.URL{Scheme: "http", Host: "runtime"}
+	}
 	proxy := &httputil.ReverseProxy{
+		Transport: transport,
 		Rewrite: func(p *httputil.ProxyRequest) {
-			p.SetURL(route.Target)
+			p.SetURL(target)
 			p.Out.Host = p.In.Host
 			// Identity must never come from client-supplied headers.
 			for key := range p.Out.Header {

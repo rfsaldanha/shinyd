@@ -64,3 +64,39 @@ jobs:
         env:
           SHINYD_DEV: "1"
       - run: python manage.py check --deploy --fail-level WARNING
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Prepare disposable runtime runner
+        run: |
+          sudo -n apt-get update -qq
+          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs
+          python3 -m venv .venv
+          .venv/bin/pip install playwright==1.64.0
+          sudo -n python3 scripts/container_subids.py --apply
+      - run: python3 scripts/build_agent_package.py
+      - run: python3 scripts/build_agent_package.py --component runtime
+      - run: go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
+      - run: sudo -n dpkg --install 'dist/shinyd-agent_0.1.0~agent1_amd64.deb'
+      - name: Verify actual Shiny, lifecycle and namespace isolation
+        run: |
+          set -o pipefail
+          sudo -n .venv/bin/python scripts/runtime_smoke.py --install-package 'dist/shinyd-runtime_0.1.0~runtime1_amd64.deb' | tee dist/runtime-report.json
+      - name: Diagnostic agent retains its original restrictions
+        run: |
+          set -o pipefail
+          sudo -n python3 scripts/agent_service_smoke.py | tee dist/agent-after-runtime.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-package-and-report
+          path: |
+            dist/*.deb
+            dist/*.sha256
+            dist/*report.json
+            dist/agent-after-runtime.json

@@ -26,6 +26,20 @@ pytestmark = pytest.mark.django_db
 SERVICE_KEY = "ab" * 32
 
 
+def test_unix_runtime_route_is_bound_to_instance(registration):
+    registration.target = f"unix:/run/shinyd-runtime/apps/{registration.pk}.sock"
+    assert route(registration)["target"] == registration.target
+    for target in (
+        "unix:/run/podman/podman.sock",
+        f"unix:/tmp/{registration.pk}.sock",
+        registration.target + "?x=1",
+        "unix:/run/shinyd-runtime/apps/11111111-1111-4111-8111-111111111111.sock",
+    ):
+        registration.target = target
+        with pytest.raises(ValidationError):
+            route(registration)
+
+
 @pytest.fixture
 def registration(settings, app, accounts, client):
     settings.DEBUG = True

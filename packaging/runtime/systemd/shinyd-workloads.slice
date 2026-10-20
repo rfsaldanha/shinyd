@@ -1,0 +1,11 @@
+[Unit]
+Description=Orçamento agregado dos aplicativos shinyd
+
+[Slice]
+CPUAccounting=yes
+MemoryAccounting=yes
+CPUWeight=100
+# Fail closed until the executor applies the validated server budget.
+MemoryMax=0
+MemorySwapMax=0
+TasksMax=4096

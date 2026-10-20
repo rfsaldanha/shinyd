@@ -187,3 +187,25 @@ Isso conclui a homologação local da capacidade de diagnóstico. Não comprova
 recuperação após reboot, instalação do painel/worker/gateway ou execução de
 containers pelo agente. O painel de desenvolvimento continua sob o usuário do
 desenvolvedor e não ganha autorização para o socket de sistema.
+
+## Marco 10 — Executor tipado e transporte por socket Unix
+
+Implementados `shinyd-runtime` e cliente, com catálogo root de imagens locais
+imutáveis, estado durável, operações criar/consultar/parar/remover, idempotência,
+proteção de recursos alheios e admissão conservadora. O pacote é separado do
+diagnóstico e instala execução desabilitada.
+
+O caminho de atendimento usa containers sem rede externa e relay Unix para
+o namespace próprio da instância. Gateway e autorizador aceitam somente o
+socket canônico vinculado ao UUID. A API não aceita comandos, imagens, volumes
+ou opções de Podman fornecidos pelo chamador.
+
+Validação local: **107 testes Python**, testes Go com detector de concorrência,
+`go vet`, Ruff e verificação das unidades systemd aprovados. Roteiro privilegiado
+com dois Shiny reais preparado; sua execução no CI ainda está pendente neste
+registro. Não declarar rede/execução homologadas antes desse resultado.
+
+Contrato e limites: [EXECUTOR_CONTAINERS.md](EXECUTOR_CONTAINERS.md).
+Uploads continuam sem execução; faltam builder, registro automático no painel,
+drenagem, dados persistentes e QoS sob carga. Reinício do executor encerra as
+conexões dos relays, embora preserve containers já em execução.

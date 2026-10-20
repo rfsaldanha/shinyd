@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+if [ "$1" = configure ]; then
+    systemd-sysusers /usr/lib/sysusers.d/shinyd-runtime.conf
+    systemd-tmpfiles --create /usr/lib/tmpfiles.d/shinyd-runtime.conf
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload
+        # Installing the package never enables execution. Existing installations
+        # require a maintenance window: restarting relays disconnects sessions.
+        systemctl try-restart shinyd-runtime.service
+    fi
+fi

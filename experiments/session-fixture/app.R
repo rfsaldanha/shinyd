@@ -15,7 +15,8 @@ server <- function(input, output, session) {
   count <- reactiveVal(0L)
   observeEvent(input$increment, count(count() + 1L))
   state <- reactive(paste(
-    Sys.getenv("PROBE_INSTANCE"), getRversion(), packageVersion("shiny"),
+    Sys.getenv("SHINYD_INSTANCE_ID", unset = Sys.getenv("PROBE_INSTANCE")),
+    getRversion(), packageVersion("shiny"),
     Sys.getpid(), count(), sep = "|"
   ))
   output$state <- renderText(state())

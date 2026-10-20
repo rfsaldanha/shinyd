@@ -1,0 +1,33 @@
+[Unit]
+Description=Executor local do shinyd
+Requires=shinyd-runtime.socket
+After=shinyd-runtime.socket
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/shinyd/shinyd-runtime
+User=root
+Group=root
+UMask=0077
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=75
+Slice=shinyd-control.slice
+MemoryHigh=384M
+MemoryMax=512M
+TasksMax=256
+LimitNOFILE=2048
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+# Podman rootful needs namespace/mount/cgroup operations. This service is a
+# separate trust boundary; the diagnostic agent retains its original sandbox.
+# Container payloads are moved by Podman to the workloads hierarchy.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=shinyd-runtime
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200

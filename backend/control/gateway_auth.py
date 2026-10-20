@@ -70,6 +70,11 @@ def instance_origin(instance):
 
 def route(instance):
     instance_origin(instance)
+    # Exact instance-bound path, supplied only by the trusted runtime. No
+    # arbitrary socket, URI encoding, path traversal or cross-instance alias.
+    expected_socket = f"unix:/run/shinyd-runtime/apps/{instance.pk}.sock"
+    if instance.target == expected_socket:
+        return {"instance_id": str(instance.pk), "target": instance.target}
     target = urlsplit(instance.target)
     try:
         valid = (

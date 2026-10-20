@@ -12,12 +12,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def verify_units(staging):
+def verify_units(staging, component="agent"):
     """Check the exact packaged units/binary against the installed systemd parser."""
     with tempfile.TemporaryDirectory(prefix="shinyd-unit-verification-") as temporary:
         root = Path(temporary)
         shutil.copytree(staging / "usr", root / "usr")
         units = root / "usr/lib/systemd/system"
+        if component == "runtime":
+            shutil.copyfile(
+                ROOT / "packaging/systemd/shinyd-control.slice", units / "shinyd-control.slice"
+            )
         # Dependency targets only in this temporary verification root, never in
         # the package. --root avoids reading this host's custom service units.
         for source in Path("/usr/lib/systemd/system").glob("*.target"):
@@ -31,8 +35,8 @@ def verify_units(staging):
                 "--generators=no",
                 "--root",
                 str(root),
-                "shinyd-agent.socket",
-                "shinyd-agent.service",
+                f"shinyd-{component}.socket",
+                f"shinyd-{component}.service",
                 "shinyd-control.slice",
             ],
             check=True,
@@ -40,7 +44,7 @@ def verify_units(staging):
         )
 
 
-def build(go, output):
+def build(go, output, component="agent"):
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "CGO_ENABLED": "0", "GOOS": "linux", "GOARCH": "amd64"}
@@ -49,8 +53,8 @@ def build(go, output):
     with tempfile.TemporaryDirectory(prefix="shinyd-agent-package-") as temporary:
         staging = Path(temporary)
         for binary, directory in (
-            ("shinyd-agent", "usr/libexec/shinyd"),
-            ("shinyd-agentctl", "usr/bin"),
+            (f"shinyd-{component}", "usr/libexec/shinyd"),
+            (f"shinyd-{component}ctl", "usr/bin"),
         ):
             target = staging / directory / binary
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -67,19 +71,29 @@ def build(go, output):
             ("tmpfiles", "usr/lib/tmpfiles.d"),
             ("debian", "DEBIAN"),
         ):
-            shutil.copytree(ROOT / "packaging" / source_dir, staging / destination)
+            source = ROOT / "packaging"
+            if component == "runtime":
+                source = source / "runtime"
+            shutil.copytree(source / source_dir, staging / destination)
         for name in ("postinst", "prerm", "postrm"):
             (staging / "DEBIAN" / name).chmod(0o755)
-        doc = staging / "usr/share/doc/shinyd-agent"
+        doc = staging / f"usr/share/doc/shinyd-{component}"
         doc.mkdir(parents=True)
         shutil.copyfile(ROOT / "LICENSE", doc / "copyright")
-        shutil.copyfile(ROOT / "docs/AGENTE_EXECUCAO.md", doc / "README.md")
+        document = "AGENTE_EXECUCAO.md" if component == "agent" else "EXECUTOR_CONTAINERS.md"
+        shutil.copyfile(ROOT / "docs" / document, doc / "README.md")
         staging.chmod(0o755)
-        executables = {"postinst", "prerm", "postrm", "shinyd-agent", "shinyd-agentctl"}
+        executables = {
+            "postinst",
+            "prerm",
+            "postrm",
+            f"shinyd-{component}",
+            f"shinyd-{component}ctl",
+        }
         for path in staging.rglob("*"):
             path.chmod(0o755 if path.is_dir() or path.name in executables else 0o644)
-        verify_units(staging)
-        package = output / "shinyd-agent_0.1.0~agent1_amd64.deb"
+        verify_units(staging, component)
+        package = output / f"shinyd-{component}_0.1.0~{component}1_amd64.deb"
         subprocess.run(
             ["dpkg-deb", "--root-owner-group", "--build", str(staging), str(package)],
             env=env,
@@ -95,8 +109,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--go", default="go", help="Executável Go")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")
+    parser.add_argument("--component", choices=("agent", "runtime"), default="agent")
     args = parser.parse_args()
-    print(build(args.go, args.output))
+    print(build(args.go, args.output, args.component))
 
 
 if __name__ == "__main__":

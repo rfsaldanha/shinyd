@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+case "$1" in
+    remove|deconfigure)
+        if [ -d /run/systemd/system ]; then
+            systemctl stop shinyd-runtime.service shinyd-runtime.socket
+            systemctl disable shinyd-runtime.socket
+        fi
+        ;;
+esac
