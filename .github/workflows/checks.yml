@@ -14,6 +14,35 @@ jobs:
       - run: go test -race ./...
       - run: go build -o dist/shinyd ./cmd/shinyd
       - run: go build -o dist/shinyd-gateway ./cmd/shinyd-gateway
+      - run: go build -o dist/shinyd-agent ./cmd/shinyd-agent
+      - run: go build -o dist/shinyd-agentctl ./cmd/shinyd-agentctl
+      - run: python3 scripts/agent_probe.py
+  agent-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: python3 scripts/build_agent_package.py
+      - name: Install and verify the service on this disposable runner
+        run: |
+          set -o pipefail
+          sudo -n python3 scripts/agent_service_smoke.py --install-package 'dist/shinyd-agent_0.1.0~agent1_amd64.deb' | tee dist/agent-service-report.json
+      - name: Verify removal preserves state
+        run: |
+          sudo -n touch /var/lib/shinyd/package-test-sentinel
+          sudo -n dpkg --remove shinyd-agent
+          sudo -n test -f /var/lib/shinyd/package-test-sentinel
+          test ! -S /run/shinyd-agent/control.sock
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-package-and-report
+          path: |
+            dist/*.deb
+            dist/*.sha256
+            dist/agent-service-report.json
   python:
     runs-on: ubuntu-24.04
     steps:

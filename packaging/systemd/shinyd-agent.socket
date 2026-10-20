@@ -1,0 +1,16 @@
+[Unit]
+Description=Socket privado do agente shinyd
+
+[Socket]
+ListenStream=/run/shinyd-agent/control.sock
+SocketUser=root
+SocketGroup=shinyd-control
+SocketMode=0660
+DirectoryMode=0755
+FileDescriptorName=control
+Accept=no
+Backlog=32
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

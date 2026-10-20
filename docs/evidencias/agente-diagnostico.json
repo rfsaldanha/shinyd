@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T13:29:27.953366+00:00",
+  "scope": "Agente real com socket herdado; usuário de desenvolvimento",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "inherited_unix_socket_and_real_doctor",
+      "passed": true
+    },
+    {
+      "name": "read_only_capability",
+      "passed": true
+    },
+    {
+      "name": "arguments_rejected",
+      "passed": true
+    },
+    {
+      "name": "graceful_stop_keeps_activation_socket",
+      "passed": true
+    },
+    {
+      "name": "service_restart_reuses_socket",
+      "passed": true
+    },
+    {
+      "name": "unauthorized_uid_rejected",
+      "passed": true
+    },
+    {
+      "name": "audit_allowlist",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "Não instala o pacote nem homologa isolamento do serviço systemd ou reboot.",
+    "Não executa containers; operações de runtime permanecem indisponíveis."
+  ],
+  "passed": true
+}

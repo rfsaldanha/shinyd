@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+if [ "$1" = configure ]; then
+    systemd-sysusers /usr/lib/sysusers.d/shinyd-agent.conf
+    systemd-tmpfiles --create /usr/lib/tmpfiles.d/shinyd-agent.conf
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload
+        # Preserves an operator's disabled/masked state on upgrades.
+        if [ -z "${2:-}" ]; then
+            systemctl enable shinyd-agent.socket
+        fi
+        # Socket activation is sufficient on a fresh installation.
+        # A running old agent must not keep its old binary after an upgrade.
+        systemctl try-restart shinyd-agent.service
+        if systemctl is-enabled --quiet shinyd-agent.socket; then
+            systemctl start shinyd-agent.socket
+        fi
+    fi
+fi

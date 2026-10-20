@@ -1,0 +1,10 @@
+Package: shinyd-agent
+Version: 0.1.0~agent1
+Section: admin
+Priority: optional
+Architecture: amd64
+Maintainer: shinyd contributors <noreply@github.com>
+Depends: systemd (>= 249)
+Description: Private read-only diagnostics agent for shinyd
+ This development package provides a Unix socket and a supervised agent.
+ It does not install the web panel or execute uploaded Shiny applications.

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+fi
+# Keep /var/lib/shinyd and the locked identity, even on purge. The package never
+# creates application data or keys and must not delete another component's state.

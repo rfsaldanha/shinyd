@@ -126,3 +126,23 @@ Esse marco implementa partes de F2-05/F5-03. Não conclui TLS, registro automát
 de instâncias ou publicação: o experimento usa fixtures confiáveis e banco
 descartável. Builder, agente privilegiado, rede, instalação/reboot, QoS sob
 concorrência e as demais fases do plano continuam pendentes.
+
+## Marco 7 — Fronteira do agente e pacote de diagnóstico
+
+* `shinyd-agent` aceita apenas diagnóstico por socket Unix herdado; autentica
+  o UID do chamador pelo kernel, sem identidade fornecida em cabeçalhos.
+* Cliente valida o UID do listener. Não há comando arbitrário, shell, operações
+  de containers, escuta TCP ou exposição de argumentos na auditoria.
+* Testes Go com detector de condições de corrida aprovados. O roteiro com
+  binários reais passou em **sete verificações**, incluindo reativação com o
+  mesmo socket, UID indevido e argumentos recusados.
+* Pacote `.deb` de desenvolvimento, unidades systemd, conta bloqueada e cliente
+  administrativo. Build sem root e verificação das unidades com systemd 255.
+* Roteiro privilegiado e job de CI preparados para instalar, verificar
+  restrições/recuperação e remover o pacote preservando estado em máquina
+  descartável. Resultado dessa homologação ainda pendente neste registro.
+
+Contrato, instalação e limites: [AGENTE_EXECUCAO.md](AGENTE_EXECUCAO.md).
+Evidência sem privilégios: [agente-diagnostico.json](evidencias/agente-diagnostico.json).
+É a primeira parte de F1-03/F1-05; criação/parada de containers, rede, instalação
+do controle completo, registro no gateway e reboot continuam pendentes.

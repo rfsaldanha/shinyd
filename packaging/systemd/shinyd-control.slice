@@ -1,0 +1,8 @@
+[Unit]
+Description=Serviços de controle do shinyd
+
+[Slice]
+CPUAccounting=yes
+MemoryAccounting=yes
+TasksAccounting=yes
+CPUWeight=1000
