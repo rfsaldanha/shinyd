@@ -46,8 +46,8 @@ não executa R e não cria publicação ativa. O plano administrativo não tem a
 ao runtime; publicação, proxy Shiny, QoS efetivo, serviços instaláveis e recuperação
 do produto completo ainda dependem das etapas seguintes.
 
-Próxima porta técnica: homologação de containers e árvore de cgroups com os
-privilégios apropriados, seguida dos experimentos de sessões/ambientes R.
+As primeiras verificações de containers e sessões estão registradas nos marcos
+seguintes; a integração do produto continua em desenvolvimento.
 
 ## Marco 3 — Experimentos de containers e sessões
 
@@ -67,7 +67,7 @@ Detalhes e relatórios em [DECISOES_EXECUTOR.md](DECISOES_EXECUTOR.md).
 Os experimentos não estão conectados ao painel e não habilitam execução de
 código publicado. Não há declaração de conclusão do MVP ou da versão 1.0.
 
-CI remota: marcos 1, 2 e 3 aprovados em GitHub Actions.
+CI remota: marcos 1 a 4 aprovados em GitHub Actions.
 
 ## Marco 4 — Preparação de IDs para containers
 
@@ -84,6 +84,21 @@ CI remota: marcos 1, 2 e 3 aprovados em GitHub Actions.
 * Verificação local: **62 testes aprovados**, Ruff e formatação aprovados; teste
   real rootless repetido com sucesso, mantendo as limitações já documentadas.
 
-A aplicação no `/etc` real e a repetição do teste exigem sudo pelo operador;
-sudo sem interação continua indisponível nesta sessão. Esse marco prepara o
-reteste, não declara o executor homologado nem conclui a instalação do produto.
+O operador aplicou a preparação e repetiu o teste; resultado abaixo.
+
+## Marco 5 — Isolamento rootful inicial aprovado
+
+Relatório real de 20/10/2026: [container-rootful.json](evidencias/container-rootful.json).
+As **11 verificações passaram**, incluindo:
+
+* Reserva de IDs aplicada sem alterar as faixas anteriores; repetição da prévia
+  retorna `unchanged`.
+* UID não-root com namespace remapeado; raiz somente leitura, tmpfs, rede
+  desligada, capacidades removidas, seccomp e no-new-privileges.
+* Limites de memória/processos presentes no kernel e AppArmor em modo `enforce`.
+* Container sob a slice esperada, com peso de CPU 400 no ancestral.
+
+Isso aceita o teste inicial do roteiro, não todo F0-05. Continuam pendentes
+build/runtime com dados, rede de atendimento, QoS sob concorrência e reboot.
+`production_ready` permanece `false`. A integração do login central com o gateway
+pode avançar usando fixtures confiáveis; código enviado pelo painel continua sem execução.

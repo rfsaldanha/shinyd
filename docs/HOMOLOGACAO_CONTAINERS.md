@@ -29,6 +29,8 @@ O primeiro teste rootful neste host parou por ausência dessa reserva,
 antes de iniciar o container. Instalar os pacotes não criou a reserva.
 A evidência foi preservada em
 [container-rootful-prerequisito.json](evidencias/container-rootful-prerequisito.json).
+Após a preparação, o [reteste](evidencias/container-rootful.json) passou nas 11
+verificações. As limitações desse teste continuam descritas ao final deste roteiro.
 
 Para conferir a proposta sem mudar o sistema:
 

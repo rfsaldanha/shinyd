@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T12:38:09.709449+00:00",
+  "scope": "rootful-smoke",
+  "kernel": "7.0.0-38-generic",
+  "tests": [
+    {
+      "name": "subid_reservation",
+      "passed": true,
+      "detail": [
+        {
+          "start": 589824,
+          "count": 1048576
+        }
+      ]
+    },
+    {
+      "name": "cgroup_v2",
+      "passed": true,
+      "detail": "v2"
+    },
+    {
+      "name": "systemd_manager",
+      "passed": true,
+      "detail": "systemd"
+    },
+    {
+      "name": "cpu_available",
+      "passed": true,
+      "detail": [
+        "cpuset",
+        "cpu",
+        "io",
+        "memory",
+        "hugetlb",
+        "pids",
+        "rdma",
+        "misc",
+        "dmem"
+      ]
+    },
+    {
+      "name": "isolation",
+      "passed": true,
+      "detail": "UID não-root, raiz somente leitura, tmpfs, rede desligada, caps=0, seccomp e NNP"
+    },
+    {
+      "name": "user_namespace_remapped",
+      "passed": true,
+      "detail": "UIDs internos não mapeiam para root do host"
+    },
+    {
+      "name": "memory_limit",
+      "passed": true,
+      "detail": "memory.max=128 MiB no kernel"
+    },
+    {
+      "name": "pids_limit",
+      "passed": true,
+      "detail": "pids.max=64 no kernel"
+    },
+    {
+      "name": "apparmor_enforced",
+      "passed": true,
+      "detail": "containers-default-0.57.4-apparmor1 (enforce)"
+    },
+    {
+      "name": "slice_membership",
+      "passed": true,
+      "detail": "/shinycheckfabf18a57c.slice/shinycheckfabf18a57c-apps.slice/libpod-e95ab701eb8ecff0eb2abd5a5f38a911ea1072cbb5f7c05602e75ca921647f25.scope"
+    },
+    {
+      "name": "parent_weight",
+      "passed": true,
+      "detail": "CPUWeight=400 presente no pai agregado"
+    }
+  ],
+  "production_ready": false,
+  "limitations": [
+    "Não testa ainda Shiny, build, rede de atendimento, QoS sob disputa ou reboot.",
+    "A imagem permanece em cache; somente containers/unidades do teste são removidos."
+  ],
+  "subid_preparation": {
+    "action": "reserve",
+    "ranges": [
+      {
+        "start": 589824,
+        "count": 1048576
+      }
+    ],
+    "additions": {
+      "subuid": "containers:589824:1048576\n",
+      "subgid": "containers:589824:1048576\n"
+    },
+    "applied": true,
+    "backup_directory": "/etc/shinyd-subids-backup-845bngbk"
+  },
+  "podman_version": "4.9.3",
+  "controllers": [
+    "cpuset",
+    "cpu",
+    "io",
+    "memory",
+    "hugetlb",
+    "pids",
+    "rdma",
+    "misc",
+    "dmem"
+  ],
+  "apparmor_reported": true,
+  "image_digest": "sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8",
+  "uid_map": "0     589824      65536",
+  "cgroup_path": "/shinycheckfabf18a57c.slice/shinycheckfabf18a57c-apps.slice/libpod-e95ab701eb8ecff0eb2abd5a5f38a911ea1072cbb5f7c05602e75ca921647f25.scope",
+  "apparmor_profile": "containers-default-0.57.4-apparmor1 (enforce)",
+  "smoke_passed": true
+}

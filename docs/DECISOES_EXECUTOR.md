@@ -51,9 +51,21 @@ Isso **não demonstra** AppArmor imposto, mapeamento de UIDs ou peso de CPU
 efetivo; essas verificações ficaram sem execução.
 
 [Relatório original](evidencias/container-rootful-prerequisito.json), sem credenciais.
-O próximo teste inclui preparação explícita e idempotente dessa reserva,
-conforme [o roteiro atualizado](HOMOLOGACAO_CONTAINERS.md). Mantidos user namespaces
-e os demais controles de isolamento. Execução de código publicado continua desabilitada.
+O operador aplicou a preparação explícita e idempotente dessa reserva,
+conforme [o roteiro atualizado](HOMOLOGACAO_CONTAINERS.md).
+
+## Reteste rootful: isolamento inicial aprovado
+
+O [reteste de 20/10/2026](evidencias/container-rootful.json) passou nas 11
+verificações. O container executou sem root, com mapeamento `0 → 589824`
+de 65.536 IDs, AppArmor `containers-default-0.57.4-apparmor1 (enforce)`,
+seccomp, capacidades removidas e no-new-privileges. O kernel confirmou os
+limites de 128 MiB/64 processos, a posição na slice e peso 400 no ancestral.
+
+Mantidos os controles propostos; nenhuma exceção ao isolamento foi necessária.
+Esse resultado permite continuar a implementação, mas não mede partilha de CPU
+sob disputa nem homologa rede, build, dados persistentes ou reboot. F0-05 continua
+parcial. Execução de código publicado pelo painel permanece desabilitada.
 
 ## Proxy e sessões Shiny reais
 
