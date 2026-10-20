@@ -1,11 +1,12 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from control import gateway_views, views
+from control import agent_views, gateway_views, views
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("healthz", views.health, name="health"),
+    path("server/diagnostics/", agent_views.diagnostics, name="diagnostics"),
     path("connect/<uuid:pk>/", gateway_views.connect, name="gateway_connect"),
     path("login/", views.Login.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),

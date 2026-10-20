@@ -17,6 +17,11 @@ tem um roteiro separado com apps de teste.
 
 ## Diagnóstico do servidor
 
+O [agente de diagnóstico](docs/AGENTE_EXECUCAO.md) tem pacote `.deb`, socket
+privado e integração com a página administrativa “Diagnóstico do servidor”.
+Instalação e recuperação do serviço foram verificadas em Ubuntu 24.04 no CI.
+O pacote ainda instala somente esse componente, sem executar uploads.
+
 Em Linux com Go 1.24 ou superior:
 
 ```sh

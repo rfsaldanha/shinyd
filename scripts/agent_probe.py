@@ -15,6 +15,45 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def start_agent(binary, listener, caller, data_dir, log):
+    # Tiny exec wrapper only sets the child's own LISTEN_PID and fd 3.
+    # No shell, preexec_fn, root or host service changes.
+    wrapper = (
+        "import os,sys; fd=int(sys.argv[1]); os.dup2(fd,3); "
+        "os.set_inheritable(3,True); "
+        "os.environ.update(LISTEN_PID=str(os.getpid()),LISTEN_FDS='1',"
+        "LISTEN_FDNAMES='control'); os.execv(sys.argv[2],sys.argv[2:])"
+    )
+    return subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            wrapper,
+            str(listener.fileno()),
+            str(Path(binary).resolve()),
+            "--allowed-user",
+            caller,
+            "--socket-path",
+            listener.getsockname(),
+            "--data-dir",
+            str(data_dir),
+        ],
+        pass_fds=(listener.fileno(),),
+        stdout=log,
+        stderr=log,
+    )
+
+
+def stop_agent(process):
+    if process and process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=8)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=3)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--agent", type=Path, default=ROOT / "dist/shinyd-agent")
@@ -50,32 +89,7 @@ def main():
         log = log_path.open("wb")
 
         def start(allowed_user):
-            # Tiny exec wrapper only sets the child's own LISTEN_PID and fd 3.
-            # No shell, preexec_fn, root or host service changes.
-            wrapper = (
-                "import os,sys; fd=int(sys.argv[1]); os.dup2(fd,3); "
-                "os.set_inheritable(3,True); "
-                "os.environ.update(LISTEN_PID=str(os.getpid()),LISTEN_FDS='1',"
-                "LISTEN_FDNAMES='control'); os.execv(sys.argv[2],sys.argv[2:])"
-            )
-            return subprocess.Popen(
-                [
-                    sys.executable,
-                    "-c",
-                    wrapper,
-                    str(listener.fileno()),
-                    str(args.agent.resolve()),
-                    "--allowed-user",
-                    allowed_user,
-                    "--socket-path",
-                    path,
-                    "--data-dir",
-                    temporary,
-                ],
-                pass_fds=(listener.fileno(),),
-                stdout=log,
-                stderr=log,
-            )
+            return start_agent(args.agent, listener, allowed_user, temporary, log)
 
         def status():
             return subprocess.run(
@@ -93,13 +107,7 @@ def main():
             )
 
         def stop():
-            if process and process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=8)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait(timeout=3)
+            stop_agent(process)
 
         try:
             process = start(pwd.getpwuid(os.getuid()).pw_name)

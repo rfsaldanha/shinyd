@@ -64,6 +64,20 @@ O [gateway com login central](GATEWAY_ACESSO.md) tem um experimento separado
 com dois Shiny reais, banco descartável e acesso por socket Unix. Esse roteiro
 não transforma uploads do painel em apps executáveis.
 
+O [agente de diagnóstico](AGENTE_EXECUCAO.md) tem pacote `.deb` e roteiro próprio.
+A página “Diagnóstico do servidor” é exclusiva de administradores. Um painel
+de desenvolvimento normalmente mostrará “Diagnóstico indisponível”: o agente
+de sistema autoriza a conta de serviço `shinyd-control`, não o desenvolvedor.
+O teste de navegador abaixo exercita a integração com um agente descartável:
+
+```sh
+go build -o dist/shinyd-agent ./cmd/shinyd-agent
+.venv/bin/python scripts/browser_smoke.py --agent-binary dist/shinyd-agent
+```
+
+Não altera usuários nem serviços do host. O próprio roteiro define as opções
+de desenvolvimento, verifica a tela em 360 px e encerra os processos ao terminar.
+
 A verificação de deployment preserva HSTS e cookies seguros. Somente W021
 (adesão a HSTS preload) é silenciado: cadastrar o domínio em uma lista global
 do navegador requer decisão do administrador, não pode ser um efeito da instalação.

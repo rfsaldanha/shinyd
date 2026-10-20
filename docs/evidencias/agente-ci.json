@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T13:32:59.778472+00:00",
+  "source": "https://api.github.com/repos/rfsaldanha/shinyd/actions/runs/39430925787",
+  "html_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39430925787",
+  "head_sha": "ac1ff54197ba26d16b289a8515e41455712f265a",
+  "status": "completed",
+  "conclusion": "success",
+  "production_ready": false,
+  "jobs": [
+    {
+      "name": "python",
+      "conclusion": "success",
+      "html_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39430925787/job/118655475754",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pip install -r requirements.lock",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run ruff check backend tests scripts manage.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run ruff format --check backend tests scripts manage.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run pytest -q",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python scripts/bootstrap.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python manage.py migrate --noinput",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python manage.py makemigrations --check --dry-run",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python manage.py check --deploy --fail-level WARNING",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "agent-package",
+      "conclusion": "success",
+      "html_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39430925787/job/118655476040",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-go@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/build_agent_package.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install and verify the service on this disposable runner",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify removal preserves state",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-go@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "go",
+      "conclusion": "success",
+      "html_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39430925787/job/118655476092",
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-go@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go vet ./...",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go test -race ./...",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go build -o dist/shinyd ./cmd/shinyd",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go build -o dist/shinyd-gateway ./cmd/shinyd-gateway",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go build -o dist/shinyd-agent ./cmd/shinyd-agent",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run go build -o dist/shinyd-agentctl ./cmd/shinyd-agentctl",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 scripts/agent_probe.py",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-go@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Evidência obtida da API pública do GitHub; JSON detalhado do serviço está no artifact autenticado do run.",
+    "Máquina descartável Ubuntu 24.04 do CI; não instala no host de desenvolvimento nem homologa reboot."
+  ]
+}

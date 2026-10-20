@@ -1,0 +1,27 @@
+{% extends "control/base.html" %}
+{% block title %}Diagnóstico do servidor · shinyd{% endblock %}
+{% block content %}
+<div class="page-heading">
+  <div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Diagnóstico do servidor</h1><p class="muted">Confira os recursos disponíveis e os pontos que precisam de atenção.</p></div>
+  <a class="btn btn-light" href="{% url 'diagnostics' %}">Atualizar diagnóstico</a>
+</div>
+{% if agent_error %}
+<section class="panel" role="status"><h2>Diagnóstico indisponível</h2><p>{{ agent_error }}</p><p class="muted">Os aplicativos e as configurações cadastrados continuam preservados.</p></section>
+{% else %}
+<section class="panel">
+  <h2>Agente conectado</h2>
+  <p>Última observação: <time datetime="{{ report.observed_at|date:'c' }}">{{ report.observed_at|date:"d/m/Y H:i:s T" }}</time>. Os resultados podem ter até 10 segundos de atraso.</p>
+  {% if report.prerequisites_ready %}<p>Os pré-requisitos observados estão disponíveis.</p>{% else %}<p>Há pré-requisitos ausentes ou que ainda não puderam ser verificados.</p>{% endif %}
+</section>
+<section class="diagnostic-grid" aria-label="Verificações do servidor">
+{% for check in report.checks %}
+  <article class="panel diagnostic-check">
+    <h2>{{ check.name }}</h2>
+    <p class="diagnostic-state diagnostic-{{ check.status }}">{{ check.status_name }}{% if check.required %} · Obrigatório{% else %} · Complementar{% endif %}</p>
+    <p class="break-all">{{ check.detail }}</p>
+  </article>
+{% endfor %}
+</section>
+{% endif %}
+<div class="readiness"><div><strong>Consultas somente de leitura</strong><p>Este diagnóstico não inicia apps nem altera o servidor. A execução de uploads continua indisponível enquanto as próximas verificações de isolamento e rede são desenvolvidas.</p></div></div>
+{% endblock %}

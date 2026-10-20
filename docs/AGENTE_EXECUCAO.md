@@ -6,6 +6,11 @@ F1-03/F1-05: a instalação do painel/worker/gateway, operações de containers,
 rede de atendimento, registro automático de instâncias e reboot ainda exigem
 entregas e homologação. Uploads continuam sem execução.
 
+A instalação e os reinícios do serviço passaram no
+[CI Ubuntu 24.04](https://github.com/rfsaldanha/shinyd/actions/runs/39430925787),
+incluindo remoção que preserva estado. Isso não comprova instalação no servidor
+do operador, Linux mínimo sem ferramentas adicionais ou recuperação após reboot.
+
 ## Contrato e fronteira de confiança
 
 `shinyd-agent` recebe um único socket Unix do systemd. Não escuta TCP e não

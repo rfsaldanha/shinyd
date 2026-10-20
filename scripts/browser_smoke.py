@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Exercise the real UI against disposable state; never use the operator's DB."""
 
+import argparse
 import io
 import os
+import pwd
 import secrets
 import socket
 import subprocess
@@ -11,8 +13,10 @@ import tempfile
 import time
 import urllib.request
 import zipfile
+from contextlib import ExitStack
 from pathlib import Path
 
+from agent_probe import start_agent, stop_agent
 from playwright.sync_api import sync_playwright
 
 repo = Path(__file__).resolve().parents[1]
@@ -26,8 +30,25 @@ def run(*args, env):
     )
 
 
-with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state:
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--agent-binary", type=Path, help="Inclui diagnóstico com agente real")
+args = parser.parse_args()
+
+with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state, ExitStack() as resources:
     env = {**os.environ, "SHINYD_DEV": "1", "SHINYD_STATE_DIR": state}
+    agent = None
+    if args.agent_binary:
+        listener = resources.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
+        listener.bind(str(Path(state) / "agent.sock"))
+        listener.listen(32)
+        log = resources.enter_context((Path(state) / "agent.log").open("wb"))
+        agent = start_agent(
+            args.agent_binary, listener, pwd.getpwuid(os.getuid()).pw_name, state, log
+        )
+        resources.callback(stop_agent, agent)
+        env.update(
+            SHINYD_AGENT_SOCKET=listener.getsockname(), SHINYD_AGENT_DEV_UID=str(os.getuid())
+        )
     run("scripts/bootstrap.py", "--state-dir", state, env=env)
     run("manage.py", "migrate", "--noinput", env=env)
     password = secrets.token_urlsafe(32)
@@ -72,6 +93,17 @@ with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state:
             page.get_by_role("button", name="Entrar", exact=True).click()
             page.get_by_role("heading", name="Seus aplicativos").wait_for()
             page.screenshot(path=str(evidence / "dashboard-desktop.png"), full_page=True)
+            if agent:
+                page.get_by_role("link", name="Diagnóstico do servidor", exact=True).click()
+                page.get_by_role("heading", name="Agente conectado").wait_for()
+                assert page.locator(".diagnostic-check").count() >= 15
+                assert "Consultas somente de leitura" in page.locator("#main").inner_text()
+                page.screenshot(path=str(evidence / "agent-desktop.png"), full_page=True)
+                page.set_viewport_size({"width": 360, "height": 800})
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+                page.screenshot(path=str(evidence / "agent-mobile.png"), full_page=True)
+                page.set_viewport_size({"width": 1440, "height": 1000})
+                page.goto(base)
             page.get_by_role("link", name="+ Novo aplicativo", exact=True).click()
             page.get_by_label("Nome:", exact=True).fill("Indicadores de demonstração")
             page.get_by_label("Endereço:", exact=True).fill("indicadores")
@@ -97,6 +129,14 @@ with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state:
             page.set_viewport_size({"width": 360, "height": 800})
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
             page.screenshot(path=str(evidence / "dashboard-mobile.png"), full_page=True)
+            if agent:
+                stop_agent(agent)
+                listener.close()
+                page.goto(base + "/server/diagnostics/")
+                page.get_by_role("heading", name="Diagnóstico indisponível").wait_for()
+                page.goto(base)
+                page.get_by_role("heading", name="Seus aplicativos").wait_for()
+                print("Agente: diagnóstico real, viewport 360px e queda do serviço passaram.")
             assert not errors, errors
             browser.close()
             print(

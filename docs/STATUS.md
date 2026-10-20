@@ -138,11 +138,31 @@ concorrência e as demais fases do plano continuam pendentes.
   mesmo socket, UID indevido e argumentos recusados.
 * Pacote `.deb` de desenvolvimento, unidades systemd, conta bloqueada e cliente
   administrativo. Build sem root e verificação das unidades com systemd 255.
-* Roteiro privilegiado e job de CI preparados para instalar, verificar
-  restrições/recuperação e remover o pacote preservando estado em máquina
-  descartável. Resultado dessa homologação ainda pendente neste registro.
+* Roteiro privilegiado aprovado no Ubuntu 24.04 descartável do CI: instalação,
+  identidade autorizada/negada, limites e restrições observados no kernel,
+  reinício do agente e recriação do socket. Remoção preservou arquivo de teste
+  em `/var/lib/shinyd`. O host de desenvolvimento não foi alterado.
 
 Contrato, instalação e limites: [AGENTE_EXECUCAO.md](AGENTE_EXECUCAO.md).
 Evidência sem privilégios: [agente-diagnostico.json](evidencias/agente-diagnostico.json).
+Evidência do CI: [agente-ci.json](evidencias/agente-ci.json) e
+[execução com pacote e relatório](https://github.com/rfsaldanha/shinyd/actions/runs/39430925787).
 É a primeira parte de F1-03/F1-05; criação/parada de containers, rede, instalação
 do controle completo, registro no gateway e reboot continuam pendentes.
+
+## Marco 8 — Diagnóstico do agente no painel
+
+* Página exclusiva de administradores consulta o agente por socket autenticado.
+  Publicadores/usuários não acionam a consulta nem veem o diagnóstico.
+* Mostra pré-requisitos e data da observação; rejeita respostas incompatíveis,
+  excessivas, desatualizadas ou de outro UID. Sem redirecionamento/TCP alternativo.
+* Ausência do agente tem mensagem própria e não impede acesso ao catálogo.
+* **106 testes Python aprovados**, incluindo 21 novos testes do cliente,
+  autorização da página, dados malformados, indisponibilidade e escape HTML.
+* Chrome real com agente e banco descartáveis: diagnóstico, disposição em
+  360 px e queda do serviço aprovados. O fluxo anterior de login, cadastro,
+  upload, worker e atualização HTMX continuou aprovado.
+
+Esta é uma parte de F1-06. Não substitui observação de instâncias, métricas de
+apps nem a instalação do painel como serviço. Próximo marco: operações tipadas
+de containers e isolamento da rede, antes da conexão com o fluxo de publicação.
