@@ -369,9 +369,8 @@ A revisão também separou as chaves de idempotência de upload e preparação e
 preservou o erro `busy` quando um builder CLI já ocupa o lock, sem atribuir a
 esse trabalho uma limpeza pertencente ao outro.
 
-A homologação local do pacote `builder2` ainda depende de execução privilegiada:
-`sudo` exige senha nesta sessão. A homologação local do marco 13 refere-se ao
-contrato CLI do pacote anterior. As falhas intermitentes anteriores de cache,
+A homologação local do marco 13 refere-se ao contrato CLI do pacote anterior.
+As falhas intermitentes anteriores de cache,
 partida e limpeza continuam sem causa confirmada; este sucesso no kernel 6.17
 não comprova resolução dessas falhas nem capacidade sob carga.
 
@@ -391,3 +390,25 @@ artefato preparado, iniciar a candidata e registrar sua rota após readiness,
 preservando a publicação anterior em caso de falha. Downloads, retenção visual,
 prioridades da fila e homologação de reboot continuam pendentes.
 Contrato, limites e demonstração: [BUILDER_PAINEL.md](BUILDER_PAINEL.md).
+
+### Tentativa local de builder2 e correção da preparação Python
+
+Em 20/10/2026, o operador executou o pacote `0.1.0~builder2`. O
+[relatório local](evidencias/builder-panel-local-setup.json) registra **26
+verificações aprovadas**, seguidas de falha antes dos testes de integração com
+o painel. Não há erro de limpeza no relatório. O SHA-256 conferido do pacote foi
+`c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9`.
+O host usou kernel `7.0.0-38-generic`, 16 CPUs lógicas,
+66.735.198.208 bytes de RAM e Podman 4.9.3.
+
+A reprodução com o mesmo Python 3.12.3 confirmou que `python -m venv` falha
+porque `ensurepip` está ausente. O roteiro agora cria o ambiente descartável
+sem pip e usa o pip do interpretador invocador para instalar as dependências
+fixadas nesse ambiente. A preparação ocorre antes dos builds e identifica sua
+etapa no relatório, sem expor saídas que possam conter credenciais.
+
+A preparação corrigida passou neste host, sem sudo, incluindo todas as
+dependências de `requirements.lock` e importações isoladas de Django 5.2.18,
+Argon2 e cryptography. Isso confirma a correção da preparação Python; **não
+conclui a homologação local** do painel com o builder. A repetição privilegiada
+ainda depende do operador, pois `sudo` exige senha nesta sessão.

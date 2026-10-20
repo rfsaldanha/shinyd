@@ -9,6 +9,7 @@ import os
 import platform
 import pwd
 import shutil
+import subprocess
 import sys
 import tempfile
 import urllib.request
@@ -23,6 +24,45 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("/etc/shinyd-builder/policy.json")
 STATE = Path("/var/lib/shinyd-builder")
 RUNTIME_POLICY = Path("/etc/shinyd-runtime/policy.json")
+
+
+def prepare_panel_python(directory, report):
+    """Use the invoking pip to populate an isolated venv, without ensurepip."""
+    interpreter = directory / "bin/python"
+    steps = (
+        ("venv", 60, (sys.executable, "-m", "venv", "--without-pip", str(directory))),
+        (
+            "dependencies",
+            180,
+            (
+                sys.executable,
+                "-m",
+                "pip",
+                "--isolated",
+                "--disable-pip-version-check",
+                "--python",
+                str(interpreter),
+                "install",
+                "--no-input",
+                "-r",
+                str(ROOT / "requirements.lock"),
+            ),
+        ),
+    )
+    for stage, timeout, args in steps:
+        diagnostic = {"stage": stage, "passed": False}
+        report["panel_setup"] = diagnostic
+        try:
+            result = command(*args, timeout=timeout, check=False)
+        except subprocess.TimeoutExpired:
+            diagnostic["error"] = "timeout"
+            raise RuntimeError(f"Preparação Python do painel excedeu o prazo: {stage}.") from None
+        if result.returncode:
+            diagnostic["exit_code"] = result.returncode
+            # pip output can contain authenticated index URLs. Never include it.
+            raise RuntimeError(f"Preparação Python do painel falhou: {stage}.")
+        diagnostic["passed"] = True
+    return interpreter
 
 
 def prepare_environment(directory, reference):
@@ -196,6 +236,13 @@ def main():
             ).stdout
             record("package_identity", identity == "shinyd-builder 0.1.0~builder2", identity)
             command("dpkg", "--install", str(package), timeout=120)
+            # Bootstrap before expensive container builds, using disposable state.
+            # /var/lib/shinyd belongs to the diagnostic agent (root:root 0750).
+            panel_state = Path("/var/lib") / ("shinyd-builder-probe-" + uuid.uuid4().hex)
+            control = pwd.getpwnam("shinyd-control")
+            panel_state.mkdir(mode=0o700)
+            os.chown(panel_state, control.pw_uid, control.pw_gid)
+            interpreter = prepare_panel_python(panel_state / "venv", report)
             report["environment"]["podman"] = json.loads(
                 command("podman", "version", "--format=json").stdout
             )["Client"]["Version"]
@@ -419,12 +466,6 @@ def main():
             )
             # This separate database never opens the developer's panel state.
             record("empty_api_jobs", not any(p.is_dir() for p in (STATE / "jobs").iterdir()))
-            # /var/lib/shinyd belongs to the diagnostic agent (root:root 0750).
-            # The control account needs its own disposable state directory.
-            panel_state = Path("/var/lib") / ("shinyd-builder-probe-" + uuid.uuid4().hex)
-            control = pwd.getpwnam("shinyd-control")
-            panel_state.mkdir(mode=0o700)
-            os.chown(panel_state, control.pw_uid, control.pw_gid)
             shutil.copyfile(temporary / "app-0.zip", panel_state / "fixture.zip")
             os.chown(panel_state / "fixture.zip", control.pw_uid, control.pw_gid)
             # A developer/runner home can be 0750. Never weaken its permissions
@@ -437,17 +478,6 @@ def main():
             (project / "scripts").mkdir()
             for name in ("bootstrap.py", "builder_panel_probe.py"):
                 shutil.copyfile(ROOT / "scripts" / name, project / "scripts" / name)
-            interpreter = panel_state / "venv/bin/python"
-            command(sys.executable, "-m", "venv", str(panel_state / "venv"))
-            command(
-                str(interpreter),
-                "-m",
-                "pip",
-                "install",
-                "-r",
-                str(ROOT / "requirements.lock"),
-                timeout=180,
-            )
             for path in panel_state.rglob("*"):
                 os.chown(path, control.pw_uid, control.pw_gid, follow_symlinks=False)
             command("systemctl", "start", "shinyd-builder.socket")

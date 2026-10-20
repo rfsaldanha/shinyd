@@ -114,12 +114,30 @@ o [relatório](evidencias/builder-panel-ci.json) registra o commit e o ambiente
 observado. Isso não substitui a homologação do novo pacote no host do operador.
 
 Exige a instalação de teste vazia indicada pelo roteiro, os pacotes do agente
-e executor, Chrome e o probe Go. O roteiro cria catálogo, banco, contas e ZIPs
+e executor, Chrome, o probe Go e `pip` 22.3+ no Python que executa o roteiro
+(`.venv/bin/python -m pip --version`). O ambiente Python descartável é criado
+com `--without-pip` e recebe as dependências fixadas por
+[`pip --python`](https://pip.pypa.io/en/stable/topics/python-option/),
+sem exigir `ensurepip` nem compartilhar os pacotes do ambiente de desenvolvimento.
+Isso acontece antes de preparar as imagens R; `panel_setup` registra a etapa,
+o resultado e, em falhas, o código de saída ou timeout. A saída bruta do pip
+não entra no relatório, pois pode conter URLs com credenciais de repositórios.
+
+O roteiro cria catálogo, banco, contas e ZIPs
 descartáveis; testa as views HTTP e worker com o serviço real, reinicia a API,
 confere imagem nova, cancelamento, permissões e ausência de segredo nas saídas
 verificadas. Remove os registros da demonstração e encerra a API ao finalizar.
 A navegação reativa dos dois apps R continua coberta pelo probe Chrome anterior;
 a nova tela de preparação é exercitada pelo cliente de testes HTTP do Django.
+
+A primeira execução local de `builder2` passou por 26 verificações e falhou
+na criação do ambiente Python de teste, antes de exercitar o painel. A reprodução
+com o mesmo interpretador confirmou a ausência de `ensurepip`; o relatório
+[original](evidencias/builder-panel-local-setup.json) foi preservado.
+A preparação corrigida foi exercitada localmente com todas as dependências
+fixadas e importação isolada de Django, Argon2 e cryptography. A homologação
+privilegiada completa deste host ainda precisa ser repetida com o roteiro
+corrigido; essa verificação parcial não a substitui.
 
 Fontes: [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html),
 [socket do Python](https://docs.python.org/3.12/library/socket.html),
