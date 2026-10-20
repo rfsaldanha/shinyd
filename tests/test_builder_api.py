@@ -167,6 +167,24 @@ def test_runner_cancel_and_safe_failure(service):
     assert jobs.get(identity)["error"] == "storage"
 
 
+def test_cli_lock_conflict_does_not_claim_another_build_needs_cleanup(service):
+    jobs, _ = service
+    identity = str(uuid.uuid4())
+    jobs.submit(identity, spec(), io.BytesIO(b"fixture"), 7)
+    save(jobs.root.parent / "current.json", {"another_build": True})
+
+    class BusyBuild:
+        def __init__(self, **_):
+            pass
+
+        def build(self, *_):
+            policy.fail("busy")
+
+    runner.run(identity, jobs=jobs.root, factory=BusyBuild)
+    assert jobs.get(identity)["error"] == "busy"
+    assert (jobs.root.parent / "current.json").exists()
+
+
 def test_real_unix_peer_identity_and_typed_transport(service, tmp_path):
     jobs, _ = service
     path = str(tmp_path / "api.sock")

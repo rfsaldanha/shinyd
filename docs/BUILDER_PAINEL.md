@@ -108,6 +108,11 @@ sudo .venv/bin/python scripts/builder_smoke.py \
   | tee var/builder-panel-report.json
 ```
 
+As 33 verificações passaram no
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39461324271);
+o [relatório](evidencias/builder-panel-ci.json) registra o commit e o ambiente
+observado. Isso não substitui a homologação do novo pacote no host do operador.
+
 Exige a instalação de teste vazia indicada pelo roteiro, os pacotes do agente
 e executor, Chrome e o probe Go. O roteiro cria catálogo, banco, contas e ZIPs
 descartáveis; testa as views HTTP e worker com o serviço real, reinicia a API,

@@ -42,7 +42,7 @@ def run(job_id, *, jobs=JOBS, factory=Builder):
         record.update(status="succeeded", phase="prepared", artifact=artifact)
     except Exception as exc:
         code = str(exc) if isinstance(exc, BuildError) and str(exc) in MESSAGES else "storage"
-        if (jobs.parent / "current.json").exists():
+        if code != "busy" and (jobs.parent / "current.json").exists():
             code = "cleanup"
         # Never report cancellation as complete if ownership cleanup failed.
         was_cancelled = (path / "cancel").exists() and code != "cleanup"

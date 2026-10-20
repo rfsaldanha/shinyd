@@ -135,7 +135,8 @@ def receive_upload(actor, app_id, upload, idempotency_key, entrypoint=""):
             existing = Job.objects.filter(idempotency_key=idempotency_key).first()
             if existing:
                 if (
-                    existing.app_id != app.id
+                    existing.kind != "inspect_upload"
+                    or existing.app_id != app.id
                     or existing.actor_id != actor.id
                     or existing.version.source_hash != digest.hexdigest()
                     or existing.version.entrypoint != entrypoint

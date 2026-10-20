@@ -3,13 +3,14 @@ from datetime import timedelta
 
 import pytest
 from django.core.exceptions import PermissionDenied
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 
 from control import build_jobs, builder_client
 from control.jobs import process_one
 from control.models import AuditEvent, Job
-from control.services import Conflict
+from control.services import Conflict, receive_upload
 from tests.test_jobs import send
 
 pytestmark = pytest.mark.django_db
@@ -168,3 +169,16 @@ def test_unavailable_catalog_shows_safe_message(client, app, accounts, local_sta
     client.force_login(accounts["publisher"])
     response = client.get(reverse("version_prepare", args=[job.version_id]))
     assert response.status_code == 503 and b"indispon" in response.content
+
+
+def test_upload_cannot_reuse_a_build_idempotency_key(app, accounts, local_state):
+    job = queued(app, accounts)
+    content = (local_state / job.version.source_path).read_bytes()
+    with pytest.raises(Conflict):
+        receive_upload(
+            accounts["publisher"],
+            app.pk,
+            SimpleUploadedFile("app.zip", content),
+            job.idempotency_key,
+            job.version.entrypoint,
+        )

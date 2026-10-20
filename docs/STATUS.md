@@ -345,16 +345,35 @@ permitem retomar consultas após perder a resposta ou reiniciar a API/worker.
 Um cancelamento anterior ao envio impede submissão tardia. Falha de limpeza
 permanece visível e não é apresentada como cancelamento concluído.
 
-Os **163 testes Python** passaram, incluindo transporte Unix real com recusa de
+Os **165 testes Python** passaram, incluindo transporte Unix real com recusa de
 UID indevido, requisições inválidas, concorrência, retomada, upload interrompido,
 cancelamento, conflito de leases e revogação de permissão. Ruff e verificações
 Django/migrações passaram. O pacote foi gerado e as novas unidades foram
 verificadas pelo systemd; a verificação também apontou o `MemoryMax=0` do pacote
 antigo do executor ainda instalado neste host, já corrigido no código no marco 12.
 
-O roteiro privilegiado foi ampliado para testar views e worker Django contra a
-API instalada, com a identidade real `shinyd-control` e banco descartável.
-Sua execução no CI e a homologação local deste novo pacote ainda estão pendentes.
+As **33 verificações do roteiro privilegiado** passaram no
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39461324271), incluindo
+views e worker Django contra a API instalada, com a identidade real
+`shinyd-control` e banco descartável. Os cinco jobs passaram. Evidência:
+[builder-panel-ci.json](evidencias/builder-panel-ci.json). O runner usou kernel
+`6.17.0-1022-azure`, 4 CPUs lógicas, 16.770.748.416 bytes de RAM e Podman 4.9.3.
+
+O primeiro ensaio da integração falhou no roteiro: o estado do painel tinha sido
+colocado sob o diretório do agente, `root:root 0750`, inacessível à conta de
+controle. A demonstração agora usa diretório e ambiente Python descartáveis
+próprios, sem ampliar permissões de diretórios existentes. O banco local de
+desenvolvimento recebeu a migração após backup privado em `var/backups/`.
+
+A revisão também separou as chaves de idempotência de upload e preparação e
+preservou o erro `busy` quando um builder CLI já ocupa o lock, sem atribuir a
+esse trabalho uma limpeza pertencente ao outro.
+
+A homologação local do pacote `builder2` ainda depende de execução privilegiada:
+`sudo` exige senha nesta sessão. A homologação local do marco 13 refere-se ao
+contrato CLI do pacote anterior. As falhas intermitentes anteriores de cache,
+partida e limpeza continuam sem causa confirmada; este sucesso no kernel 6.17
+não comprova resolução dessas falhas nem capacidade sob carga.
 
 Este marco cobre a integração de F2-03 e parte de F2-06. **Ainda não ativa
 publicações**: o próximo contrato deve permitir ao executor reconhecer um
