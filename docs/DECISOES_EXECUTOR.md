@@ -38,10 +38,22 @@ seccomp, no-new-privileges e limites de 128 MiB/64 processos presentes no kernel
 
 Foram observados somente `memory` e `pids` delegados ao usuário. AppArmor aparece
 como `podman (unconfined)`. Logo, esse modo **não homologa** QoS de CPU nem o
-perfil de isolamento proposto. O teste rootful está preparado e aguarda execução
-com sudo, conforme [o roteiro](HOMOLOGACAO_CONTAINERS.md).
+perfil de isolamento proposto.
 
 Relatório sanitizado: [container-rootless.json](evidencias/container-rootless.json).
+
+## Primeiro teste rootful: pré-requisito ausente
+
+O operador executou o teste privilegiado em 20/10/2026. Podman informou cgroups v2,
+gerenciador systemd, controlador CPU e AppArmor disponível. A criação do container
+falhou: faltavam faixas para `containers` em `/etc/subuid` e `/etc/subgid`.
+Isso **não demonstra** AppArmor imposto, mapeamento de UIDs ou peso de CPU
+efetivo; essas verificações ficaram sem execução.
+
+[Relatório original](evidencias/container-rootful-prerequisito.json), sem credenciais.
+O próximo teste inclui preparação explícita e idempotente dessa reserva,
+conforme [o roteiro atualizado](HOMOLOGACAO_CONTAINERS.md). Mantidos user namespaces
+e os demais controles de isolamento. Execução de código publicado continua desabilitada.
 
 ## Proxy e sessões Shiny reais
 

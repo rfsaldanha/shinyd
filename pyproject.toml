@@ -12,7 +12,7 @@ dependencies = [
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "shinyd_web.settings_test"
-pythonpath = ["backend"]
+pythonpath = ["backend", "scripts"]
 testpaths = ["tests"]
 
 [tool.ruff]

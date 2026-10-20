@@ -53,7 +53,8 @@ privilégios apropriados, seguida dos experimentos de sessões/ambientes R.
 
 * Podman instalado pelo operador; teste rootless inicial aprovado.
 * Limitações reais: CPU não delegada e AppArmor não imposto no modo rootless.
-* Roteiro rootful limitado disponível; resultado ainda pendente.
+* Primeiro teste rootful executado pelo operador: criação do container bloqueada
+  por ausência da reserva de IDs `containers`; homologação ainda pendente.
 * Núcleo do proxy Go com autorização antes de HTTP/WS e revalidação de WS,
   fronteiras de cabeçalhos/cookies e destinos loopback.
 * Experimento com R 4.4.3/Shiny 1.10.0 e R 4.5.2/Shiny 1.13.0 simultâneos:
@@ -66,4 +67,23 @@ Detalhes e relatórios em [DECISOES_EXECUTOR.md](DECISOES_EXECUTOR.md).
 Os experimentos não estão conectados ao painel e não habilitam execução de
 código publicado. Não há declaração de conclusão do MVP ou da versão 1.0.
 
-CI remota: marcos 1 e 2 aprovados em GitHub Actions.
+CI remota: marcos 1, 2 e 3 aprovados em GitHub Actions.
+
+## Marco 4 — Preparação de IDs para containers
+
+* Falha real do teste rootful preservada em
+  [container-rootful-prerequisito.json](evidencias/container-rootful-prerequisito.json).
+* Diagnóstico antecipado da reserva de IDs, antes de baixar imagens/criar unidades.
+* Preparador com prévia somente leitura e aplicação explícita: preservação das
+  entradas existentes, detecção de sobreposição, locks, backups e recuperação
+  após falha de escrita.
+* Opção `--rootful --prepare-subids` prepara o pré-requisito e repete o teste em
+  um comando. Não afrouxa isolamento e não modifica sudoers.
+* Testes automatizados cobrem reserva, repetição, colisões, arquivos inseguros,
+  provedor externo, disputa de locks, erro de escrita e diagnóstico antecipado.
+* Verificação local: **62 testes aprovados**, Ruff e formatação aprovados; teste
+  real rootless repetido com sucesso, mantendo as limitações já documentadas.
+
+A aplicação no `/etc` real e a repetição do teste exigem sudo pelo operador;
+sudo sem interação continua indisponível nesta sessão. Esse marco prepara o
+reteste, não declara o executor homologado nem conclui a instalação do produto.

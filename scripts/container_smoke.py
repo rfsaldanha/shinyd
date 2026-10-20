@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded Podman smoke test. Prints JSON; never installs or changes host policy."""
+"""Bounded Podman smoke test. Host ID preparation requires --prepare-subids."""
 
 import argparse
 import json
@@ -12,6 +12,8 @@ import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+
+from container_subids import inspect_reservation, reserve
 
 IMAGE = "docker.io/library/alpine:3.22"
 
@@ -30,6 +32,11 @@ def main():
         action="store_true",
         help="Exige root; testa AppArmor e slice transitória do sistema",
     )
+    parser.add_argument(
+        "--prepare-subids",
+        action="store_true",
+        help="Reserva IDs livres em /etc/subuid e /etc/subgid com backup; exige --rootful.",
+    )
     args = parser.parse_args()
 
     def interrupted(signum, frame):
@@ -38,6 +45,8 @@ def main():
     signal.signal(signal.SIGTERM, interrupted)
     if args.rootful != (os.geteuid() == 0):
         parser.error("Use sem sudo para rootless; com sudo, informe --rootful.")
+    if args.prepare_subids and not args.rootful:
+        parser.error("--prepare-subids exige --rootful.")
     podman = shutil.which("podman")
     if not podman:
         parser.error("Podman não encontrado.")
@@ -66,6 +75,20 @@ def main():
             raise RuntimeError(f"Falha no teste {name}: {detail}")
 
     try:
+        if args.rootful:
+            if args.prepare_subids:
+                report["subid_preparation"] = reserve()
+            reservation, _ = inspect_reservation()
+            record(
+                "subid_reservation",
+                reservation["action"] == "unchanged",
+                reservation["ranges"]
+                if reservation["action"] == "unchanged"
+                else (
+                    "Falta reservar IDs para containers em /etc/subuid e /etc/subgid. "
+                    "Revise scripts/container_subids.py e repita com --rootful --prepare-subids."
+                ),
+            )
         info = json.loads(command(podman, "info", "--format", "json"))
         host = info["host"]
         report["podman_version"] = info["version"]["Version"]
