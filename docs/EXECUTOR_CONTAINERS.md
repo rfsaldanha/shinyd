@@ -121,6 +121,14 @@ O roteiro passou nas 25 verificações do
 O [relatório](evidencias/executor-ci.json) registra o ambiente observado e
 as verificações posteriores de preservação do agente de diagnóstico.
 
+Em 20/10/2026, as mesmas 25 verificações passaram no host local, incluindo
+preservação do ID do container e do PID no host após reiniciar o executor.
+O [relatório local](evidencias/executor-local.json) registra hardware, versões,
+AppArmor imposto e checksum do pacote. A conferência posterior confirmou o
+executor parado, seu socket desabilitado e o agente de diagnóstico ativo.
+Essa homologação funcional não cobre reboot, publicação de ZIPs ou capacidade
+sob carga.
+
 ## API e manutenção
 
 * `PUT /v1/instances/<UUID>`: JSON exato `app_id`, `recipe`, `priority`.

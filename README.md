@@ -16,6 +16,7 @@ na verificação rootful. O [gateway com login central](docs/GATEWAY_ACESSO.md)
 tem um roteiro separado com apps de teste.
 O [executor de containers](docs/EXECUTOR_CONTAINERS.md) acrescenta operações
 restritas de ciclo de vida e atendimento por sockets Unix, em pacote separado.
+Suas 25 verificações funcionais passaram no CI e no host local.
 Ele ainda não está conectado à publicação de ZIPs pelo painel.
 
 ## Diagnóstico do servidor

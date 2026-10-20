@@ -219,11 +219,35 @@ Evidência: [executor-ci.json](evidencias/executor-ci.json), incluindo versões,
 hardware e perfil de teste. Isso comprova este cenário funcional, sem medir
 capacidade de usuários, pressão de memória ou QoS sob concorrência.
 
-O novo pacote ainda não foi instalado/homologado no host local: `sudo -n`
-exige senha nesta sessão. O pacote e o roteiro estão preparados para execução
-limitada pelo operador, sem alterar sudoers nem as permissões do diagnóstico.
-
 Contrato e limites: [EXECUTOR_CONTAINERS.md](EXECUTOR_CONTAINERS.md).
 Uploads continuam sem execução; faltam builder, registro automático no painel,
 drenagem, dados persistentes e QoS sob carga. Reinício do executor encerra as
 conexões dos relays, embora preserve containers já em execução.
+
+## Marco 11 — Executor homologado localmente
+
+O operador instalou `shinyd-runtime 0.1.0~runtime1` e executou o roteiro
+privilegiado em 20/10/2026. As **25 verificações passaram** no host local,
+incluindo dois apps Shiny reais, isolamento, admissão, parada de uma instância
+sem interromper a sessão da outra e partida malsucedida com tentativas limitadas.
+Na recuperação após reiniciar o executor, o roteiro conferiu tanto a identidade
+do container quanto o PID do processo no host; a sessão do navegador foi recriada.
+
+Evidência: [executor-local.json](evidencias/executor-local.json), cópia do
+relatório de `var/runtime-report.json`. O ambiente observado tinha kernel
+`7.0.0-38-generic`, 16 CPUs lógicas, 66.735.202.304 bytes de RAM, Podman 4.9.3
+e cgroups v2. Os apps usaram R 4.4.3 e Shiny 1.10.0, com AppArmor em modo
+`enforce`. Este cenário não mede capacidade de atendimento.
+
+A conferência posterior confirmou:
+
+* Checksum SHA-256 do pacote local igual ao registrado no relatório:
+  `4f6cfbe5b265327a405179ce2063f4bbc1d5a667b934e6c1463f5f1f6588dd29`.
+* Pacote instalado; serviço e socket do executor inativos, com resultado
+  `success`, e socket desabilitado, como previsto na finalização do roteiro.
+* Serviço e socket do agente de diagnóstico ativos, com socket habilitado.
+
+Isso conclui a homologação local deste executor. Publicação de ZIPs, builder,
+TLS, dados persistentes, drenagem, recuperação após reboot e QoS sob carga
+continuam pendentes. O próximo marco é o builder isolado (F2-03), preparando
+artefatos verificados para conectar o fluxo de publicação ao executor.

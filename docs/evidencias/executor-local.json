@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-20T14:47:30.691766+00:00",
+  "scope": "Executor rootful, rede none, relay Unix e Shiny real",
+  "production_ready": false,
+  "tests": [
+    {
+      "name": "empty_test_installation",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "subids_prepared",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "package_checksum",
+      "passed": true,
+      "detail": "4f6cfbe5b265327a405179ce2063f4bbc1d5a667b934e6c1463f5f1f6588dd29"
+    },
+    {
+      "name": "package_identity",
+      "passed": true,
+      "detail": "shinyd-runtime 0.1.0~runtime1"
+    },
+    {
+      "name": "execution_disabled_after_install",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "instance_0_ready",
+      "passed": true,
+      "detail": {
+        "id": "d5743f60-dbb3-4fac-ad8a-dc28bb9b6ec4",
+        "app_id": "d5743f60-dbb3-4fac-ad8a-dc28bb9b6ec4",
+        "recipe": "probe",
+        "priority": "normal",
+        "desired": "running",
+        "state": "ready",
+        "target": "unix:/run/shinyd-runtime/apps/d5743f60-dbb3-4fac-ad8a-dc28bb9b6ec4.sock"
+      }
+    },
+    {
+      "name": "instance_0_apparmor",
+      "passed": true,
+      "detail": {
+        "process_label": "containers-default-0.57.4-apparmor1 (enforce)",
+        "required_profile": "containers-default-0.57.4-apparmor1"
+      }
+    },
+    {
+      "name": "instance_0_idempotent",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "instance_1_ready",
+      "passed": true,
+      "detail": {
+        "id": "a9a26bb0-3aa8-4f64-9e7a-2cb44ba946e6",
+        "app_id": "a9a26bb0-3aa8-4f64-9e7a-2cb44ba946e6",
+        "recipe": "probe",
+        "priority": "normal",
+        "desired": "running",
+        "state": "ready",
+        "target": "unix:/run/shinyd-runtime/apps/a9a26bb0-3aa8-4f64-9e7a-2cb44ba946e6.sock"
+      }
+    },
+    {
+      "name": "instance_1_apparmor",
+      "passed": true,
+      "detail": {
+        "process_label": "containers-default-0.57.4-apparmor1 (enforce)",
+        "required_profile": "containers-default-0.57.4-apparmor1"
+      }
+    },
+    {
+      "name": "instance_1_idempotent",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "aggregate_memory_and_app_hierarchy",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "untyped_arguments_denied",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "server_admission_limit",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "unauthorized_uid",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "distinct_network_namespaces",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "host_metadata_and_control_blocked",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "browser_stop_first",
+      "passed": true,
+      "detail": [
+        {
+          "id": "d5743f60-dbb3-4fac-ad8a-dc28bb9b6ec4",
+          "r": "4.4.3",
+          "shiny": "1.10.0",
+          "pid": "1"
+        },
+        {
+          "id": "a9a26bb0-3aa8-4f64-9e7a-2cb44ba946e6",
+          "r": "4.4.3",
+          "shiny": "1.10.0",
+          "pid": "1"
+        }
+      ]
+    },
+    {
+      "name": "stop_one_instance",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "browser_restart_executor",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "restart_without_duplicate",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "browser_passed",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "failed_start_is_bounded",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "failure_preserves_other_app",
+      "passed": true,
+      "detail": null
+    },
+    {
+      "name": "no_container_output_in_audit",
+      "passed": true,
+      "detail": null
+    }
+  ],
+  "limitations": [
+    "Não publica ZIPs nem homologa TLS, builder, dados persistentes ou QoS sob carga.",
+    "Reinício do executor encerra sessões; não há drenagem nem acesso externo dos apps.",
+    "Não testa reboot; mantém imagens em cache e pacote instalado, executor desabilitado."
+  ],
+  "environment": {
+    "kernel": "7.0.0-38-generic",
+    "architecture": "x86_64",
+    "logical_cpus": 16,
+    "memory_bytes": 66735202304,
+    "podman": "4.9.3",
+    "cgroup_version": "v2",
+    "profile": "Dois Shiny de teste com sessões reativas; não é teste de capacidade."
+  },
+  "fixture_image": "sha256:716c86e30d9d57951ad0cec0acc60f6bd0a29c414055dec1957c738c5fe12ce0",
+  "passed": true
+}
