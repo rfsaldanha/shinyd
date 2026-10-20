@@ -345,7 +345,7 @@ permitem retomar consultas após perder a resposta ou reiniciar a API/worker.
 Um cancelamento anterior ao envio impede submissão tardia. Falha de limpeza
 permanece visível e não é apresentada como cancelamento concluído.
 
-Os **165 testes Python** passaram, incluindo transporte Unix real com recusa de
+Os **168 testes Python** passaram, incluindo transporte Unix real com recusa de
 UID indevido, requisições inválidas, concorrência, retomada, upload interrompido,
 cancelamento, conflito de leases e revogação de permissão. Ruff e verificações
 Django/migrações passaram. O pacote foi gerado e as novas unidades foram
@@ -353,11 +353,11 @@ verificadas pelo systemd; a verificação também apontou o `MemoryMax=0` do pac
 antigo do executor ainda instalado neste host, já corrigido no código no marco 12.
 
 As **33 verificações do roteiro privilegiado** passaram no
-[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39461324271), incluindo
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39463341316), incluindo
 views e worker Django contra a API instalada, com a identidade real
 `shinyd-control` e banco descartável. Os cinco jobs passaram. Evidência:
 [builder-panel-ci.json](evidencias/builder-panel-ci.json). O runner usou kernel
-`6.17.0-1022-azure`, 4 CPUs lógicas, 16.770.748.416 bytes de RAM e Podman 4.9.3.
+`6.17.0-1022-azure`, 4 CPUs lógicas, 16.766.414.848 bytes de RAM e Podman 4.9.3.
 
 O primeiro ensaio da integração falhou no roteiro: o estado do painel tinha sido
 colocado sob o diretório do agente, `root:root 0750`, inacessível à conta de
@@ -374,6 +374,16 @@ A homologação local do pacote `builder2` ainda depende de execução privilegi
 contrato CLI do pacote anterior. As falhas intermitentes anteriores de cache,
 partida e limpeza continuam sem causa confirmada; este sucesso no kernel 6.17
 não comprova resolução dessas falhas nem capacidade sob carga.
+
+Na rodada seguinte, as 33 verificações passaram, mas a limpeza de duas instâncias
+falhou; [registro](evidencias/builder-panel-cleanup-ci.json). O roteiro agora
+respeita HTTP 429/Retry-After, com até quatro tentativas sobre o mesmo UUID,
+e registra as repetições. Outros erros continuam encerrando a operação; testes
+negativos observam a primeira recusa. Esse ajuste não altera o executor nem
+comprova a causa da falha anterior, cujo código HTTP não foi registrado.
+A rodada posterior passou integralmente, incluindo a limpeza, sem receber 429;
+o relatório registra `runtime_api_retries: []`. Os testes unitários cobrem a
+repetição limitada e a preservação de falhas diferentes de 429.
 
 Este marco cobre a integração de F2-03 e parte de F2-06. **Ainda não ativa
 publicações**: o próximo contrato deve permitir ao executor reconhecer um

@@ -1,14 +1,14 @@
 {
   "source": {
     "kind": "github_actions_job_log",
-    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39461324271",
-    "job_id": 118761237155,
-    "commit": "0fc751a3c7f34fe8bd66a0247d1b4a9a533b1ec0",
+    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39463341316",
+    "job_id": 118768106651,
+    "commit": "432ba27e310cd24561992e4292642061540db2a5",
     "conclusion": "success"
   },
   "builder": {
     "schema_version": 1,
-    "observed_at": "2026-10-20T16:54:01.855586+00:00",
+    "observed_at": "2026-10-20T17:08:46.217296+00:00",
     "scope": "Builder offline ZIP/renv, imagens imutáveis e integração com executor",
     "production_ready": false,
     "tests": [
@@ -20,7 +20,7 @@
       {
         "name": "package_checksum",
         "passed": true,
-        "detail": "594d325c2e20f41815c924cdb675a90b00c25a81ac21d08eabb313d0c8ca18f6"
+        "detail": "81e31e9bd512c577193fac05251757e3a7cdb6f704cf8a499e275d6b13c83963"
       },
       {
         "name": "package_identity",
@@ -74,12 +74,12 @@
           {
             "r": "4.4.3",
             "shiny": "1.10.0",
-            "image": "sha256:d160a1c73d932eaab9894e2ac13518852fe1cc14d7e3d8543b83de97f6d85b1c"
+            "image": "sha256:329438be9b290f69bcd6feb88ad5b70eaea3bd61fe6a2abc44d2e969de295815"
           },
           {
             "r": "4.5.2",
             "shiny": "1.13.0",
-            "image": "sha256:b213628d3a936b5f1088c244e84fb330e025cd2ee02ba74a143561ad2da8c9b2"
+            "image": "sha256:6090615abd2ff2f22818b5d4df0cad625b554e6cc67ef6e5d850547654b3831f"
           }
         ]
       },
@@ -87,26 +87,26 @@
         "name": "artifact_0_ready",
         "passed": true,
         "detail": {
-          "id": "08ec6ba7-889d-4abd-ac56-8ed9fb318ad5",
-          "app_id": "08ec6ba7-889d-4abd-ac56-8ed9fb318ad5",
+          "id": "2c19ce15-4259-4a17-b491-67776e344175",
+          "app_id": "2c19ce15-4259-4a17-b491-67776e344175",
           "recipe": "built-0",
           "priority": "normal",
           "desired": "running",
           "state": "ready",
-          "target": "unix:/run/shinyd-runtime/apps/08ec6ba7-889d-4abd-ac56-8ed9fb318ad5.sock"
+          "target": "unix:/run/shinyd-runtime/apps/2c19ce15-4259-4a17-b491-67776e344175.sock"
         }
       },
       {
         "name": "artifact_1_ready",
         "passed": true,
         "detail": {
-          "id": "85977548-28e8-43dd-8d6c-c9334577c307",
-          "app_id": "85977548-28e8-43dd-8d6c-c9334577c307",
+          "id": "2ef5aa37-1273-449b-b7ca-5103f40d3d90",
+          "app_id": "2ef5aa37-1273-449b-b7ca-5103f40d3d90",
           "recipe": "built-1",
           "priority": "normal",
           "desired": "running",
           "state": "ready",
-          "target": "unix:/run/shinyd-runtime/apps/85977548-28e8-43dd-8d6c-c9334577c307.sock"
+          "target": "unix:/run/shinyd-runtime/apps/2ef5aa37-1273-449b-b7ca-5103f40d3d90.sock"
         }
       },
       {
@@ -235,7 +235,7 @@
       "kernel": "6.17.0-1022-azure",
       "architecture": "x86_64",
       "logical_cpus": 4,
-      "memory_bytes": 16770748416,
+      "memory_bytes": 16766414848,
       "profile": "Dois apps, builds offline e operações reativas; sem teste de capacidade.",
       "podman": "4.9.3"
     },
@@ -247,13 +247,13 @@
       {
         "schema_version": 1,
         "recipe_version": 1,
-        "created_at": "2026-10-20T16:55:21.564294+00:00",
-        "app_id": "08ec6ba7-889d-4abd-ac56-8ed9fb318ad5",
-        "cache_key": "5bd6bbbd80f0a507d8ddf8fa4c5c01205090178a522a8c0518b3f83bd8b966d9",
-        "source_hash": "2eac1e63c290dda4f19d31c9945b60865f1a4e6647eba84055e9284035a0a633",
+        "created_at": "2026-10-20T17:10:03.582254+00:00",
+        "app_id": "2c19ce15-4259-4a17-b491-67776e344175",
+        "cache_key": "c820b1e5e032a183f31f2b4b47104f6ff482f3e9bfee24297930588ec5fb6d33",
+        "source_hash": "31ccc390a92fcce240491874d50b79e989cea34a17dfd1688de830b07a7f146d",
         "entrypoint": "project",
-        "base_image": "sha256:348878153c2a618703eada6a85a66786e1809420f0c49ba6043a7c527ff51671",
-        "image": "sha256:d160a1c73d932eaab9894e2ac13518852fe1cc14d7e3d8543b83de97f6d85b1c",
+        "base_image": "sha256:8bffb85e462faaae09d92635f57d7681f5aee20808916d0793240c77de2f0f74",
+        "image": "sha256:329438be9b290f69bcd6feb88ad5b70eaea3bd61fe6a2abc44d2e969de295815",
         "r_version": "4.4.3",
         "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
         "packages": {
@@ -309,13 +309,13 @@
       {
         "schema_version": 1,
         "recipe_version": 1,
-        "created_at": "2026-10-20T16:55:37.798056+00:00",
-        "app_id": "85977548-28e8-43dd-8d6c-c9334577c307",
-        "cache_key": "ae8a677ec069791e1be9f0a7690f681dc3714266f657aab7c0d3bce53b52f1f4",
-        "source_hash": "4757385f03ca795f4da328ffb3fe07b1a76ebf6b00580e42ab45eba166f4db0c",
+        "created_at": "2026-10-20T17:10:17.776993+00:00",
+        "app_id": "2ef5aa37-1273-449b-b7ca-5103f40d3d90",
+        "cache_key": "552c390a8b56f685ab18facbd6ab1ee526482e21848b0adad85ea39d4d19e494",
+        "source_hash": "040342add553ebeef978cc12b2bb98d8496efde6e8c2ae2686d90f408fe03eb8",
         "entrypoint": "project",
-        "base_image": "sha256:8d3faccd02a423837afb8c990bf914f6e381e930164d539c864bd78615cec70a",
-        "image": "sha256:b213628d3a936b5f1088c244e84fb330e025cd2ee02ba74a143561ad2da8c9b2",
+        "base_image": "sha256:4b3b37adc1c8e683a4ff74bcc8ececca6c93af57db85bbdf6dbbf2792400c77b",
+        "image": "sha256:6090615abd2ff2f22818b5d4df0cad625b554e6cc67ef6e5d850547654b3831f",
         "r_version": "4.5.2",
         "lock_hash": "b8f2a7373b8320fab390ee9c4df52cfd0e8eb8db71b38cd4bdcddf944cd25fa9",
         "packages": {
@@ -370,13 +370,13 @@
       }
     ],
     "panel_artifact": {
-      "app_id": "4562ec0d-1c7a-4ed0-9c35-138c95606f76",
-      "base_image": "sha256:348878153c2a618703eada6a85a66786e1809420f0c49ba6043a7c527ff51671",
+      "app_id": "438414f2-0e58-4f08-84cd-5ebfceb18c07",
+      "base_image": "sha256:8bffb85e462faaae09d92635f57d7681f5aee20808916d0793240c77de2f0f74",
       "cache_hit": false,
-      "cache_key": "566100f8e0d60d5107835780a3f55162fe30413f8a59d7cc45fd52a5122c3a41",
-      "created_at": "2026-10-20T16:56:49.789119+00:00",
+      "cache_key": "320698c70a71f474f2d968a1355cca84e5946b3f5c4cdf1c46c2ba2743ae56a8",
+      "created_at": "2026-10-20T17:11:22.712808+00:00",
       "entrypoint": "project",
-      "image": "sha256:1274073655f1691284bf3677ad0a0916c0c16960e03fb5c1e1f5ba3876014c60",
+      "image": "sha256:3df5092421084aa5ac2c894a34bb7a219fee0cc33c3abdb5d4fecf964a515a8c",
       "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
       "packages": {
         "R6": "2.6.1",
@@ -429,8 +429,9 @@
       "r_version": "4.4.3",
       "recipe_version": 1,
       "schema_version": 1,
-      "source_hash": "2eac1e63c290dda4f19d31c9945b60865f1a4e6647eba84055e9284035a0a633"
+      "source_hash": "31ccc390a92fcce240491874d50b79e989cea34a17dfd1688de830b07a7f146d"
     },
+    "runtime_api_retries": [],
     "passed": true
   }
 }

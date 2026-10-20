@@ -109,7 +109,7 @@ sudo .venv/bin/python scripts/builder_smoke.py \
 ```
 
 As 33 verificações passaram no
-[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39461324271);
+[CI](https://github.com/rfsaldanha/shinyd/actions/runs/39463341316);
 o [relatório](evidencias/builder-panel-ci.json) registra o commit e o ambiente
 observado. Isso não substitui a homologação do novo pacote no host do operador.
 

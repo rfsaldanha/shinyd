@@ -1,0 +1,26 @@
+{
+  "source": {
+    "kind": "github_actions_job_log",
+    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39462347631",
+    "job_id": 118764781216,
+    "commit": "cf538c7ea4c2487f47429e17711299c75a923352",
+    "conclusion": "failure"
+  },
+  "observed_at": "2026-10-20T17:01:07.677987+00:00",
+  "environment": {
+    "kernel": "7.0.0-1017-azure",
+    "architecture": "x86_64",
+    "logical_cpus": 4,
+    "memory_bytes": 16760344576,
+    "profile": "Dois apps, builds offline e operações reativas; sem teste de capacidade.",
+    "podman": "4.9.3"
+  },
+  "checks_passed": 33,
+  "checks_total": 33,
+  "passed": false,
+  "cleanup_error": [
+    "instance:a7010223-d0bc-47a4-9583-b8e8ce9b0fce",
+    "instance:a7c788ce-04ca-4555-b997-4c151162fe4a"
+  ],
+  "note": "As verificações funcionais passaram; a limpeza não concluiu. O roteiro desta execução não registrava o código da recusa nem repetia HTTP 429. A causa específica desta execução não foi comprovada."
+}
