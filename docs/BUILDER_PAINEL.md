@@ -112,7 +112,8 @@ As 33 verificações passaram no
 [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39465438999),
 já com a preparação Python corrigida;
 o [relatório](evidencias/builder-panel-bootstrap-ci.json) registra o commit e o ambiente
-observado. Isso não substitui a homologação do novo pacote no host do operador.
+observado. As mesmas 33 verificações passaram no host do operador em 20/10/2026;
+veja o [relatório local](evidencias/builder-panel-local.json).
 
 Exige a instalação de teste vazia indicada pelo roteiro, os pacotes do agente
 e executor, Chrome, o probe Go e `pip` 22.3+ no Python que executa o roteiro
@@ -136,9 +137,13 @@ na criação do ambiente Python de teste, antes de exercitar o painel. A reprodu
 com o mesmo interpretador confirmou a ausência de `ensurepip`; o relatório
 [original](evidencias/builder-panel-local-setup.json) foi preservado.
 A preparação corrigida foi exercitada localmente com todas as dependências
-fixadas e importação isolada de Django, Argon2 e cryptography. A homologação
-privilegiada completa deste host ainda precisa ser repetida com o roteiro
-corrigido; essa verificação parcial não a substitui.
+fixadas e importação isolada de Django, Argon2 e cryptography. Na repetição
+privilegiada, o roteiro completo passou, incluindo preparação pelo painel,
+retomada após reinício da API, cancelamento e permissões. Não houve erro de
+limpeza nem repetição da API do executor. Builder e executor terminaram parados,
+com sockets desabilitados; o socket do agente de diagnóstico permaneceu
+habilitado e escutando. Essa homologação cobre a preparação de versões, sem
+concluir ativação da publicação, reboot, capacidade ou QoS sob carga.
 
 Fontes: [systemd.service](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html),
 [socket do Python](https://docs.python.org/3.12/library/socket.html),

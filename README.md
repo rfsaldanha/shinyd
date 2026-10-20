@@ -21,7 +21,8 @@ O [builder offline](docs/BUILDER_OFFLINE.md) prepara ZIPs com `renv.lock` usando
 um catálogo de ambientes aprovado. Suas 25 verificações passaram no CI e no
 host local, com dois ambientes R distintos. A nova
 [integração com o painel](docs/BUILDER_PAINEL.md) acrescenta preparação de versões,
-progresso e cancelamento. A ativação da publicação ainda está em desenvolvimento.
+progresso e cancelamento. O roteiro ampliado passou nas 33 verificações no CI e
+no host local. A ativação da publicação ainda está em desenvolvimento.
 
 ## Diagnóstico do servidor
 

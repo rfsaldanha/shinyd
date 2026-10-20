@@ -409,9 +409,9 @@ etapa no relatório, sem expor saídas que possam conter credenciais.
 
 A preparação corrigida passou neste host, sem sudo, incluindo todas as
 dependências de `requirements.lock` e importações isoladas de Django 5.2.18,
-Argon2 e cryptography. Isso confirma a correção da preparação Python; **não
-conclui a homologação local** do painel com o builder. A repetição privilegiada
-ainda depende do operador, pois `sudo` exige senha nesta sessão.
+Argon2 e cryptography. Essa verificação confirmou a correção da preparação
+Python. Naquela rodada, a homologação local completa ainda aguardava a
+repetição privilegiada pelo operador, registrada no marco seguinte.
 
 O commit `26620d6` passou nos cinco jobs do
 [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39465438999).
@@ -420,3 +420,38 @@ repetição da API do executor. A preparação Python registrou
 `panel_setup: {"stage": "dependencies", "passed": true}`.
 Evidência: [builder-panel-bootstrap-ci.json](evidencias/builder-panel-bootstrap-ci.json).
 Localmente, os 168 testes Python e as verificações Ruff também passaram.
+
+## Marco 15 — Preparação pelo painel homologada localmente
+
+O operador repetiu o roteiro corrigido em 20/10/2026. As **33 verificações
+passaram**, com `passed: true`, sem erro de limpeza e sem repetição da API do
+executor. Evidência: [builder-panel-local.json](evidencias/builder-panel-local.json),
+cópia integral de `var/builder-panel-report.json`, iniciado às 17:28:36 UTC.
+
+O pacote instalado é `shinyd-builder 0.1.0~builder2`. O SHA-256 conferido do
+arquivo local coincide com o relatório:
+`c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9`.
+O host usou kernel `7.0.0-38-generic`, 16 CPUs lógicas,
+66.735.198.208 bytes de RAM e Podman 4.9.3. Os dois ambientes R foram
+4.4.3/Shiny 1.10.0 e 4.5.2/Shiny 1.13.0.
+
+Além dos cenários de build, isolamento, cache e execução simultânea dos apps,
+o roteiro confirmou, com a identidade real `shinyd-control` e banco descartável:
+
+* Upload e preparação pelas views Django, com criação de artefato novo.
+* Retomada pelo worker após reiniciar a API de build.
+* Cancelamento confirmado e negação de acesso a versões/trabalhos de outro usuário.
+* Ausência do segredo de teste no manifesto e na página consultada.
+
+A consulta posterior ao systemd confirmou builder e executor inativos com
+resultado `success`, e seus sockets desabilitados. O socket do agente de
+diagnóstico permaneceu habilitado e escutando; seu serviço estava inativo,
+disponível para ativação pelo socket.
+
+Isso conclui a homologação local da preparação de versões integrada ao painel.
+O roteiro usa cliente HTTP de testes Django para as telas e Chrome para os
+apps R; não é um teste de navegação visual da nova tela de preparação.
+O próximo marco é o contrato de ativação: reconhecer artefato preparado,
+iniciar a candidata, verificar funcionamento e registrar a rota no gateway,
+preservando a publicação anterior em caso de falha. Ativação, reboot, capacidade,
+QoS sob carga, downloads externos e os demais itens do plano continuam pendentes.
