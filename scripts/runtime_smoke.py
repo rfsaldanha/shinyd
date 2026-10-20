@@ -401,8 +401,29 @@ def main():
             stop_process(proxy)
             if touched_service:
                 if "error" in report:
-                    # This dedicated service logs fixed errors and audit metadata only.
-                    # Never collect application/container output into the report.
+                    # Only this test's trusted fixture IDs are inspected. No app
+                    # logs, environments or image labels enter the report.
+                    report["fixture_diagnostics"] = []
+                    for instance in created:
+                        inspection = command("podman", "inspect", "shinyd-" + instance, check=False)
+                        if inspection.returncode == 0:
+                            state = json.loads(inspection.stdout)[0]["State"]
+                            diagnosis = {
+                                "instance": instance,
+                                "status": state.get("Status"),
+                                "error": state.get("Error"),
+                                "exit_code": state.get("ExitCode"),
+                            }
+                            if state.get("Status") == "created":
+                                # A failed fixture start may leave no OCI error in
+                                # inspect. Retry only this trusted test container,
+                                # outside the service, to identify host vs unit errors.
+                                retry = command(
+                                    "podman", "start", "shinyd-" + instance, check=False
+                                )
+                                diagnosis["diagnostic_start_code"] = retry.returncode
+                                diagnosis["diagnostic_start_error"] = retry.stderr[:2000]
+                            report["fixture_diagnostics"].append(diagnosis)
                     report["executor_diagnostics"] = command(
                         "journalctl",
                         "--unit=shinyd-runtime",

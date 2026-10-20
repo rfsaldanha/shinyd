@@ -14,6 +14,9 @@ está habilitado; uma inspeção aprovada não publica o app.
 O [isolamento inicial de containers](docs/HOMOLOGACAO_CONTAINERS.md) passou
 na verificação rootful. O [gateway com login central](docs/GATEWAY_ACESSO.md)
 tem um roteiro separado com apps de teste.
+O [executor de containers](docs/EXECUTOR_CONTAINERS.md) acrescenta operações
+restritas de ciclo de vida e atendimento por sockets Unix, em pacote separado.
+Ele ainda não está conectado à publicação de ZIPs pelo painel.
 
 ## Diagnóstico do servidor
 

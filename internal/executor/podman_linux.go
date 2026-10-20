@@ -51,6 +51,11 @@ func (b *cappedOutput) Write(p []byte) (int, error) {
 func RunCommand(ctx context.Context, binary string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
+	if binary == "/usr/bin/podman" {
+		// Podman can send image labels straight to journald, independently
+		// of stdout/stderr. Keep that metadata outside the control audit.
+		args = append([]string{"--events-backend=none"}, args...)
+	}
 	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin", "HOME=/root", "LANG=C.UTF-8"}
 	var out cappedOutput

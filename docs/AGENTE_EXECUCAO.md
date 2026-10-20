@@ -2,9 +2,10 @@
 
 Este marco entrega **diagnóstico somente de leitura**, instalação do agente
 como serviço e a página administrativa “Diagnóstico do servidor”. Não conclui
-F1-03/F1-05: a instalação do painel/worker/gateway, operações de containers,
-rede de atendimento, registro automático de instâncias e reboot ainda exigem
-entregas e homologação. Uploads continuam sem execução.
+F1-03/F1-05: a instalação do painel/worker/gateway, registro automático de
+instâncias e reboot ainda exigem entregas e homologação. Operações de containers
+e rede de atendimento estão no componente separado
+[shinyd-runtime](EXECUTOR_CONTAINERS.md). Uploads continuam sem execução.
 
 A instalação e os reinícios do serviço passaram no
 [CI Ubuntu 24.04](https://github.com/rfsaldanha/shinyd/actions/runs/39430925787),
@@ -151,10 +152,10 @@ bloqueada e dados de outros componentes. Não há operação de apagamento de da
 nesse pacote. A conta permanece para evitar reaproveitamento de UID enquanto
 existirem arquivos que lhe pertençam.
 
-## Próximo contrato
+## Continuação em componente separado
 
-Adicionar criação/consulta/parada idempotentes somente com imagem por digest,
-identificadores internos e perfis aprovados. Não aceitar comandos, caminhos,
-volumes ou opções de Podman arbitrários. Homologar a rede bloqueando controle
-e comunicação entre apps antes de registrar destinos no gateway. Só então
-conectar preparação de ambientes e execução ao fluxo de publicação.
+O [executor de containers](EXECUTOR_CONTAINERS.md) implementa criação,
+consulta e parada idempotentes com imagens locais imutáveis, identificadores
+internos e perfis aprovados. Tem pacote e serviço próprios; as restrições do
+diagnóstico permanecem. Preparação de ambientes e conexão ao fluxo de publicação
+continuam pendentes.
