@@ -14,6 +14,12 @@ import (
 )
 
 func TestEnvironmentValidation(t *testing.T) {
+	for _, invalid := range []string{`null`, `{"TOKEN":null}`, `{"TOKEN":false}`, `{"TOKEN":1}`, `{"TOKEN":"one","TOKEN":"two"}`} {
+		var values environmentValues
+		if decodeStrict([]byte(invalid), &values) == nil {
+			t.Fatal("ambiguous value accepted")
+		}
+	}
 	spec := artifactSpec()
 	spec.ConfigRevision = 1
 	valid := map[string]string{"TOKEN": "quotes\"'\nç\\=value", "EMPTY": ""}
@@ -107,13 +113,14 @@ func TestEnvironmentAPIPersistsOnlyRevisionAndNeverReturnsValues(t *testing.T) {
 	spec := artifactSpec()
 	spec.ConfigRevision = 1
 	var audit []Event
+	callerUID := uint32(124)
 	server := NewServer(123, m, func(e Event) { audit = append(audit, e) })
 	call := func(method, suffix string, input any) *httptest.ResponseRecorder {
 		body, _ := json.Marshal(input)
 		r := httptest.NewRequest(method, "/v1/instances/"+firstID+suffix, strings.NewReader(string(body)))
 		r.Host = "runtime"
 		r.Header.Set("Content-Type", "application/json")
-		r = r.WithContext(context.WithValue(r.Context(), callerKey{}, caller{123, true}))
+		r = r.WithContext(context.WithValue(r.Context(), callerKey{}, caller{callerUID, true}))
 		w := httptest.NewRecorder()
 		server.Handler.ServeHTTP(w, r)
 		return w
@@ -122,6 +129,10 @@ func TestEnvironmentAPIPersistsOnlyRevisionAndNeverReturnsValues(t *testing.T) {
 		Spec
 		Environment map[string]string `json:"environment"`
 	}{spec, map[string]string{"TOKEN": "private-sentinel"}}
+	if w := call(http.MethodPut, "", input); w.Code != 403 || backend.starts != 0 {
+		t.Fatal("unauthorized environment reached runtime")
+	}
+	callerUID = 123
 	for range 2 {
 		w := call(http.MethodPut, "", input)
 		if w.Code != 200 || strings.Contains(w.Body.String(), "private-sentinel") || strings.Contains(w.Body.String(), "environment") {

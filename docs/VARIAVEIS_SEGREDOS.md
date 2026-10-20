@@ -58,8 +58,10 @@ reconecta apenas a containers que ainda estão vivos, como nos marcos anteriores
 O executor fecha sua cópia do descritor ao finalizar a chamada, inclusive em erro.
 Não há garantia de apagar todas as cópias de memória mantidas por Python/Go/R.
 Memória e `memfd` podem participar de swap do host; essa entrega não implementa
-proteção contra root nem contra leitura física da RAM/swap. Dumps de memória são
-desabilitados nos serviços que tratam valores e nos containers (`core=0`).
+proteção contra root nem contra leitura física da RAM/swap. Os serviços que tratam
+valores e os containers recebem limite `core=0`. Isso não substitui a política
+de dumps do host: o Linux pode ignorar esse limite quando encaminha dumps a um
+programa, conforme [core(5)](https://man7.org/linux/man-pages/man5/core.5.html).
 O kernel, Podman/crun, os serviços de controle e administradores do host fazem
 parte da base de confiança.
 
@@ -98,3 +100,5 @@ documenta a passagem de descritores no cliente local; a
 [documentação atual](https://docs.podman.io/en/latest/markdown/podman-run.1.html#preserve-fds-n)
 mantém essa opção. A compatibilidade com user namespaces, AppArmor e R é objeto
 da execução real do roteiro, não inferida apenas da documentação.
+O comportamento do arquivo anônimo e dos selos está descrito em
+[memfd_create(2)](https://man7.org/linux/man-pages/man2/memfd_create.2.html).

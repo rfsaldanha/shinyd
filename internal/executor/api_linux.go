@@ -80,7 +80,7 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 			defer clear(body)
 			var input struct {
 				Spec
-				Environment map[string]string `json:"environment,omitempty"`
+				Environment environmentValues `json:"environment,omitempty"`
 			}
 			if readErr != nil || !utf8.Valid(body) || decodeStrict(body, &input) != nil || input.Spec.Validate() != nil {
 				fail(400, ErrInvalid)

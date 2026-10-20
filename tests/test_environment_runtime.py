@@ -212,3 +212,24 @@ def test_environment_bounds(values):
 
 def test_empty_and_multiline_environment_are_valid():
     validate({"TOKEN": "", "CERTIFICATE": "one\r\nç\n\t='\"\\two"})
+
+
+def test_combined_limit_has_safe_actionable_message(client, app, accounts, local_state):
+    actor = accounts["publisher"]
+    for i in range(4):
+        set_environment(actor, app.pk, i, f"KEY{i}", "x" * 15360, True)
+    client.force_login(actor)
+    secret = "SECRET-SENTINEL" * 400
+    response = client.post(
+        reverse("app_config", args=[app.pk]),
+        {
+            "revision": 4,
+            "name": "LAST_TOKEN",
+            "value": secret,
+            "is_secret": True,
+        },
+    )
+    assert response.status_code == 400 and b"64 KiB" in response.content
+    assert secret.encode() not in response.content
+    app.refresh_from_db()
+    assert app.config_revision == 4 and EnvironmentValue.objects.count() == 4

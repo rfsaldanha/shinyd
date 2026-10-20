@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -14,6 +15,35 @@ import (
 const maxEnvironmentRequest = 512 * 1024
 
 var environmentName = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,127}$`)
+
+// encoding/json otherwise accepts null as an empty string. Do not silently
+// change a configuration value supplied through the privileged contract.
+type environmentValues map[string]string
+
+func (values *environmentValues) UnmarshalJSON(data []byte) error {
+	data = bytes.TrimSpace(data)
+	if len(data) < 2 || data[0] != '{' {
+		return ErrInvalid
+	}
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(data, &raw) != nil {
+		return ErrInvalid
+	}
+	result := make(environmentValues, len(raw))
+	for name, rawValue := range raw {
+		rawValue = bytes.TrimSpace(rawValue)
+		if len(rawValue) == 0 || rawValue[0] != '"' {
+			return ErrInvalid
+		}
+		var value string
+		if json.Unmarshal(rawValue, &value) != nil {
+			return ErrInvalid
+		}
+		result[name] = value
+	}
+	*values = result
+	return nil
+}
 
 func validateEnvironment(spec Spec, values map[string]string) error {
 	if spec.ConfigRevision == 0 {

@@ -234,7 +234,12 @@ def app_config(request, pk):
         except Conflict as exc:
             form.add_error(None, str(exc))
             status = 409
-        except (ValidationError, OSError):
+        except ValidationError as exc:
+            # Domain validation messages contain only allowlisted descriptions.
+            # In particular, a full environment is not an encryption/key failure.
+            form.add_error(None, " ".join(exc.messages))
+            status = 400
+        except OSError:
             form.add_error(None, "Não foi possível cifrar o valor. Verifique a chave e permissões.")
             status = 503
     return render(
