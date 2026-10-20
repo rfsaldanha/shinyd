@@ -30,7 +30,11 @@ STATE = Path("/var/lib/shinyd-runtime")
 def command(*args, input=None, check=True, timeout=60):
     result = subprocess.run(args, input=input, capture_output=True, text=True, timeout=timeout)
     if check and result.returncode:
-        raise RuntimeError(f"Comando de homologação falhou: {Path(args[0]).name}")
+        operation = args[1] if args[0] in {"systemctl", "podman"} else ""
+        raise RuntimeError(
+            f"Comando de homologação falhou: {Path(args[0]).name} {operation} "
+            f"(código {result.returncode})"
+        )
     return result
 
 
@@ -193,7 +197,8 @@ def main():
             with POLICY.open("xb") as file:
                 file.write(policy_bytes)
             touched_service = True
-            command("systemctl", "reset-failed", "shinyd-runtime.service")
+            # A newly installed service may not yet be loaded by systemd.
+            command("systemctl", "reset-failed", "shinyd-runtime.service", check=False)
             command("systemctl", "start", "shinyd-runtime.socket")
             views, container_ids, pids = [], [], []
             for index in range(2):
@@ -395,6 +400,19 @@ def main():
             stop_process(browser)
             stop_process(proxy)
             if touched_service:
+                if "error" in report:
+                    # This dedicated service logs fixed errors and audit metadata only.
+                    # Never collect application/container output into the report.
+                    report["executor_diagnostics"] = command(
+                        "journalctl",
+                        "--unit=shinyd-runtime",
+                        "--since",
+                        report["observed_at"],
+                        "--output=cat",
+                        "--no-pager",
+                        "--lines=40",
+                        check=False,
+                    ).stdout
                 cleanup_errors = []
                 for instance in created:
                     try:
