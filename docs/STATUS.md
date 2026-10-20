@@ -331,3 +331,34 @@ reboot, capacidade, QoS sob carga ou quotas de disco. O próximo marco é a API
 privada tipada e sua integração com o worker do painel, incluindo progresso,
 cancelamento e ativação da candidata preservando a publicação anterior.
 Downloads de dependências externas continuam fora deste contrato.
+
+## Marco 14 — Preparação de versões integrada ao painel
+
+Implementados API privada de build, cliente autenticado por UID, integração com
+o worker e botão **Preparar versão**. O publicador seleciona um ambiente do
+catálogo e acompanha fases, falhas e cancelamento. O ZIP é transmitido como
+bytes; o painel não ganha sudo nem fornece caminhos, imagens ou comandos.
+
+O pacote `shinyd-builder 0.1.0~builder2` separa a API na slice de controle e os
+trabalhos em unidades systemd de manutenção. Registros duráveis e idempotência
+permitem retomar consultas após perder a resposta ou reiniciar a API/worker.
+Um cancelamento anterior ao envio impede submissão tardia. Falha de limpeza
+permanece visível e não é apresentada como cancelamento concluído.
+
+Os **163 testes Python** passaram, incluindo transporte Unix real com recusa de
+UID indevido, requisições inválidas, concorrência, retomada, upload interrompido,
+cancelamento, conflito de leases e revogação de permissão. Ruff e verificações
+Django/migrações passaram. O pacote foi gerado e as novas unidades foram
+verificadas pelo systemd; a verificação também apontou o `MemoryMax=0` do pacote
+antigo do executor ainda instalado neste host, já corrigido no código no marco 12.
+
+O roteiro privilegiado foi ampliado para testar views e worker Django contra a
+API instalada, com a identidade real `shinyd-control` e banco descartável.
+Sua execução no CI e a homologação local deste novo pacote ainda estão pendentes.
+
+Este marco cobre a integração de F2-03 e parte de F2-06. **Ainda não ativa
+publicações**: o próximo contrato deve permitir ao executor reconhecer um
+artefato preparado, iniciar a candidata e registrar sua rota após readiness,
+preservando a publicação anterior em caso de falha. Downloads, retenção visual,
+prioridades da fila e homologação de reboot continuam pendentes.
+Contrato, limites e demonstração: [BUILDER_PAINEL.md](BUILDER_PAINEL.md).

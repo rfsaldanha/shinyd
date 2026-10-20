@@ -2,10 +2,11 @@
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">CONFIGURAÇÃO</p><h1>{{ title|default:"Alterar senha" }}</h1>{% if description %}<p class="muted">{{ description }}</p>{% endif %}</div></div>
 <section class="panel form-panel">
+  {% if service_error %}<p class="notice" role="alert">{{ service_error }}</p>{% endif %}
   <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
     {{ form.as_p }}
-    <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar</button><a class="btn btn-light" href="{% url 'dashboard' %}">Voltar ao catálogo</a></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit" {% if service_error %}disabled{% endif %}>Salvar</button><a class="btn btn-light" href="{% url 'dashboard' %}">Voltar ao catálogo</a></div>
   </form>
 </section>
 {% endblock %}

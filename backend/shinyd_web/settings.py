@@ -124,3 +124,4 @@ SHINYD_GATEWAY_KEY_FILE = Path(
 EMAIL_BACKEND = "django.core.mail.backends.dummy.EmailBackend"
 SHINYD_AGENT_SOCKET = os.environ.get("SHINYD_AGENT_SOCKET", "/run/shinyd-agent/control.sock")
 SHINYD_AGENT_DEV_UID = int(os.environ.get("SHINYD_AGENT_DEV_UID", "0")) if DEBUG else 0
+SHINYD_BUILDER_SOCKET = os.environ.get("SHINYD_BUILDER_SOCKET", "/run/shinyd-builder/control.sock")

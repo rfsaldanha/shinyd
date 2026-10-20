@@ -1,9 +1,10 @@
 # Builder offline — primeiro contrato
 
 O pacote `shinyd-builder` prepara um ZIP e produz uma imagem OCI local imutável.
-É um marco parcial de F2-03: ainda não está ligado ao worker ou aos botões do
-painel e não ativa publicações. A operação privilegiada é iniciada pelo operador,
-sem conceder sudo ao painel. O catálogo e o estado pertencem a root.
+É um marco parcial de F2-03. A versão `0.1.0~builder2` acrescenta API privada,
+worker e botão **Preparar versão** no painel. Prepara imagens, sem ativar
+publicações. O catálogo e o estado privilegiado pertencem a root; o painel não
+recebe sudo. Contrato: [BUILDER_PAINEL.md](BUILDER_PAINEL.md).
 
 ## Entrada e ambiente
 
@@ -88,7 +89,7 @@ restauração. Remoção do pacote preserva catálogos, manifestos e imagens.
 python3 scripts/build_builder_package.py
 ```
 
-O pacote depende de `shinyd-runtime`; não habilita serviço nem cria catálogo.
+O pacote depende de `shinyd-runtime`; não habilita o socket nem cria catálogo.
 O wrapper `/usr/bin/shinyd-build` inicia um scope systemd de manutenção e executa
 Python com `-I`, importando apenas o código instalado. Não use o pacote como
 permissão sudo genérica para publicadores.
@@ -99,7 +100,7 @@ sem política/instâncias do executor ou builds existentes:
 ```sh
 set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py \
-  --install-package 'dist/shinyd-builder_0.1.0~builder1_amd64.deb' \
+  --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' \
   | tee var/builder-report.json
 ```
 
@@ -108,7 +109,10 @@ SHA-256 conferido, gera lockfiles e ZIPs de teste, prepara artefatos e os execut
 pelo executor já instalado. Verifica concorrência, memória/peso de manutenção e recuperação de um registro
 interrompido simulado. Remove somente política/instâncias/manifestos de
 teste e restaura os limites agregados anteriores. Mantém pacotes e imagens em
-cache; não reinicia o host. Requer Playwright, Chrome e `dist/shinyd-proxy-probe`.
+cache; não reinicia o host. Requer as dependências de `requirements.lock`,
+Playwright, Chrome e `dist/shinyd-proxy-probe`. O roteiro ampliado exercita também
+as views Django e o worker como `shinyd-control`, com banco descartável, reinício
+da API e cancelamento confirmado. A preparação usa o serviço instalado.
 O [CI](https://github.com/rfsaldanha/shinyd/actions/runs/39449102048) passou nas
 25 verificações; o [relatório](evidencias/builder-ci.json) registra os resultados
 reais, com kernel `7.0.0-1017-azure`, Podman 4.9.3 e os dois ambientes R.
@@ -123,9 +127,9 @@ capacidade, QoS sob carga ou recuperação após reboot.
 
 ## Próximos passos
 
-API tipada de upload/build com autorização por identidade; reconciliação entre
-worker e builder; progresso/cancelamento na interface; ativação da candidata e
-preservação da publicação anterior. Downloads exigem política de saída que bloqueie
+Ativação da candidata e preservação da publicação anterior; evolução da retenção
+de trabalhos e homologação de interrupções durante cada etapa.
+Downloads exigem política de saída que bloqueie
 host, metadados e redes privadas, além de catálogo de fontes e checksums. Não abrir
 a rede do build como atalho para implementar essa etapa.
 

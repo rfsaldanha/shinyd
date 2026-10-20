@@ -83,7 +83,7 @@ def private_read(path, *, owner=0, limit=2 * 1024 * 1024):
         return raw
 
 
-def load_environment(path, name):
+def load_catalog(path):
     try:
         secure_dir(Path(path).parent)
         policy = strict_json(private_read(path))
@@ -105,11 +105,16 @@ def load_environment(path, name):
             for package, version in packages.items():
                 if not PACKAGE.fullmatch(package) or not VERSION.fullmatch(version):
                     fail("policy")
-        if name not in environments:
-            fail("policy")
-        return environments[name]
+        return environments
     except (OSError, ValueError, TypeError, KeyError, RecursionError):
         fail("policy")
+
+
+def load_environment(path, name):
+    environments = load_catalog(path)
+    if name not in environments:
+        fail("policy")
+    return environments[name]
 
 
 def resolve_lock(path, environment):

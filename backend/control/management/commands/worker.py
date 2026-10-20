@@ -7,7 +7,7 @@ from control.jobs import process_one
 
 
 class Command(BaseCommand):
-    help = "Processa a fila persistente de inspeção de publicações."
+    help = "Inspeciona ZIPs e acompanha a preparação de versões na fila persistente."
 
     def add_arguments(self, parser):
         parser.add_argument("--once", action="store_true", help="Processa no máximo um trabalho")

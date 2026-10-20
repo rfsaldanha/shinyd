@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    output = ROOT / "dist/shinyd-builder_0.1.0~builder1_amd64.deb"
+    output = ROOT / "dist/shinyd-builder_0.1.0~builder2_amd64.deb"
     output.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="shinyd-builder-package-") as directory:
         target = Path(directory)
@@ -25,6 +25,8 @@ def main():
         (lib / "control/__init__.py").touch()
         shutil.copyfile(ROOT / "backend/control/archives.py", lib / "control/archives.py")
         shutil.copyfile(ROOT / "packaging/builder/main.py", lib / "main.py")
+        for name in ("api.py", "runner.py"):
+            shutil.copyfile(ROOT / "packaging/builder" / name, lib / name)
         binary = target / "usr/bin/shinyd-build"
         binary.parent.mkdir(parents=True)
         shutil.copyfile(ROOT / "packaging/builder/shinyd-build", binary)
@@ -34,11 +36,13 @@ def main():
         docs.mkdir(parents=True)
         shutil.copyfile(ROOT / "LICENSE", docs / "copyright")
         shutil.copyfile(ROOT / "docs/BUILDER_OFFLINE.md", docs / "README.md")
+        for name in ("BUILDER_OFFLINE.md", "BUILDER_PAINEL.md"):
+            shutil.copyfile(ROOT / "docs" / name, docs / name)
         target.chmod(0o755)
         for path in target.rglob("*"):
             path.chmod(
                 0o755
-                if path.is_dir() or path.name in {"shinyd-build", "postinst", "postrm"}
+                if path.is_dir() or path.name in {"shinyd-build", "postinst", "postrm", "prerm"}
                 else 0o644
             )
         subprocess.run(

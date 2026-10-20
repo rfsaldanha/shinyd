@@ -1,0 +1,28 @@
+[Unit]
+Description=API privada de preparação do shinyd
+Requires=shinyd-builder.socket
+After=shinyd-builder.socket
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/python3 -I /usr/lib/shinyd-builder/api.py
+User=root
+Group=root
+UMask=0077
+Restart=on-failure
+RestartSec=5
+Slice=shinyd-control.slice
+MemoryHigh=128M
+MemoryMax=192M
+TasksMax=32
+LimitNOFILE=128
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shinyd-builder
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX
+StandardOutput=null
+StandardError=null

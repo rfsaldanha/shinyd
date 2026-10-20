@@ -56,7 +56,7 @@ def save(path, value):
             temporary.unlink(missing_ok=True)
 
 
-def snapshot(source, target, expected_hash):
+def snapshot(source, target, expected_hash, check=lambda: None):
     fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
     total, sha, deadline = 0, hashlib.sha256(), time.monotonic() + 60
     with os.fdopen(fd, "rb") as original, target.open("xb") as output:
@@ -64,6 +64,7 @@ def snapshot(source, target, expected_hash):
         if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= SOURCE_LIMIT:
             fail("archive")
         while chunk := original.read(1024 * 1024):
+            check()
             total += len(chunk)
             if total > SOURCE_LIMIT or time.monotonic() > deadline:
                 fail("archive")
@@ -122,8 +123,12 @@ LABEL org.shinyd.managed=builder-v1 org.shinyd.build={job_id} org.shinyd.key={ke
 
 
 class Builder:
-    def __init__(self, state=STATE, progress=lambda phase: None):
-        self.state, self.progress = state, progress
+    def __init__(self, state=STATE, progress=lambda phase: None, cancelled=lambda: False):
+        self.state, self.progress, self.cancelled = state, progress, cancelled
+
+    def check(self):
+        if self.cancelled():
+            fail("interrupted")
 
     def cleanup(self, job):
         podman.remove_owned(job)
@@ -191,7 +196,8 @@ class Builder:
         active = None
         try:
             self.progress("validating")
-            snapshot(source, work / "source.zip", expected_hash)
+            self.check()
+            snapshot(source, work / "source.zip", expected_hash, self.check)
             extracted = work / "extracted"
             extracted.mkdir(mode=0o700)
             try:
@@ -201,6 +207,7 @@ class Builder:
                     max_bytes=EXTRACT_LIMIT,
                     max_entries=50000,
                     entrypoint=entrypoint,
+                    cancelled=self.cancelled,
                 )
             except (ArchiveError, ValueError, RecursionError):
                 fail("archive")
@@ -234,6 +241,7 @@ class Builder:
             save(self.state / "current.json", active)
 
             def monitor():
+                self.check()
                 podman.resources_available(self.state)
 
             self.progress("assembling")

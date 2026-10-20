@@ -1,0 +1,18 @@
+[Unit]
+Description=Preparação isolada de versão Shiny
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/python3 -I /usr/lib/shinyd-builder/runner.py %i
+User=root
+Group=root
+UMask=0077
+Slice=shinyd-workloads-maintenance.slice
+Restart=no
+RuntimeMaxSec=960
+TimeoutStopSec=10
+KillMode=control-group
+TasksMax=256
+LimitNOFILE=512
+StandardOutput=null
+StandardError=null

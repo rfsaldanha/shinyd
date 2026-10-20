@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import pwd
+import shutil
 import sys
 import tempfile
 import urllib.request
@@ -154,7 +155,7 @@ def main():
             "profile": ("Dois apps, builds offline e operações reativas; sem teste de capacidade."),
         },
         "limitations": [
-            "Não integra a publicação pela interface ou downloads de pacotes.",
+            "Não ativa a publicação pelo painel nem baixa pacotes externos.",
             "Não homologa reboot, capacidade, QoS sob carga ou quotas de disco.",
         ],
     }
@@ -168,6 +169,9 @@ def main():
     previous_limits = None
     created = []
     artifacts = []
+    panel_state = None
+    panel_jobs = []
+    builder_started = False
     ids = [str(uuid.uuid4()) for _ in range(2)]
     with tempfile.TemporaryDirectory(prefix="shinyd-builder-probe-") as temporary:
         temporary = Path(temporary)
@@ -190,7 +194,7 @@ def main():
             identity = command(
                 "dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)
             ).stdout
-            record("package_identity", identity == "shinyd-builder 0.1.0~builder1", identity)
+            record("package_identity", identity == "shinyd-builder 0.1.0~builder2", identity)
             command("dpkg", "--install", str(package), timeout=120)
             report["environment"]["podman"] = json.loads(
                 command("podman", "version", "--format=json").stdout
@@ -412,6 +416,36 @@ def main():
                 "no_pending_build",
                 not (STATE / "current.json").exists() and not list(STATE.glob("work-*")),
             )
+            # This separate database never opens the developer's panel state.
+            record("empty_api_jobs", not any(p.is_dir() for p in (STATE / "jobs").iterdir()))
+            panel_state = Path("/var/lib/shinyd") / ("builder-probe-" + uuid.uuid4().hex)
+            control = pwd.getpwnam("shinyd-control")
+            panel_state.mkdir(mode=0o700)
+            os.chown(panel_state, control.pw_uid, control.pw_gid)
+            shutil.copyfile(temporary / "app-0.zip", panel_state / "fixture.zip")
+            os.chown(panel_state / "fixture.zip", control.pw_uid, control.pw_gid)
+            command("systemctl", "start", "shinyd-builder.socket")
+            builder_started = True
+            probe = [
+                "runuser",
+                "-u",
+                "shinyd-control",
+                "--",
+                sys.executable,
+                str(ROOT / "scripts/builder_panel_probe.py"),
+                "--state",
+                str(panel_state),
+            ]
+            submitted = json.loads(command(*probe, "--stage", "submit", timeout=90).stdout)
+            panel_jobs.append(submitted["job_id"])
+            record("api_submission_from_control_identity", submitted["passed"])
+            command("systemctl", "restart", "shinyd-builder.service")
+            completed = json.loads(command(*probe, "--stage", "complete", timeout=660).stdout)
+            panel_jobs = completed["job_ids"]
+            artifacts.append(completed["artifact"]["cache_key"])
+            for name in completed["checks"]:
+                record(name, completed["passed"])
+            report["panel_artifact"] = completed["artifact"]
             report["artifacts"] = results
         except Exception as exc:
             report["error"] = str(exc)
@@ -432,6 +466,34 @@ def main():
                     report["fixture_diagnostics"].append(diagnostic)
         finally:
             cleanup_errors = []
+            if builder_started:
+                # Namespace was verified empty before this fixture used it.
+                panel_jobs = [p.name for p in (STATE / "jobs").iterdir() if p.is_dir()]
+                for job_id in panel_jobs:
+                    command("systemctl", "stop", f"shinyd-build@{job_id}.service", check=False)
+                    record_path = STATE / "jobs" / job_id / "record.json"
+                    if record_path.exists():
+                        value = json.loads(record_path.read_text())
+                        if value.get("artifact"):
+                            key = value["artifact"]["cache_key"]
+                            if key not in artifacts:
+                                artifacts.append(key)
+                stopped = command(
+                    "systemctl",
+                    "stop",
+                    "shinyd-builder.service",
+                    "shinyd-builder.socket",
+                    check=False,
+                )
+                if stopped.returncode:
+                    cleanup_errors.append("builder_api_stop")
+                elif not (STATE / "current.json").exists():
+                    for job_id in panel_jobs:
+                        shutil.rmtree(STATE / "jobs" / job_id)
+                else:
+                    cleanup_errors.append("pending_api_build")
+            if panel_state is not None:
+                shutil.rmtree(panel_state)
             for instance in created:
                 try:
                     api("remove", instance)

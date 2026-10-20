@@ -67,7 +67,7 @@ def finish(job, *, manifest=None, error=None):
         current.status, current.phase = Job.Status.SUCCEEDED, "validated"
         current.message = (
             "ZIP validado. Nenhum código foi executado. "
-            "A preparação e a publicação ainda não estão conectadas a este fluxo."
+            "Selecione Preparar versão para conferir as dependências em um ambiente aprovado."
         )
         Version.objects.filter(pk=current.version_id).update(
             status="validated",
@@ -81,6 +81,10 @@ def finish(job, *, manifest=None, error=None):
 
 
 def process_one():
+    from .build_jobs import process_one as process_build
+
+    if process_build():
+        return True
     job = claim()
     if job is None:
         return False

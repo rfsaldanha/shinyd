@@ -295,7 +295,7 @@ def job_cancel(request, pk):
         if Job.objects.filter(pk=job.pk, status__in=["queued", "running"]).update(
             cancel_requested=True
         ):
-            Job.objects.filter(pk=job.pk, status="queued").update(
+            Job.objects.filter(pk=job.pk, status="queued", kind="inspect_upload").update(
                 status="cancelled", phase="cancelled", message="Inspeção cancelada."
             )
             event(request.user, "job.cancel_requested", job.pk)

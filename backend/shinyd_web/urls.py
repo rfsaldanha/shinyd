@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from control import agent_views, gateway_views, views
+from control import agent_views, build_views, gateway_views, views
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
@@ -27,6 +27,7 @@ urlpatterns = [
     path("apps/<uuid:pk>/config/", views.app_config, name="app_config"),
     path("apps/<uuid:pk>/upload/", views.upload, name="upload"),
     path("jobs/<uuid:pk>/", views.job_detail, name="job_detail"),
+    path("versions/<uuid:pk>/prepare/", build_views.prepare, name="version_prepare"),
     path("jobs/<uuid:pk>/cancel/", views.job_cancel, name="job_cancel"),
     path("audit/", views.audit, name="audit"),
     path("api/v1/apps/", views.api_apps, name="api_apps"),

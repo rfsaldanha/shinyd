@@ -111,6 +111,7 @@ class Version(models.Model):
     r_version = models.CharField(max_length=30, blank=True)
     image_digest = models.CharField(max_length=256, blank=True)
     manifest = models.JSONField(default=dict)
+    build_manifest = models.JSONField(default=dict)
     status = models.CharField(default="received", max_length=30)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -157,6 +158,7 @@ class Job(models.Model):
     version = models.ForeignKey(Version, null=True, on_delete=models.CASCADE)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     kind = models.CharField(max_length=30)
+    build_environment = models.CharField(max_length=40, blank=True)
     idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True)
     status = models.CharField(max_length=12, choices=Status, default=Status.QUEUED)
     phase = models.CharField(max_length=50, default="queued")

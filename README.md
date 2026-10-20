@@ -19,8 +19,9 @@ restritas de ciclo de vida e atendimento por sockets Unix, em pacote separado.
 Suas 25 verificações funcionais passaram no CI e no host local.
 O [builder offline](docs/BUILDER_OFFLINE.md) prepara ZIPs com `renv.lock` usando
 um catálogo de ambientes aprovado. Suas 25 verificações passaram no CI e no
-host local, com dois ambientes R distintos. A integração desses componentes
-à publicação pelo painel ainda está em desenvolvimento.
+host local, com dois ambientes R distintos. A nova
+[integração com o painel](docs/BUILDER_PAINEL.md) acrescenta preparação de versões,
+progresso e cancelamento. A ativação da publicação ainda está em desenvolvimento.
 
 ## Diagnóstico do servidor
 

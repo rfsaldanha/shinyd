@@ -1,0 +1,15 @@
+[Unit]
+Description=Socket privado do builder shinyd
+ConditionPathExists=/etc/shinyd-builder/policy.json
+
+[Socket]
+ListenStream=/run/shinyd-builder/control.sock
+SocketUser=root
+SocketGroup=shinyd-control
+SocketMode=0660
+DirectoryMode=0755
+RemoveOnStop=yes
+Backlog=16
+
+[Install]
+WantedBy=sockets.target

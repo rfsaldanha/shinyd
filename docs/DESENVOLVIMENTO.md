@@ -97,6 +97,8 @@ SHA-512 verificada. Assets e respectivas licenças acompanham o repositório;
 nenhum CDN é necessário.
 
 O [builder offline](BUILDER_OFFLINE.md) tem pacote e demonstração separados para
-preparar ZIPs com `renv.lock`. Seu roteiro passou no CI e no host local com dois ambientes R,
-mas ainda não é chamado pelo worker do painel. As mensagens de inspeção refletem
-essa diferença; validar um ZIP continua sem publicar o app.
+preparar ZIPs com `renv.lock`. O contrato CLI passou no CI e no host local com
+dois ambientes R. A [integração com o painel](BUILDER_PAINEL.md) agora permite
+selecionar um ambiente aprovado e preparar uma versão depois da inspeção.
+Exige API instalada e identidade `shinyd-control`; sem isso, a tela informa
+indisponibilidade. Preparar uma imagem continua sem ativar a publicação.
