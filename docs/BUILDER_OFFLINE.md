@@ -27,7 +27,10 @@ Linux ficam fixados por seu ID. A base e o inventário devem ser obtidos juntos.
 Um catálogo incorreto não permite substituir silenciosamente uma versão: o
 helper confere novamente o R e os pacotes dentro do container.
 
-Este primeiro contrato admite pacotes CRAN já instalados na base. A biblioteca
+Este primeiro contrato admite pacotes CRAN já instalados na base (registros
+`CRAN` ou `RSPM`). Aceita registros resumidos ou com DESCRIPTION completo;
+somente os campos de restauração são passados ao renv. Metadados como
+`Authors@R` não são avaliados. A biblioteca
 privada é preparada com `renv::hydrate`, restaurada com `renv::restore` e conferida
 com `renv::snapshot`, incluindo hashes presentes no lock. Não baixa dependências.
 Fontes GitHub, caminhos locais, repositórios personalizados, pacotes ausentes ou
@@ -38,7 +41,7 @@ O cache inicial usa as camadas da base e o artefato completo. Sua chave inclui
 app, checksum do ZIP, pasta, ambiente/inventário, lock, versão da receita e hashes
 dos helpers. Não existe cache de biblioteca gravável compartilhado entre apps.
 Repetir a preparação reaproveita a imagem apenas após conferir sua identidade e
-os rótulos controlados. Não promete imagem byte a byte idêntica ao reconstruir.
+os rótulos controlados. Bases com instruções ONBUILD são recusadas. Não promete imagem byte a byte idêntica ao reconstruir.
 
 ## Isolamento, recursos e falhas
 
@@ -102,7 +105,8 @@ sudo .venv/bin/python scripts/builder_smoke.py \
 
 O roteiro prepara duas bases R fixadas, instala renv 1.1.5 por tarball oficial com
 SHA-256 conferido, gera lockfiles e ZIPs de teste, prepara artefatos e os executa
-pelo executor já instalado. Remove somente política/instâncias/manifestações de
+pelo executor já instalado. Verifica concorrência, memória/peso de manutenção e recuperação de um registro
+interrompido simulado. Remove somente política/instâncias/manifestos de
 teste e restaura os limites agregados anteriores. Mantém pacotes e imagens em
 cache; não reinicia o host. Requer Playwright, Chrome e `dist/shinyd-proxy-probe`.
 Homologação real e resultados observados são registrados em [STATUS.md](STATUS.md).

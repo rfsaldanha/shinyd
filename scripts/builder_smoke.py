@@ -2,10 +2,12 @@
 """Verify the installed offline builder with trusted fixtures on an empty test installation."""
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import platform
+import pwd
 import sys
 import tempfile
 import urllib.request
@@ -141,6 +143,15 @@ def main():
             "kernel": platform.release(),
             "architecture": platform.machine(),
             "logical_cpus": os.cpu_count(),
+            "memory_bytes": int(
+                next(
+                    line
+                    for line in Path("/proc/meminfo").read_text().splitlines()
+                    if line.startswith("MemTotal:")
+                ).split()[1]
+            )
+            * 1024,
+            "profile": ("Dois apps, builds offline e operações reativas; sem teste de capacidade."),
         },
         "limitations": [
             "Não integra a publicação pela interface ou downloads de pacotes.",
@@ -181,6 +192,9 @@ def main():
             ).stdout
             record("package_identity", identity == "shinyd-builder 0.1.0~builder1", identity)
             command("dpkg", "--install", str(package), timeout=120)
+            report["environment"]["podman"] = json.loads(
+                command("podman", "version", "--format=json").stdout
+            )["Client"]["Version"]
             # Snapshot and restore only these temporary aggregate settings.
             previous_limits = dict(
                 line.split("=", 1)
@@ -224,6 +238,7 @@ def main():
                 artifact = value["artifact"]
                 artifacts.append(artifact["cache_key"])
                 results.append(artifact)
+                report["artifacts"] = results
                 record(
                     f"build_{index}_isolation",
                     artifact["protection"]["maintenance"] and artifact["protection"]["mapped_uid"],
@@ -278,6 +293,80 @@ def main():
                 timeout=120,
             )
             record("browser_reactivity_upload_download", json.loads(browser.stdout)["passed"])
+            processes = [
+                json.loads(command("podman", "inspect", "shinyd-" + identity).stdout)[0]["State"][
+                    "Pid"
+                ]
+                for identity in ids
+            ]
+            source = temporary / "app-0.zip"
+            source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+            with (STATE / ".lock").open("rb") as held:
+                fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                busy = invoke(source, source_hash, ids[0])
+                record("concurrent_build_refused", busy.get("error") == "busy")
+            mismatch = invoke(source, "0" * 64, ids[0])
+            record("source_checksum_mismatch", mismatch.get("error") == "source_changed")
+            denied = command(
+                "runuser",
+                "-u",
+                pwd.getpwuid(int(os.environ["SUDO_UID"])).pw_name,
+                "--",
+                "/usr/bin/shinyd-build",
+                check=False,
+            )
+            record("unprivileged_builder_refused", denied.returncode != 0)
+            # Simulate durable state left by an interrupted builder. Do not kill
+            # unrelated processes or claim that this is a reboot test.
+            orphan = str(uuid.uuid4())
+            job = {
+                "id": orphan,
+                "key": results[0]["cache_key"],
+                "input_image": environments["r-a"]["image"],
+            }
+            (STATE / ("work-" + orphan)).mkdir(mode=0o700)
+            with (STATE / "current.json").open("x") as output:
+                json.dump(job, output)
+            command(
+                "podman",
+                "run",
+                "--detach",
+                "--name=shinyd-build-" + orphan,
+                "--label=org.shinyd.managed=builder-v1",
+                "--label=org.shinyd.build=" + orphan,
+                "--label=org.shinyd.key=" + job["key"],
+                "--network=none",
+                "--userns=auto:size=65536",
+                "--user=65534:65534",
+                "--read-only",
+                "--cap-drop=all",
+                "--security-opt=no-new-privileges",
+                "--image-volume=ignore",
+                "--pids-limit=128",
+                "--cgroup-parent=shinyd-workloads-maintenance.slice",
+                "--entrypoint=/bin/sleep",
+                job["input_image"],
+                "120",
+            )
+            maintenance = Path(
+                "/sys/fs/cgroup/shinyd.slice/shinyd-workloads.slice/shinyd-workloads-maintenance.slice"
+            )
+            record(
+                "maintenance_weight_and_memory",
+                (maintenance / "cpu.weight").read_text().strip() == "50"
+                and (maintenance / "memory.max").read_text().strip() == str(1024**3),
+            )
+            recovered = invoke(source, source_hash, ids[0])
+            record(
+                "recover_recorded_orphan",
+                recovered.get("passed")
+                and recovered["artifact"]["cache_hit"]
+                and not (STATE / "current.json").exists()
+                and command(
+                    "podman", "container", "exists", "shinyd-build-" + orphan, check=False
+                ).returncode
+                == 1,
+            )
             snapshot = [(STATE / "artifacts" / (key + ".json")).read_bytes() for key in artifacts]
             failures = [
                 ("invalid_zip", locks[0], True, "archive"),
@@ -308,6 +397,16 @@ def main():
                     for i, key in enumerate(artifacts)
                 )
                 and all(api("inspect", identity)["state"] == "ready" for identity in ids),
+            )
+            record(
+                "failure_preserves_r_processes",
+                all(
+                    json.loads(command("podman", "inspect", "shinyd-" + identity).stdout)[0][
+                        "State"
+                    ]["Pid"]
+                    == processes[index]
+                    for index, identity in enumerate(ids)
+                ),
             )
             record(
                 "no_pending_build",
