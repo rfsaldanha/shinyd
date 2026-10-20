@@ -438,7 +438,10 @@ def installed_probe(package, fixture, created):
                     arg=fingerprint(rotated_token),
                 )
                 check("secret_rotated_without_zip", app_origin != previous_origin)
-                check("previous_config_route_revoked", page.goto(previous_origin).status == 403)
+                report["previous_config_http_status"] = page.goto(previous_origin).status
+                # Disabled publications are removed routes; existing private
+                # routes without permission return 403 instead.
+                check("previous_config_route_revoked", report["previous_config_http_status"] == 404)
                 check(
                     "single_source_version_after_rotation",
                     "VERSION_COUNT=1"
