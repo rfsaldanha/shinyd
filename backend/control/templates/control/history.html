@@ -1,0 +1,24 @@
+{% extends "control/base.html" %}
+{% block title %}Histórico · {{ app.name }} · shinyd{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">APLICATIVO / {{ app.slug }}</p><h1>Histórico de versões e publicações</h1><p>{{ app.name }}</p></div><a class="btn btn-light" href="{% url 'app_detail' app.pk %}">Voltar ao app</a></div>
+<p class="notice">Uma versão contém o código preparado. Cada ativação cria uma publicação com sua revisão de configuração. Voltar uma versão usa a configuração atual, incluindo alterações pendentes, e mantém os dados persistentes sem desfazer alterações feitas pelo app.</p>
+<section class="panel" id="publications"><h2>Publicações</h2>
+<p class="muted">As rotas antigas permanecem encerradas. Para acessar a publicação atual, abra o app pela sua página.</p>
+<div class="table-responsive"><table class="table"><thead><tr><th>Publicação / versão</th><th>Estado</th><th>Configuração</th><th>Responsável</th><th>Ações</th></tr></thead><tbody>
+{% for publication in publications %}<tr data-publication="{{ publication.pk }}">
+<td class="break-all">{{ publication.created_at|date:"d/m/Y H:i:s" }} UTC<br><code>{{ publication.pk }}</code><br>Versão <code>{{ publication.version_id }}</code>{% if publication.restored_from_id %}<br>Retorno da publicação <code>{{ publication.restored_from_id }}</code>{% endif %}</td>
+<td>{{ publication.state_label }}{% if app.active_publication_id == publication.pk %} · selecionada{% endif %}</td><td>Revisão {{ publication.config_revision }}</td><td>{{ publication.created_by.username }}</td>
+<td>{% if publication.job %}<p><a href="{% url 'job_detail' publication.job.pk %}">Ver resultado</a></p>{% endif %}{% if publication.status == "retired" %}<a href="{% url 'publication_rollback' publication.pk %}">Voltar a esta versão</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5">Nenhuma publicação.</td></tr>{% endfor %}
+</tbody></table></div>
+<nav aria-label="Páginas de publicações">{% if publications.has_previous %}<a href="?publications={{ publications.previous_page_number }}&amp;versions={{ versions.number }}#publications">Publicações anteriores</a> · {% endif %}Página {{ publications.number }} de {{ publications.paginator.num_pages }}{% if publications.has_next %} · <a href="?publications={{ publications.next_page_number }}&amp;versions={{ versions.number }}#publications">Mais publicações</a>{% endif %}</nav>
+</section>
+<section class="panel" id="versions"><h2>Versões enviadas</h2><p class="muted">Imagens já preparadas são reutilizadas sem reenviar o ZIP ou recompilar dependências.</p>
+<div class="table-responsive"><table class="table"><thead><tr><th>Versão</th><th>Estado / ambiente</th><th>Responsável</th><th>Ações</th></tr></thead><tbody>
+{% for version in versions %}<tr data-version="{{ version.pk }}"><td class="break-all">{{ version.created_at|date:"d/m/Y H:i:s" }} UTC<br><code>{{ version.pk }}</code><br>ZIP SHA-256: <code>{{ version.source_hash }}</code>{% if version.image_digest %}<br>Imagem: <code>{{ version.image_digest }}</code>{% endif %}</td><td>{{ version.state_label }}<br>R {{ version.r_version|default:"não informado" }}{% if app.active_publication.version_id == version.pk %}<br>Código selecionado{% endif %}</td><td>{{ version.created_by.username }}</td><td>{% if version.status == "prepared" %}<a href="{% url 'version_activate' version.pk %}">Ativar versão</a>{% elif version.status == "validated" or version.status == "build_failed" or version.status == "build_cancelled" %}<a href="{% url 'version_prepare' version.pk %}">Preparar versão</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4">Nenhuma versão enviada.</td></tr>{% endfor %}
+</tbody></table></div>
+<nav aria-label="Páginas de versões">{% if versions.has_previous %}<a href="?versions={{ versions.previous_page_number }}&amp;publications={{ publications.number }}#versions">Versões anteriores</a> · {% endif %}Página {{ versions.number }} de {{ versions.paginator.num_pages }}{% if versions.has_next %} · <a href="?versions={{ versions.next_page_number }}&amp;publications={{ publications.number }}#versions">Mais versões</a>{% endif %}</nav>
+</section>
+{% endblock %}

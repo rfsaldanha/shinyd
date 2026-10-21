@@ -26,7 +26,7 @@ def eligible(app):
 
 
 @transaction.atomic
-def enqueue(actor, version_id, key):
+def enqueue(actor, version_id, key, *, restored_from=None, expected_state=None):
     version = Version.objects.select_related("app__priority").get(pk=version_id)
     app = require_publish(actor, version.app_id)
     existing = Job.objects.filter(idempotency_key=key).first()
@@ -35,9 +35,19 @@ def enqueue(actor, version_id, key):
             existing.kind != "activate_version"
             or existing.actor_id != actor.pk
             or existing.version_id != version.pk
+            or not existing.publication_id
+            or existing.publication.restored_from_id != restored_from
         ):
             raise Conflict("Identificador já utilizado para outra operação.")
         return existing
+    if restored_from is not None:
+        source = Publication.objects.filter(
+            pk=restored_from, app=app, version=version, status="retired"
+        ).first()
+        if source is None:
+            raise ValidationError("Escolha uma publicação anterior encerrada deste app.")
+        if expected_state != rollback_state(app, source):
+            raise Conflict("O aplicativo ou sua configuração mudou. Reabra a confirmação.")
     eligible(app)
     artifact = version.build_manifest
     if (
@@ -71,6 +81,7 @@ def enqueue(actor, version_id, key):
         config_revision=app.config_revision,
         app_revision=app.revision,
         previous_id=app.active_publication_id,
+        restored_from_id=restored_from,
         runtime_spec={
             "app_id": str(app.pk),
             "recipe": "",
@@ -110,7 +121,29 @@ def enqueue(actor, version_id, key):
         message="Na fila de ativação. A candidata será verificada antes da troca.",
     )
     event(actor, "activation.queued", job.pk, publication=str(publication.pk))
+    if restored_from:
+        event(
+            actor,
+            "rollback.queued",
+            job.pk,
+            publication=str(publication.pk),
+            restored_from=str(restored_from),
+            version=str(version.pk),
+            config_revision=app.config_revision,
+        )
     return job
+
+
+def rollback_state(app, source):
+    """Confirmation binds code and current settings, never historical secret values."""
+    return {
+        "app": str(app.pk),
+        "source": str(source.pk),
+        "version": str(source.version_id),
+        "revision": app.revision,
+        "config_revision": app.config_revision,
+        "active": str(app.active_publication_id) if app.active_publication_id else None,
+    }
 
 
 @transaction.atomic
@@ -216,7 +249,13 @@ def decide(job, result=None, failure=None):
             Publication.objects.filter(pk=pub.previous_id).update(status="retiring")
         pub.status, value.phase = "active", "retiring_previous"
         value.message = "Versão ativada. Finalizando a troca."
-        event(value.actor, "publication.activated", pub.pk, version=str(pub.version_id))
+        event(
+            value.actor,
+            "publication.activated",
+            pub.pk,
+            version=str(pub.version_id),
+            **({"restored_from": str(pub.restored_from_id)} if pub.restored_from_id else {}),
+        )
     pub.save(update_fields=["status"])
     value.save(update_fields=["phase", "message", "updated_at"])
     return True

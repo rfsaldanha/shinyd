@@ -2,6 +2,7 @@
 {% block content %}
 <div class="page-heading"><div><p class="eyebrow">{% if job.kind == "activate_version" %}ATIVAÇÃO DA VERSÃO{% elif job.kind == "prepare_version" %}PREPARAÇÃO DA VERSÃO{% else %}INSPEÇÃO DO ZIP{% endif %}</p><h1>{{ job.app.name }}</h1><p class="muted">Acompanhe as etapas do trabalho enviado.</p></div><a href="{% url 'app_detail' job.app_id %}" class="btn btn-light">Voltar ao app</a></div>
 <section class="panel" id="job-status" {% if job.status == "queued" or job.status == "running" %}hx-get="{% url 'job_detail' job.pk %}" hx-trigger="every 3s" hx-target="this" hx-select="#job-status" hx-swap="outerHTML"{% endif %} aria-live="polite">
+  {% if job.publication.restored_from_id %}<p class="notice">Retorno ao código da publicação <code>{{ job.publication.restored_from_id }}</code>, com a configuração atual na revisão {{ job.publication.config_revision }}. Os dados persistentes são mantidos; alterações feitas pelo app não são desfeitas.</p>{% endif %}
   <p class="eyebrow">{{ job.phase }}</p><h2>{{ job.get_status_display }}</h2>
   <p>{{ job.message|default:"Aguardando o worker. A página será atualizada automaticamente." }}</p>
   {% if job.phase == "cleaning_candidate" %}<p class="notice">Aguardando confirmação da remoção da candidata. {% if job.publication.data_cutover %}A publicação anterior já foi interrompida; o volume de dados será mantido.{% else %}A publicação anterior continua selecionada.{% endif %}</p>{% endif %}

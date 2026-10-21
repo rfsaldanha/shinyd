@@ -200,6 +200,11 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
         (data / "fixture.txt").read_text().strip() == value
         and (other_data / "fixture.txt").read_text().strip() == "other-app-value",
     )
+    from rollback_browser_probe import probe as rollback_probe
+
+    third = rollback_probe(
+        page, app_url, app_id, other_url, data, value, run, admin, check, open_app
+    )
     admin(
         "from control.models import Application, AppInstance\n"
         "from control.runtime_client import retire\n"

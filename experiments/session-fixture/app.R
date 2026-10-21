@@ -10,6 +10,7 @@ ui <- fluidPage(
   textInput("data_value", "Dado persistente", ""),
   actionButton("save_data", "Gravar dado"),
   verbatimTextOutput("data_state"),
+  verbatimTextOutput("data_revision"),
   fileInput("upload", "Arquivo de teste"),
   verbatimTextOutput("uploaded"),
   downloadButton("download", "Baixar estado")
@@ -31,6 +32,7 @@ server <- function(input, output, session) {
     saved_data(read_data())
   })
   output$data_state <- renderText(saved_data())
+  output$data_revision <- renderText(Sys.getenv("DATA_REVISION", unset="revision-unset"))
   output$environment_fingerprint <- renderText({
     # Only synthetic high-entropy values in this fixture. Never echo secrets.
     if (identical(Sys.getenv("APP_TOKEN", unset=NA_character_), NA_character_)) {

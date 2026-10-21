@@ -69,3 +69,9 @@ habilitação pelo painel, teste da candidata em pasta temporária e remoção
 confirmada da instância anterior antes de usar os dados reais. Requer `runtime4`
 e `control3`. Passaram 117 verificações integradas no CI e 119 na homologação
 local. Consulte os marcos 23–24 em [STATUS.md](docs/STATUS.md).
+
+F3-03 acrescenta [histórico e rollback de código](docs/HISTORICO_ROLLBACK.md),
+com paginação, confirmação de impacto e auditoria da origem. O retorno reutiliza
+a imagem preparada com a configuração atual e preserva o volume de dados.
+Requer `control4` e a migração `0009`; não reverte migrações de dados feitas pelo app.
+Validação e limites estão no marco 25 de [STATUS.md](docs/STATUS.md).

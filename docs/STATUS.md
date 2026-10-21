@@ -972,3 +972,47 @@ disco não foram testados. O próximo marco é **F3-03: histórico, ativação e
 rollback de versões**, preservando dados persistentes e configuração atual.
 Rollback de código não reverte escritas ou migrações de dados feitas pelo app;
 drenagem e backup recuperável continuam no backlog.
+
+## Marco 25 — Histórico e rollback de código (F3-03)
+
+Implementado histórico de versões e publicações por app, com paginação de 20
+registros em cada lista e acesso restrito a quem pode publicar. O painel exibe
+estado, identificação da versão, imagem, responsável, revisão de configuração
+e resultado da tarefa. Publicações encerradas oferecem retorno explícito ao
+código, com confirmação sobre interrupção e compatibilidade dos dados.
+
+O retorno cria uma publicação nova e reutiliza a imagem preparada, mantendo a
+configuração desejada atual, inclusive mudanças pendentes. Segredos antigos não
+são restaurados e variáveis removidas não reaparecem. A confirmação assinada
+expira em 30 minutos e é recusada se o app, a configuração, a publicação ativa
+ou o destino diferirem do estado confirmado. Idempotência, autorização,
+cancelamento e checkpoints usam o fluxo de ativação existente.
+
+`restored_from` registra a origem do retorno; `previous` mantém a publicação
+substituída. Auditoria registra IDs e revisões, sem conteúdo dos segredos.
+O volume persistente é aberto apenas depois da remoção confirmada do escritor
+anterior. Voltar código não desfaz dados, nem garante compatibilidade com seu
+formato atual. Drenagem e backup automatizado continuam pendentes.
+
+Passaram **273 testes Python**, Ruff, formatação, consistência de migrações e
+diagnóstico Django de produção. O teste de navegador sem privilégios passou
+com login, cadastro, upload, inspeção, atualização automática, histórico e tela
+de 360 px. Capturas locais: `/tmp/shinyd-evidence/history-desktop.png` e
+`history-mobile.png`. A migração `0009` foi aplicada ao banco de desenvolvimento
+após backup SQLite privado (0600):
+`var/backups/metadata-before-rollback-20261021T131405Z.sqlite3`.
+
+O pacote de controle passa a `control4`; executor `runtime4` e builder `builder2`
+permanecem. O roteiro instalado foi ampliado para rollback no navegador com
+outro app em uso, confirmação desatualizada, dados gravados e segredo removido.
+Sua homologação integrada está em andamento; não se atribui o resultado dos
+marcos anteriores a esse fluxo novo. A execução local exige senha de sudo no
+terminal do operador, conforme `sudo -n true`.
+
+Também foi aberta uma prévia local solicitada pelo operador, em
+`http://127.0.0.1:8010`, com banco próprio em `var/interface-preview`. Não executa
+containers nem altera o banco de desenvolvimento. A migração nessa prévia
+preservou contas e dados, após backup privado. Credenciais ficam apenas no
+arquivo local `var/interface-preview/ACESSO.txt`, fora do Git.
+
+Contrato e comando de homologação: [HISTORICO_ROLLBACK.md](HISTORICO_ROLLBACK.md).

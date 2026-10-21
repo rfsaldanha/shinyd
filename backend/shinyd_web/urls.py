@@ -1,7 +1,15 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from control import activation_views, agent_views, build_views, data_views, gateway_views, views
+from control import (
+    activation_views,
+    agent_views,
+    build_views,
+    data_views,
+    gateway_views,
+    history_views,
+    views,
+)
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
@@ -22,6 +30,8 @@ urlpatterns = [
     path("users/<int:pk>/recovery/", views.recovery_issue, name="recovery_issue"),
     path("apps/new/", views.app_create, name="app_create"),
     path("apps/<uuid:pk>/", views.app_detail, name="app_detail"),
+    path("apps/<uuid:pk>/history/", history_views.history, name="app_history"),
+    path("publications/<uuid:pk>/rollback/", history_views.rollback, name="publication_rollback"),
     path("apps/<uuid:pk>/edit/", views.app_edit, name="app_edit"),
     path("apps/<uuid:pk>/access/", views.app_access, name="app_access"),
     path("apps/<uuid:pk>/config/", views.app_config, name="app_config"),

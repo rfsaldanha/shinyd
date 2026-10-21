@@ -125,6 +125,15 @@ with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state, ExitStack()
             page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=10000)
             assert "Nenhum código foi executado" in page.locator("#job-status").inner_text()
             page.screenshot(path=str(evidence / "inspection-desktop.png"), full_page=True)
+            page.get_by_role("link", name="Voltar ao app", exact=True).click()
+            page.get_by_role("link", name="Histórico de versões e publicações", exact=True).click()
+            assert page.locator("tr[data-version]").count() == 1
+            assert "Validado" in page.locator("#versions").inner_text()
+            assert "Nenhuma publicação" in page.locator("#publications").inner_text()
+            page.screenshot(path=str(evidence / "history-desktop.png"), full_page=True)
+            page.set_viewport_size({"width": 360, "height": 800})
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+            page.screenshot(path=str(evidence / "history-mobile.png"), full_page=True)
             page.goto(base)
             page.set_viewport_size({"width": 360, "height": 800})
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
@@ -140,7 +149,8 @@ with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state, ExitStack()
             assert not errors, errors
             browser.close()
             print(
-                "Browser smoke: login, cadastro, upload, worker, polling e viewport 360px passaram."
+                "Browser smoke: login, cadastro, upload, worker, polling, histórico "
+                "e viewport 360px passaram."
             )
             print(f"Capturas: {evidence}")
     finally:

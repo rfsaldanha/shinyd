@@ -129,6 +129,9 @@ class Publication(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     previous = models.ForeignKey("self", null=True, on_delete=models.PROTECT, related_name="+")
+    restored_from = models.ForeignKey(
+        "self", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     app_revision = models.PositiveIntegerField(default=1)
     runtime_spec = models.JSONField(default=dict)
     environment_snapshot = models.BinaryField(default=bytes)

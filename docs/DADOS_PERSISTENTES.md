@@ -132,7 +132,9 @@ app recebeu uma resposta `runtime_busy`, repetiu a tentativa e confirmou a
 recusa esperada. Os serviços do ensaio ficaram inativos ao terminar; os pacotes
 permanecem instalados, sem configuração para atendimento permanente.
 
-Após construir os pacotes, no diretório do projeto:
+O roteiro atual usa `control4` e inclui [histórico/rollback](HISTORICO_ROLLBACK.md).
+As evidências de F3-02 acima se referem a `control3`. Após construir os pacotes,
+no diretório do projeto:
 
 ```sh
 set -o pipefail
@@ -140,6 +142,6 @@ sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control3_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control4_amd64.deb \
   | tee var/data-report.json
 ```

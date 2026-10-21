@@ -124,7 +124,7 @@ jobs:
       - name: Verify ZIP, offline restoration, cache, failures and actual Shiny
         run: |
           set -o pipefail
-          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control3_amd64.deb' | tee dist/builder-report.json
+          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control4_amd64.deb' | tee dist/builder-report.json
       - name: Removing the integrated package preserves state
         run: |
           sudo -n touch /var/lib/shinyd-control/package-test-sentinel
