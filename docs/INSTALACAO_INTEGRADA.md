@@ -44,7 +44,7 @@ python3 scripts/build_agent_package.py
 python3 scripts/build_agent_package.py --component runtime
 python3 scripts/build_builder_package.py
 .venv/bin/python scripts/build_control_package.py
-sudo apt-get install caddy
+sudo apt-get --no-remove install podman crun uidmap slirp4netns fuse-overlayfs caddy
 sudo dpkg --install dist/shinyd-agent_0.1.0~agent1_amd64.deb \
   dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
   dist/shinyd-builder_0.1.0~builder2_amd64.deb \
@@ -123,6 +123,7 @@ fixada por SPKI, sem desativar globalmente validação de certificados.
 ```sh
 go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
 set -o pipefail
+sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
@@ -159,5 +160,8 @@ O contrato atual, com `control2`/`runtime3`, passou nas **99 verificações** do
 [CI de segredos](https://github.com/rfsaldanha/shinyd/actions/runs/39486005117),
 incluindo injeção, rotação sem ZIP e remoção de variável. O
 [relatório integral](evidencias/secrets-runtime-ci.json) registra o resultado.
-A homologação local dessa revisão permanece pendente; use o comando de
-[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para gerar um relatório separado.
+A tentativa local de 21/10/2026 parou na instalação do executor por falta de
+`crun`, antes dos testes dos apps. A homologação permanece pendente; use o comando
+de recuperação e ensaio em [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para
+gerar um relatório separado. A tentativa está preservada em
+[secrets-dependency-local.json](evidencias/secrets-dependency-local.json).

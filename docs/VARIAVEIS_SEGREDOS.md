@@ -3,6 +3,8 @@
 Requer os pacotes experimentais `shinyd-runtime 0.1.0~runtime3` e
 `shinyd-control 0.1.0~control2`, com a migração `0007`. O builder permanece
 `builder2`: as imagens aprovadas já incluem `jsonlite` e o inicializador R.
+O pacote de sistema `crun` é obrigatório, mesmo que o Podman já funcione com
+outro executor. `dpkg --install` não instala dependências automaticamente.
 
 ## Uso pelo painel
 
@@ -102,6 +104,7 @@ configurada e dados existentes são recusados pelo roteiro):
 
 ```sh
 set -o pipefail
+sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
@@ -111,6 +114,16 @@ sudo .venv/bin/python scripts/builder_smoke.py --activation \
 
 O roteiro remove somente sua configuração e dados descartáveis; pacotes e cache
 permanecem. Não altera o banco de desenvolvimento em `var/`.
+
+Se a instalação anterior parou em `dpkg` por falta de `crun`, o comando de APT
+acima também configura o `shinyd-runtime` já desempacotado. A simulação local em
+21/10/2026 indicou somente a instalação de `crun` e configuração do executor, sem
+remoções ou atualizações de outros pacotes. Confira o resumo exibido pelo APT.
+Os roteiros agora verificam o pacote e `/usr/bin/crun` antes de instalar qualquer
+`.deb`; uma falha nessa verificação não altera pacotes nem inicia os testes.
+A primeira tentativa local está preservada em
+[secrets-dependency-local.json](evidencias/secrets-dependency-local.json) e não
+comprova a execução dos apps: parou antes dela.
 
 Fontes oficiais consultadas em 20/10/2026: o
 [Podman 4.9.3](https://docs.podman.io/en/v4.9.3/markdown/podman-run.1.html#preserve-fds-n)

@@ -4,6 +4,37 @@ import pytest
 import runtime_smoke
 
 
+@pytest.mark.parametrize(
+    "code,status,executable,message",
+    [
+        (1, "", False, "--no-remove install crun"),
+        (0, "install ok unpacked", True, "--no-remove install crun"),
+        (0, "install ok installed", False, "--no-remove --reinstall install crun"),
+        (0, "install ok installed", True, None),
+        (0, "hold ok installed", True, None),
+    ],
+)
+def test_crun_preflight_is_read_only_and_explains_recovery(
+    monkeypatch, code, status, executable, message
+):
+    calls = []
+
+    def command(*args, **kwargs):
+        calls.append(args)
+        assert kwargs == {"check": False}
+        return SimpleNamespace(returncode=code, stdout=status, stderr="PRIVATE_SENTINEL")
+
+    monkeypatch.setattr(runtime_smoke, "command", command)
+    monkeypatch.setattr(runtime_smoke.os, "access", lambda path, mode: executable)
+    if message:
+        with pytest.raises(RuntimeError, match=message) as exc:
+            runtime_smoke.require_crun()
+        assert "PRIVATE_SENTINEL" not in str(exc.value)
+    else:
+        runtime_smoke.require_crun()
+    assert calls == [("dpkg-query", "-W", "-f=${Status}", "crun")]
+
+
 def test_probe_retries_only_bounded_429_with_same_identity(monkeypatch):
     calls, pauses = [], []
 

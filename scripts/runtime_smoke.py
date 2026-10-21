@@ -41,6 +41,21 @@ def command(*args, input=None, check=True, timeout=60):
     return result
 
 
+def require_crun():
+    """Check the explicit runtime3 dependency before unpacking any package."""
+    result = command("dpkg-query", "-W", "-f=${Status}", "crun", check=False)
+    if result.returncode or result.stdout.split()[1:] != ["ok", "installed"]:
+        raise RuntimeError(
+            "O pacote crun precisa estar instalado e configurado antes da homologação. "
+            "Execute sudo apt-get --no-remove install crun e repita o roteiro."
+        )
+    if not os.access("/usr/bin/crun", os.X_OK):
+        raise RuntimeError(
+            "O pacote crun consta instalado, mas /usr/bin/crun não está executável. "
+            "Execute sudo apt-get --no-remove --reinstall install crun e repita o roteiro."
+        )
+
+
 def api(action, instance, spec=None, check=True):
     for attempt in range(4):
         result = command(
@@ -128,6 +143,8 @@ def main():
             record(
                 "empty_test_installation", not POLICY.exists() and not list(STATE.glob("*.json"))
             )
+            require_crun()
+            record("crun_dependency_ready", True)
             reservation, _ = inspect_reservation()
             record("subids_prepared", reservation["action"] == "unchanged")
             info = json.loads(command("podman", "info", "--format", "json").stdout)

@@ -734,9 +734,9 @@ Ambiente do ensaio: Ubuntu 24.04 do workflow, kernel `7.0.0-1017-azure`,
 funcional, sem medição de capacidade, reboot ou disputa de QoS.
 O job também removeu o pacote do controle e verificou a preservação do estado.
 
-A homologação no host local ainda está pendente: o sudo continua exigindo senha.
-Os pacotes foram construídos e as unidades conferidas, sem alterar os serviços
-instalados. O ensaio local das versões anteriores não comprova a nova injeção.
+A homologação no host local ainda está pendente: a tentativa de 21/10/2026
+parou na instalação por falta de `crun` (diagnóstico e recuperação no marco 21).
+O ensaio local das versões anteriores não comprova a nova injeção.
 Os arquivos disponíveis neste host têm estes hashes (o CI identifica seus
 próprios pacotes no relatório):
 
@@ -752,3 +752,42 @@ prosseguir quando encontra configuração ou dados de controle.
 Contrato, operação, limites e fontes: [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md).
 Persistência dos dados dos apps (F3-02), rollback, drenagem e recuperação após
 reboot seguem no backlog; esta entrega não declara a fase 3 inteira concluída.
+
+## Marco 21 — Dependência ausente na homologação local de F3-01
+
+Em 21/10/2026, a execução do operador gerou `var/secrets-report.json` às
+11:25:23 UTC, com `passed: false`. As três verificações iniciais passaram
+(instalação de teste vazia, checksum e identidade do pacote), mas `dpkg --install`
+falhou antes de preparar ambientes ou iniciar apps. A cópia integral está em
+[secrets-dependency-local.json](evidencias/secrets-dependency-local.json).
+
+O diagnóstico local confirmou `crun` ausente, inclusive `/usr/bin/crun`;
+`shinyd-runtime 0.1.0~runtime3` estava desempacotado, sem configuração (`iU`).
+Podman 4.9.3, builder2 e control1 continuavam instalados. O log de dpkg registra
+a troca de runtime2 para runtime3 às 08:25:23 no fuso local, encerrando no estado
+`unpacked`. Os serviços runtime, builder e painel estavam inativos. O roteiro
+anterior não verificava a nova dependência antes de desempacotar o executor,
+e o comando fornecido não a instalava.
+
+`apt-get --simulate --no-remove --no-install-recommends install crun` indicou
+a instalação de `crun 1.14.1-1` e configuração de runtime3, com zero remoções
+e zero atualizações de outros pacotes. A instalação real ainda depende da senha
+local: `sudo -n true` foi recusado pelo sistema por exigir senha.
+
+Os roteiros de runtime e builder agora verificam se o pacote está configurado
+e se `/usr/bin/crun` está executável antes de instalar qualquer pacote. A recusa
+informa o comando de recuperação sem copiar saídas potencialmente privadas.
+O CI instala `crun` explicitamente; os guias incluem essa dependência e o comando
+de recuperação. Não houve alteração dos binários nem reconstrução dos `.deb`.
+
+Passaram os oito testes de `tests/test_runtime_probe.py`, incluindo cinco casos
+de dependência ausente, não configurada, executável indisponível e instalação
+pronta (inclusive pacote retido em sua versão pelo APT). Ruff e sua verificação
+de formatação passaram nos arquivos alterados.
+A verificação prévia também foi executada sem privilégios neste host e retornou
+a mensagem esperada de `crun` ausente, sem alterar a instalação.
+
+F3-01 continua homologada no CI do marco 20 e pendente neste host. A próxima ação
+é instalar a dependência e repetir o ensaio conforme
+[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md); os três checks preliminares desta
+tentativa não substituem os testes de entrega, rotação e remoção de segredos.

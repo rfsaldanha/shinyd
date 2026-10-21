@@ -75,7 +75,7 @@ jobs:
       - name: Prepare disposable runtime runner
         run: |
           sudo -n apt-get update -qq
-          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs
+          sudo -n apt-get install -y podman crun uidmap slirp4netns fuse-overlayfs
           python3 -m venv .venv
           .venv/bin/pip install playwright==1.64.0
           sudo -n python3 scripts/container_subids.py --apply
@@ -111,7 +111,7 @@ jobs:
       - name: Prepare disposable builder runner
         run: |
           sudo -n apt-get update -qq
-          sudo -n apt-get install -y podman uidmap slirp4netns fuse-overlayfs caddy
+          sudo -n apt-get install -y podman crun uidmap slirp4netns fuse-overlayfs caddy
           python3 -m venv .venv
           .venv/bin/pip install -r requirements.lock playwright==1.64.0
           sudo -n python3 scripts/container_subids.py --apply

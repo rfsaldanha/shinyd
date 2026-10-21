@@ -18,7 +18,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from runtime_smoke import API_RETRIES, api, command
+from runtime_smoke import API_RETRIES, api, command, require_crun
 
 ROOT = Path(__file__).resolve().parents[1]
 POLICY = Path("/etc/shinyd-builder/policy.json")
@@ -235,6 +235,8 @@ def main():
                 and not (STATE / "current.json").exists()
                 and not list((STATE / "artifacts").glob("*.json")),
             )
+            require_crun()
+            record("crun_dependency_ready", True)
             if args.install_runtime_package:
                 package = args.install_runtime_package.resolve(strict=True)
                 checksum = hashlib.sha256(package.read_bytes()).hexdigest()
