@@ -5,6 +5,12 @@ Requer `shinyd-control 0.1.0~control4` e a migração `0009`. O executor continu
 [STATUS.md](STATUS.md). Esta etapa acrescenta rollback de código; não restaura
 um backup dos dados.
 
+Passaram **273 testes Python** e **128 verificações integradas no CI**, com
+todos os cinco jobs aprovados. Evidência:
+[rollback-runtime-ci.json](evidencias/rollback-runtime-ci.json). A homologação
+local com containers desta revisão ainda está pendente; a prévia do painel
+e o teste de navegador sem privilégios foram verificados localmente.
+
 ## Operação pelo navegador
 
 1. Na página do app, abra **Histórico de versões e publicações**. Apenas

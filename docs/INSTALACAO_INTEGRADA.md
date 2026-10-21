@@ -189,6 +189,9 @@ Use [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md) para repetir o roteiro e gera
 `var/data-report.json` sem sobrescrever relatórios de outros marcos.
 
 A revisão `control4` acrescenta [histórico e rollback](HISTORICO_ROLLBACK.md),
-com migração `0009`. Evidências desta revisão estão no marco 25 de
-[STATUS.md](STATUS.md); os relatórios anteriores correspondem aos seus próprios
-pacotes, não validam automaticamente as novas operações.
+com migração `0009`. Passaram as **128 verificações integradas** do
+[CI de rollback](https://github.com/rfsaldanha/shinyd/actions/runs/39609436973),
+com [relatório integral](evidencias/rollback-runtime-ci.json), sem erro de limpeza.
+A homologação local desta revisão está pendente. Detalhes e o ajuste de capacidade
+do roteiro estão no marco 25 de [STATUS.md](STATUS.md); os relatórios anteriores
+correspondem aos seus próprios pacotes, não validam automaticamente as novas operações.

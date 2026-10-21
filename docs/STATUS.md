@@ -1005,9 +1005,9 @@ após backup SQLite privado (0600):
 O pacote de controle passa a `control4`; executor `runtime4` e builder `builder2`
 permanecem. O roteiro instalado foi ampliado para rollback no navegador com
 outro app em uso, confirmação desatualizada, dados gravados e segredo removido.
-Sua homologação integrada está em andamento; não se atribui o resultado dos
-marcos anteriores a esse fluxo novo. A execução local exige senha de sudo no
-terminal do operador, conforme `sudo -n true`.
+Os resultados da homologação integrada deste fluxo estão registrados abaixo.
+A execução local exige senha de sudo no terminal do operador, conforme
+`sudo -n true`.
 
 Também foi aberta uma prévia local solicitada pelo operador, em
 `http://127.0.0.1:8010`, com banco próprio em `var/interface-preview`. Não executa
@@ -1030,4 +1030,43 @@ quatro slots. A candidata temporária exigia um quinto slot. Foi corrigida apena
 a política do ensaio, para cinco instâncias, preservando o orçamento agregado
 de 4096 MiB e a admissão real do executor. Isso não muda limites de uma
 instalação existente, nem autoriza ignorar pressão de memória. A homologação
-integrada será repetida com espaço para executar o cenário proposto.
+integrada foi repetida com espaço para executar o cenário proposto.
+
+A [execução corrigida](https://github.com/rfsaldanha/shinyd/actions/runs/39609436973),
+no commit `ec8f242d30df8b2eb034f278664f4a899c3aae4b`, passou em **todos os cinco
+jobs** e nas **128 verificações integradas**, incluindo as 74 da instalação.
+O [relatório integral](evidencias/rollback-runtime-ci.json) do job `119254104926`
+registra `passed: true`, sem erro de limpeza nem repetições por executor ocupado.
+O ensaio iniciou às 13:38:54 UTC, em 21/10/2026.
+
+O navegador confirmou retorno à imagem da versão anterior sem novo ZIP/build,
+nova publicação com origem registrada no histórico, arquivo persistente mantido,
+configuração pendente aplicada e segredo removido ausente no R. A confirmação
+aberta antes de uma alteração de configuração foi recusada; depois de reabri-la,
+o retorno concluiu. O escritor anterior foi removido e sua rota retornou HTTP
+404. Outra sessão Shiny manteve identidade, PID e contador, respondendo a uma
+nova interação. O histórico passou em tela de 360 px. As verificações anteriores
+de acesso privado, WebSocket, upload/download e segredos também passaram.
+
+Ambiente: runner Ubuntu 24.04, kernel `7.0.0-1017-azure`, 4 CPUs lógicas,
+16.760.344.576 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4. Os mapeamentos
+observados no teste de isolamento foram `0 327680 65536` e `0 393216 65536`.
+O reinício de painel/worker preservou auth/gateway/ingress com PIDs
+`11640`/`11641`/`11642`. O job verificou também que remover o pacote de controle
+preserva seu arquivo de estado. Isso não mede capacidade, reboot, QoS sob carga,
+compatibilidade de migrações de dados dos apps ou recuperação de backup.
+
+O pacote local `shinyd-control 0.1.0~control4`, construído a partir de `3a4e4eb`
+(mesmo código de produto, antes da correção do roteiro), teve checksum conferido:
+`23be3efb0bf0721ba955c8201f00c29751c99fa97eef0426340d94a492d88324`.
+O pacote construído no CI tem hash
+`e5e8856542d231095723b815826e25365bbe22fc3bf6c0ecae2a86be7a16469d`;
+não se declara igualdade binária. Os pacotes locais `runtime4` e `builder2`
+continuam com os hashes do marco 23.
+
+F3-03 está implementada e homologada no CI. A homologação local dos containers
+desta revisão ainda depende do roteiro em [HISTORICO_ROLLBACK.md](HISTORICO_ROLLBACK.md),
+que grava `var/rollback-report.json`. O controle instalado neste host ainda é
+`control3`; esta rodada não realizou sua atualização privilegiada. A prévia
+local teve login confirmado e captura em `var/interface-preview/catalogo.png`.
+O próximo marco de implementação é F3-04: telemetria de sessões e drenagem.
