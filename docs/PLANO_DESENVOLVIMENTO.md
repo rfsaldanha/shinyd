@@ -119,6 +119,12 @@ snapshot. Escrita persistente exige drenagem antes de trocar salvo compatibilida
 declarada. Rollback de código preserva dados e configuração atual. Reverter
 configuração é ação separada. Migração do próprio app não tem reversão automática.
 
+Entrega incremental F3-02: antecipa a interrupção imediata confirmada da instância
+anterior para garantir um único escritor, com confirmação de impacto no painel.
+A candidata usa pasta temporária vazia. Drenagem será acrescentada no marco de
+ciclo de vida; falha depois da interrupção pode deixar o app indisponível e não
+reverte escritas. O contrato desta etapa está em [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md).
+
 Segredos: criptografia autenticada por biblioteca consolidada, chave fora do banco,
 revisões, sem leitura posterior na UI, injeção somente ao executar, auditoria sem
 conteúdo. Mudança exige reinício/drenagem, não ZIP. Publicador que executa código

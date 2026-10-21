@@ -1,7 +1,8 @@
 # Ativação de versões pelo painel
 
 Este marco conecta a versão preparada ao executor e ao registro de rotas do
-gateway. Implementa parte de F2-04/F2-07 e o início de F3-03. O fluxo é:
+gateway. Implementa parte de F2-04/F2-07 e o início de F3-03. Para apps sem dados
+persistentes, o fluxo é:
 
 1. O publicador escolhe **Ativar versão** e confirma o impacto sobre as sessões.
 2. O controle cria publicação candidata, instância desabilitada e trabalho
@@ -54,12 +55,15 @@ persistentes e métricas de sessões ainda exigem os próximos marcos.
 cifrada por publicação e aplicação de nova revisão sem ZIP. O builder não recebe
 valores. Consulte [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para a fronteira
 de segurança e o efeito do reinício sobre as sessões.
-Dados gravados em `/tmp` são temporários; volumes persistentes e saída de rede
-continuam indisponíveis.
+Dados gravados em `/tmp` são temporários. O contrato `runtime4` acrescenta
+[volumes persistentes](DADOS_PERSISTENTES.md), com candidata em pasta temporária
+e interrupção da instância anterior antes de montar os dados reais. Nesse modo,
+falha depois da interrupção não preserva a disponibilidade nem desfaz escritas.
+Saída de rede continua indisponível.
 
 ## Configuração e demonstração
 
-Requer `shinyd-runtime 0.1.0~runtime3`, builder, catálogo aprovado, painel,
+O roteiro atual requer `shinyd-runtime 0.1.0~runtime4`, builder, catálogo aprovado, painel,
 worker, autorizador e gateway com identidades e sockets privados. No runtime,
 a política deve incluir `builder_artifacts: true`; a opção é falsa por padrão.
 No controle, configurar:

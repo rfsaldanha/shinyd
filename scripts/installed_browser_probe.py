@@ -497,7 +497,7 @@ def installed_probe(package, fixture, created, data_apps):
                 stage = "persistent_data"
                 from persistent_browser_probe import probe as data_probe
 
-                app_origin = data_probe(
+                app_origin, report["persistent_data"] = data_probe(
                     panel_page, app_url, fixture, temporary, run, admin, check, created, data_apps
                 )
                 check(
@@ -562,6 +562,23 @@ def installed_probe(package, fixture, created, data_apps):
                 for f in traceback.extract_tb(exc.__traceback__)
             ],
         }
+        if stage == "persistent_data":
+            # Only platform-owned status fields, never app logs or environment values.
+            try:
+                diagnostic = admin(
+                    "import json\nfrom control.models import Job\n"
+                    "print('DATA_JOBS='+json.dumps(list(Job.objects.order_by('-created_at')"
+                    "[:6].values('kind','status','phase','message'))))\n"
+                )
+                report["data_jobs"] = json.loads(
+                    next(
+                        line.removeprefix("DATA_JOBS=")
+                        for line in diagnostic.splitlines()
+                        if line.startswith("DATA_JOBS=")
+                    )
+                )
+            except Exception:
+                report["data_jobs_unavailable"] = True
         report["services"] = run(
             "systemctl",
             "show",

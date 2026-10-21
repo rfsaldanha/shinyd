@@ -73,7 +73,6 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     page.get_by_role("button", name="Gravar dado", exact=True).click()
     expect_data(value)
     metadata = json.loads(run("podman", "inspect", "shinyd-" + first).stdout)[0]
-    mapping = Path(f"/proc/{metadata['State']['Pid']}/uid_map").read_text()
     check(
         "data_mapped_write_and_private_parent",
         (data / "fixture.txt").read_text().strip() == value
@@ -164,11 +163,7 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     expect_data(value)
     check("data_survives_configuration_restart", third != second)
     current = json.loads(run("podman", "inspect", "shinyd-" + third).stdout)[0]
-    check(
-        "data_uid_maps_are_present",
-        bool(mapping.strip())
-        and bool(Path(f"/proc/{current['State']['Pid']}/uid_map").read_text().strip()),
-    )
+    current_mapping = Path(f"/proc/{current['State']['Pid']}/uid_map").read_text()
 
     panel = urlsplit(app_url)._replace(path="/", query="", fragment="").geturl()
     page.goto(panel)
@@ -183,6 +178,9 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     publish(fixture)
     other = open_app(other_url)
     expect_data("data-empty")
+    other_meta = json.loads(run("podman", "inspect", "shinyd-" + other).stdout)[0]
+    other_mapping = Path(f"/proc/{other_meta['State']['Pid']}/uid_map").read_text()
+    check("data_distinct_user_mappings", current_mapping != other_mapping)
     other_data = Path("/var/lib/shinyd-data") / other_id / "files"
     run(
         "podman",
@@ -217,4 +215,8 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     )
     check("data_other_app_preserved_after_removal", open_app(app_url) == third)
     expect_data(value)
-    return urlsplit(page.url)._replace(path="", query="", fragment="").geturl()
+    return urlsplit(page.url)._replace(path="", query="", fragment="").geturl(), {
+        "filesystem": run("findmnt", "-n", "-o", "FSTYPE", "-T", str(data)).stdout.strip(),
+        "crun": run("/usr/bin/crun", "--version").stdout.splitlines()[0],
+        "uid_maps": [current_mapping.strip(), other_mapping.strip()],
+    }

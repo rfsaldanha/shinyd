@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -169,5 +170,33 @@ func TestScratchMountNeverReferencesPersistentStorage(t *testing.T) {
 		if !strings.Contains(joined, want) {
 			t.Fatal("missing isolation", want)
 		}
+	}
+}
+
+func TestPersistentInspectionRejectsWrongVolume(t *testing.T) {
+	r := Record{ID: firstID, Spec: artifactSpec(), Image: testImage}
+	r.Spec.DataMode = "persistent"
+	value := Inspection{Image: testImage}
+	value.Config.User = "65534:65534"
+	value.Config.Labels = map[string]string{"org.shinyd.managed": "executor-v1", "org.shinyd.instance": firstID, "org.shinyd.spec": signature(r)}
+	value.HostConfig.NetworkMode, value.HostConfig.ReadonlyRootfs = "none", true
+	value.Mounts = append(value.Mounts, struct {
+		Type, Source, Destination string
+		RW                        bool
+	}{"bind", dataPath(r.Spec.AppID), "/data", true})
+	p := Podman{Run: func(context.Context, string, ...string) ([]byte, error) {
+		return json.Marshal([]Inspection{value})
+	}}
+	if _, err := p.Inspect(context.Background(), r); err != nil {
+		t.Fatal(err)
+	}
+	value.Mounts[0].Source = dataPath(secondID)
+	if _, err := p.Inspect(context.Background(), r); err != ErrOwnership {
+		t.Fatal("foreign volume accepted", err)
+	}
+	value.Mounts[0].Source = dataPath(r.Spec.AppID)
+	value.Mounts[0].RW = false
+	if _, err := p.Inspect(context.Background(), r); err != ErrOwnership {
+		t.Fatal("read-only mount silently accepted", err)
 	}
 }

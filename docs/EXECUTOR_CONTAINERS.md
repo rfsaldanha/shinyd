@@ -3,14 +3,18 @@
 O novo componente `shinyd-runtime` cria, consulta, para e remove instâncias
 mediante operações tipadas. É parte de F1-05/F2-04/F2-07. O pacote `runtime2`
 acrescenta reconhecimento dos artefatos do builder e encerramento definitivo
-de candidatas. Drenagem e instalação completa do painel continuam pendentes.
+de candidatas. `runtime3` acrescenta [segredos](VARIAVEIS_SEGREDOS.md) e
+`runtime4`, [dados persistentes](DADOS_PERSISTENTES.md). O painel tem
+[pacote integrado](INSTALACAO_INTEGRADA.md); drenagem continua pendente.
 
 ## Isolamento e atendimento
 
 O container usa Podman rootful, `userns=auto`, UID/GID 65534, raiz somente
 leitura, capacidades removidas, seccomp, no-new-privileges e AppArmor imposto.
-Não há volumes do host nem portas publicadas. Volumes declarados pela imagem
-são ignorados. `/tmp` é um tmpfs de 64 MiB. O processo precisa atender na porta
+Não há portas publicadas. Volumes declarados pela imagem são ignorados. O único
+volume persistente permitido é o diretório do app derivado pelo runtime4;
+caminhos arbitrários do host não são aceitos. `/tmp` é um tmpfs de 64 MiB.
+O processo precisa atender na porta
 3838; o catálogo é de imagens locais imutáveis `sha256:<ID>`, previamente
 aprovadas pelo operador. A API não recebe comandos, caminhos, imagens, volumes
 ou variáveis arbitrários e nunca faz pull.
