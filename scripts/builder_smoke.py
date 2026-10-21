@@ -358,7 +358,8 @@ def main():
                 {
                     "schema_version": 1,
                     "recipes": {f"built-{i}": value["image"] for i, value in enumerate(results)},
-                    "max_instances": 4 if args.activation else 2,
+                    # Two baseline apps, two persistent apps and a rollback probe.
+                    "max_instances": 5 if args.activation else 2,
                     "memory_budget_mib": 4096,
                     **({"builder_artifacts": True} if args.activation else {}),
                 }
@@ -591,7 +592,7 @@ def main():
             if args.install_control_package:
                 from installed_browser_probe import installed_probe
 
-                # Leave room for active + replacement within the existing four-slot budget.
+                # Leave room for two persistent apps and a probe in the five-slot test policy.
                 api("remove", ids[1])
                 record("release_second_fixture_before_configuration_rotation", True)
                 installed = installed_probe(

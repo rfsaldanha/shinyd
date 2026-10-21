@@ -1016,3 +1016,18 @@ preservou contas e dados, após backup privado. Credenciais ficam apenas no
 arquivo local `var/interface-preview/ACESSO.txt`, fora do Git.
 
 Contrato e comando de homologação: [HISTORICO_ROLLBACK.md](HISTORICO_ROLLBACK.md).
+
+A [primeira execução integrada](https://github.com/rfsaldanha/shinyd/actions/runs/39606821149),
+no commit `3a4e4eb1b9a28b2005bc09de7904cac8975ccd50`, aprovou os jobs Python,
+Go, agente e runtime, mas o job de publicação parou por prazo ao aguardar
+recursos para a candidata de rollback. A evidência está em
+[rollback-admission-ci.json](evidencias/rollback-admission-ci.json): o worker
+permaneceu em `waiting_runtime`, sem erro de limpeza. O histórico em 360 px e a
+recusa de confirmação desatualizada já haviam passado.
+
+O roteiro mantinha dois apps de referência e dois persistentes, ocupando seus
+quatro slots. A candidata temporária exigia um quinto slot. Foi corrigida apenas
+a política do ensaio, para cinco instâncias, preservando o orçamento agregado
+de 4096 MiB e a admissão real do executor. Isso não muda limites de uma
+instalação existente, nem autoriza ignorar pressão de memória. A homologação
+integrada será repetida com espaço para executar o cenário proposto.
