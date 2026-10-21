@@ -67,4 +67,5 @@ após instalar a dependência `crun`. Consulte os marcos 20–22 em
 F3-02 implementa [dados persistentes por app](docs/DADOS_PERSISTENTES.md), com
 habilitação pelo painel, teste da candidata em pasta temporária e remoção
 confirmada da instância anterior antes de usar os dados reais. Requer `runtime4`
-e `control3`. A homologação integrada desta revisão está em andamento.
+e `control3`. Passaram 117 verificações integradas no CI; a homologação local
+desta revisão está pendente. Consulte o marco 23 em [STATUS.md](docs/STATUS.md).

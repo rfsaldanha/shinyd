@@ -1,9 +1,10 @@
 # Dados persistentes por app — F3-02
 
 Requer `shinyd-runtime 0.1.0~runtime4`, `shinyd-control 0.1.0~control3` e a
-migração `0008`. O builder continua `builder2`. A homologação real deste marco
-será registrada em [STATUS.md](STATUS.md); implementação não equivale a aprovação
-para produção.
+migração `0008`. O builder continua `builder2`. Passaram **117 verificações
+integradas no CI**, com relatório em [data-runtime-ci.json](evidencias/data-runtime-ci.json).
+A homologação local está pendente. [STATUS.md](STATUS.md) registra o ambiente e
+os limites; este resultado não constitui aprovação para produção.
 
 ## Uso pelo painel
 
@@ -112,6 +113,12 @@ sem tocar dados reais e preservação dos arquivos após remover o container.
 Ao terminar, remove explicitamente apenas os volumes descartáveis do ensaio,
 depois de confirmar a remoção de seus containers. Não roda sobre instalações
 configuradas ou com dados existentes.
+
+A [execução final no CI](https://github.com/rfsaldanha/shinyd/actions/runs/39598445721)
+usou kernel `7.0.0-1017-azure`, ext4, Podman 4.9.3 e crun 1.14.1. Os dois apps
+usaram faixas de usuários distintas (`327680` e `393216`, com 65536 IDs cada),
+com arquivos persistentes em disco pertencentes a UID 65534. Passaram todos os
+cinco jobs, sem erro de limpeza; não houve teste de reboot, capacidade ou quotas.
 
 Após construir os pacotes, no diretório do projeto:
 

@@ -845,7 +845,7 @@ F3-02 é o próximo marco: volumes persistentes por app, preservados entre
 publicações e isolados dos demais apps. Rollback com dados, drenagem e demais
 itens da fase 3 continuam no backlog.
 
-## Marco 23 — Dados persistentes por app (F3-02), homologação em andamento
+## Marco 23 — Dados persistentes por app (F3-02), homologados no CI
 
 Implementados volume por UUID de app, habilitação autorizada e confirmada pelo
 painel, diretório `SHINYD_DATA_DIR`, preservação entre publicações e reserva de
@@ -871,7 +871,49 @@ inconclusiva, reserva de escritor após recuperação e links maliciosos.
 O roteiro integrado foi ampliado para escrita real pelo Shiny, publicação de
 outro ZIP, reinício por configuração, falha de candidata que escreve somente
 na pasta temporária, dois apps com volumes isolados e remoção que preserva
-arquivos. Sua execução real ainda está pendente nesta revisão; não inferir
-sucesso de compatibilidade Podman/kernel a partir dos testes com doubles.
+arquivos. A [primeira execução](https://github.com/rfsaldanha/shinyd/actions/runs/39597869759),
+no commit `f6acb5aa50da7a33d99641f56ee8388b3cb53e69`, passou nas **117 verificações**,
+com todos os cinco jobs aprovados, sem erro de limpeza nem repetições por executor
+ocupado.
+
+A [execução final](https://github.com/rfsaldanha/shinyd/actions/runs/39598445721),
+no commit `f323fcd2d43ce0d9a3ed1f045a004590e9bf763e`, também passou nas **117 verificações**
+e em **todos os cinco jobs**. O relatório integral do job `119216524153` está em
+[data-runtime-ci.json](evidencias/data-runtime-ci.json). Não houve erro de limpeza
+nem repetições por executor ocupado. A segunda execução confirmou mapeamentos
+de usuário distintos entre os apps e registrou o sistema de arquivos ext4.
+
+O navegador comprovou gravação no volume, nova publicação de código preservando
+o arquivo, reinício por configuração preservando dados, recusa de segundo
+escritor, dois apps sem acesso aos arquivos um do outro e remoção de container
+sem excluir o volume. Uma candidata escreveu em sua pasta temporária e falhou:
+o arquivo não apareceu no volume real e a publicação anterior manteve rota e PID.
+Links para o caminho da chave de controle permaneceram inacessíveis no container;
+a chave no host permaneceu intacta. Os outros apps mantiveram processos e
+reatividade durante as publicações.
+
+Ambiente: runner Ubuntu 24.04, kernel `7.0.0-1017-azure`, 4 CPUs lógicas,
+16.760.344.576 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4. Os mapeamentos
+foram `0 327680 65536` e `0 393216 65536`; os arquivos de teste em disco
+pertenciam a UID 65534, conforme a verificação aprovada. Essa medição funcional
+não homologa reboot, capacidade, esgotamento de disco, quotas ou rollback de dados.
+O job também verificou separadamente que remover o pacote de controle preserva
+seu arquivo de estado.
+
+A migração `0008` foi aplicada ao banco de desenvolvimento depois do backup
+privado (modo 0600) `var/backups/metadata-before-persistence-20261021T121336Z.sqlite3`.
+Foram construídos e conferidos os pacotes locais:
+
+| Pacote local | SHA-256 do `.deb` |
+|---|---|
+| `shinyd-runtime 0.1.0~runtime4` | `d34a45541dc2196b244961e1ea9ea67bf03cbd422da20f71b2e83a3f43f1706d` |
+| `shinyd-control 0.1.0~control3` | `0d9f31ff1a92c796f5874ee9eb2d817561cf1ddce2b8e4e26a1861dc39c00f63` |
+
+O builder2 local continua com hash
+`c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9`.
+O CI constrói seus próprios arquivos, identificados pelo relatório; não se
+declara igualdade binária com os pacotes locais. A homologação neste host ainda
+depende da execução pelo operador: `sudo -n true` informou que exige senha.
+Os pacotes instalados no host não foram atualizados nesta rodada.
 
 Contrato, limitações e comando: [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md).

@@ -100,7 +100,8 @@ remoção, ausência em metadados/logs e persistência cifrada. Resultados efeti
 executados são registrados em [STATUS.md](STATUS.md), separados da homologação local.
 
 Para repetir o ensaio no host local após construir os pacotes (instalação
-configurada e dados existentes são recusados pelo roteiro):
+configurada e dados existentes são recusados pelo roteiro): o comando atual usa
+`runtime4`/`control3` e inclui também [dados persistentes](DADOS_PERSISTENTES.md).
 
 ```sh
 set -o pipefail

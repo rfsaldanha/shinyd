@@ -173,3 +173,11 @@ reinício de painel/worker. Os serviços do ensaio ficaram inativos ao terminar;
 isso não deixa uma instalação configurada para atendimento permanente.
 Detalhes no marco 22 de [STATUS.md](STATUS.md); comando para repetir em
 [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md).
+
+A revisão `control3`/`runtime4` acrescenta dados persistentes e passou nas
+**117 verificações integradas** do [CI de dados](https://github.com/rfsaldanha/shinyd/actions/runs/39598445721).
+O [relatório integral](evidencias/data-runtime-ci.json) inclui persistência entre
+versões/configurações, recusa de segundo escritor, isolamento entre apps e
+preservação dos arquivos ao remover containers. A homologação local desta
+revisão está pendente; use [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md) para
+gerar `var/data-report.json` sem sobrescrever relatórios anteriores.
