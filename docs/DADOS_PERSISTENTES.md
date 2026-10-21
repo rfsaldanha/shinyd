@@ -3,8 +3,10 @@
 Requer `shinyd-runtime 0.1.0~runtime4`, `shinyd-control 0.1.0~control3` e a
 migração `0008`. O builder continua `builder2`. Passaram **117 verificações
 integradas no CI**, com relatório em [data-runtime-ci.json](evidencias/data-runtime-ci.json).
-A homologação local está pendente. [STATUS.md](STATUS.md) registra o ambiente e
-os limites; este resultado não constitui aprovação para produção.
+Na homologação local, passaram **119 verificações**, registradas em
+[data-runtime-local.json](evidencias/data-runtime-local.json).
+[STATUS.md](STATUS.md) registra o ambiente e os limites; este resultado não
+constitui aprovação para produção.
 
 ## Uso pelo painel
 
@@ -119,6 +121,16 @@ usou kernel `7.0.0-1017-azure`, ext4, Podman 4.9.3 e crun 1.14.1. Os dois apps
 usaram faixas de usuários distintas (`327680` e `393216`, com 65536 IDs cada),
 com arquivos persistentes em disco pertencentes a UID 65534. Passaram todos os
 cinco jobs, sem erro de limpeza; não houve teste de reboot, capacidade ou quotas.
+
+A execução local em 21/10/2026 usou Ubuntu 24.04.5 LTS, kernel
+`7.0.0-38-generic`, ext4, Podman 4.9.3 e crun 1.14.1, com 16 CPUs lógicas e
+66.735.198.208 bytes de RAM. Confirmou faixas distintas (`655360` e `720896`,
+com 65536 IDs cada) e preservação dos dados nas mesmas operações do CI.
+As duas verificações adicionais conferem checksum e identidade do pacote local
+do executor. Não houve erro de limpeza. O teste de recusa de artefato de outro
+app recebeu uma resposta `runtime_busy`, repetiu a tentativa e confirmou a
+recusa esperada. Os serviços do ensaio ficaram inativos ao terminar; os pacotes
+permanecem instalados, sem configuração para atendimento permanente.
 
 Após construir os pacotes, no diretório do projeto:
 

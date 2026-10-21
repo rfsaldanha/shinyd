@@ -178,6 +178,12 @@ A revisão `control3`/`runtime4` acrescenta dados persistentes e passou nas
 **117 verificações integradas** do [CI de dados](https://github.com/rfsaldanha/shinyd/actions/runs/39598445721).
 O [relatório integral](evidencias/data-runtime-ci.json) inclui persistência entre
 versões/configurações, recusa de segundo escritor, isolamento entre apps e
-preservação dos arquivos ao remover containers. A homologação local desta
-revisão está pendente; use [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md) para
-gerar `var/data-report.json` sem sobrescrever relatórios anteriores.
+preservação dos arquivos ao remover containers. A homologação local passou nas
+**119 verificações**, em 21/10/2026, sem erro de limpeza. São as 117 verificações
+do CI mais checksum e identidade do pacote local do executor. O
+[relatório local integral](evidencias/data-runtime-local.json) registra uma
+repetição por executor ocupado no teste de recusa de artefato de outro app;
+a recusa esperada foi confirmada. Os serviços do ensaio ficaram inativos ao
+terminar. Ambiente e pacotes estão no marco 24 de [STATUS.md](STATUS.md).
+Use [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md) para repetir o roteiro e gerar
+`var/data-report.json` sem sobrescrever relatórios de outros marcos.

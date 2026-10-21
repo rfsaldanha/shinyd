@@ -912,8 +912,63 @@ Foram construídos e conferidos os pacotes locais:
 O builder2 local continua com hash
 `c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9`.
 O CI constrói seus próprios arquivos, identificados pelo relatório; não se
-declara igualdade binária com os pacotes locais. A homologação neste host ainda
-depende da execução pelo operador: `sudo -n true` informou que exige senha.
-Os pacotes instalados no host não foram atualizados nesta rodada.
+declara igualdade binária com os pacotes locais. Naquela rodada, a homologação
+neste host dependia da execução pelo operador: `sudo -n true` informou que
+exigia senha. Os pacotes instalados no host ainda não tinham sido atualizados;
+a execução posterior está registrada no marco 24.
 
 Contrato, limitações e comando: [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md).
+
+## Marco 24 — Dados persistentes homologados localmente (F3-02)
+
+O operador executou o roteiro em 21/10/2026, com checkout `2caefac`.
+As **119 verificações passaram**, com `passed: true` e sem erro de limpeza.
+Evidência: [data-runtime-local.json](evidencias/data-runtime-local.json), cópia
+integral de `var/data-report.json`, iniciado às 12:38:06 UTC. São as 117
+verificações do CI do marco 23 mais checksum e identidade do pacote local do
+executor. O teste `activation_cross_app_artifact_denied` recebeu uma resposta
+`runtime_busy`, repetiu a tentativa e confirmou `artifact_rejected`. Não houve
+outras repetições registradas por executor ocupado.
+
+O inventário confirmou os pacotes configurados: `shinyd-runtime
+0.1.0~runtime4`, `shinyd-control 0.1.0~control3`, `shinyd-builder
+0.1.0~builder2`, `crun 1.14.1-1` e Podman `4.9.3+ds1-1ubuntu0.2`.
+Os checksums dos três `.deb` locais passaram e coincidem com os registrados
+no ensaio e no marco 23. Os pacotes do CI têm seus próprios hashes.
+
+Ambiente local: Ubuntu 24.04.5 LTS amd64, kernel `7.0.0-38-generic`, 16 CPUs
+lógicas, 66.735.198.208 bytes de RAM e ext4. Os containers persistentes usaram
+mapeamentos distintos: `0 655360 65536` e `0 720896 65536`. O teste confirmou
+arquivos em disco pertencentes a UID 65534 e diretórios pais privados de root.
+Também atenderam simultaneamente os ambientes R 4.4.3/Shiny 1.10.0 e
+R 4.5.2/Shiny 1.13.0. O perfil foi funcional, com builds offline e operações
+reativas; não se deriva capacidade da quantidade de verificações ou da RAM.
+
+O navegador confirmou habilitação da persistência, gravação real pelo Shiny,
+troca de código e reinício por configuração preservando os arquivos. O executor
+recusou um segundo escritor do mesmo app. Uma candidata que escreveu na pasta
+temporária e falhou não alterou o volume real, a rota nem o PID da publicação
+anterior. Arquivos temporários foram descartados na troca; links no volume
+permaneceram inacessíveis para alcançar a chave de controle, que não foi
+alterada. Dois apps mantiveram volumes isolados; remover o container de um
+preservou seus arquivos e não interrompeu o outro.
+
+As 63 verificações da instalação incluíram acesso público/privado, bloqueio de
+URL direta e WebSocket não autorizados, afinidade, upload/download, variáveis e
+segredos e painel em tela de 360 px. Reiniciar painel/worker preservou a sessão
+Shiny e os PIDs de auth/gateway/ingress: `939509`/`939510`/`939511` antes e depois.
+As demais aplicações permaneceram reativas durante as publicações.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Os sockets de painel, auth, gateway, builder e runtime estavam inativos;
+`shinyd.target`, desabilitado. O socket do agente de diagnóstico permaneceu
+escutando. O ensaio descartável removeu seus dados de teste e não deixa uma
+instalação configurada para atendimento permanente.
+
+F3-02 está homologada no CI e neste host. Certificado e nomes são de teste;
+DNS público, emissão ACME, reboot, capacidade, QoS sob carga e esgotamento de
+disco não foram testados. O próximo marco é **F3-03: histórico, ativação e
+rollback de versões**, preservando dados persistentes e configuração atual.
+Rollback de código não reverte escritas ou migrações de dados feitas pelo app;
+drenagem e backup recuperável continuam no backlog.
