@@ -30,6 +30,8 @@ var (
 	ErrNamespace   = errors.New("network_namespace_verification_failed")
 	ErrReadiness   = errors.New("application_readiness_failed")
 	ErrArtifact    = errors.New("artifact_rejected")
+	ErrDataInUse   = errors.New("data_in_use")
+	ErrDataStorage = errors.New("data_storage_unavailable")
 )
 
 type Policy struct {
@@ -169,9 +171,13 @@ type Spec struct {
 	Artifact       string `json:"artifact,omitempty"`
 	SourceHash     string `json:"source_hash,omitempty"`
 	ConfigRevision uint32 `json:"config_revision,omitempty"`
+	DataMode       string `json:"data_mode,omitempty"`
 }
 
 func (s Spec) Validate() error {
+	if s.DataMode != "" && ((s.DataMode != "persistent" && s.DataMode != "scratch") || s.Artifact == "") {
+		return ErrInvalid
+	}
 	validSource := recipePattern.MatchString(s.Recipe) && s.Artifact == "" && s.SourceHash == ""
 	if s.Recipe == "" && digestPattern.MatchString(s.Artifact) && digestPattern.MatchString(s.SourceHash) {
 		validSource = true

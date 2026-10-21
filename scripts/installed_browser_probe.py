@@ -81,7 +81,7 @@ def require_empty_control(state, configuration_paths):
         raise RuntimeError("installed_control_not_empty")
 
 
-def installed_probe(package, fixture, created):
+def installed_probe(package, fixture, created, data_apps):
     from playwright.sync_api import sync_playwright
 
     report = {
@@ -128,7 +128,7 @@ def installed_probe(package, fixture, created):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control2",
+            == "shinyd-control 0.1.0~control3",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))
@@ -494,6 +494,22 @@ def installed_probe(package, fixture, created):
                     "?.textContent === 'environment-unset'"
                 )
                 check("removed_secret_unset_after_apply")
+                stage = "persistent_data"
+                from persistent_browser_probe import probe as data_probe
+
+                app_origin = data_probe(
+                    panel_page, app_url, fixture, temporary, run, admin, check, created, data_apps
+                )
+                check(
+                    "other_apps_keep_processes_during_data_publications",
+                    all(
+                        json.loads(run("podman", "inspect", "shinyd-" + identity).stdout)[0][
+                            "State"
+                        ]["Pid"]
+                        == pid
+                        for identity, pid in existing_pids.items()
+                    ),
+                )
                 stage = "browser_public"
                 panel_page.goto(app_url)
                 panel_page.get_by_role("link", name="Configurar app", exact=True).click()
@@ -561,9 +577,12 @@ def installed_probe(package, fixture, created):
             elif CONFIG.exists() and (STATE / "metadata.sqlite3").exists():
                 try:
                     data = admin(
-                        "import json\nfrom control.models import AppInstance\n"
-                        "print('INSTANCE_IDS='+json.dumps(list("
-                        "AppInstance.objects.values_list('id',flat=True)),default=str))\n"
+                        "import json\nfrom control.models import AppInstance, Publication\n"
+                        "from control.runtime_client import probe_id\n"
+                        "ids=list(AppInstance.objects.values_list('id',flat=True))\n"
+                        "ids.extend(probe_id(p) for p in Publication.objects.all() "
+                        "if p.runtime_spec.get('data_mode')=='persistent')\n"
+                        "print('INSTANCE_IDS='+json.dumps(ids,default=str))\n"
                     )
                     identities = json.loads(
                         next(

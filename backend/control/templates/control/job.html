@@ -4,7 +4,7 @@
 <section class="panel" id="job-status" {% if job.status == "queued" or job.status == "running" %}hx-get="{% url 'job_detail' job.pk %}" hx-trigger="every 3s" hx-target="this" hx-select="#job-status" hx-swap="outerHTML"{% endif %} aria-live="polite">
   <p class="eyebrow">{{ job.phase }}</p><h2>{{ job.get_status_display }}</h2>
   <p>{{ job.message|default:"Aguardando o worker. A página será atualizada automaticamente." }}</p>
-  {% if job.phase == "cleaning_candidate" %}<p class="notice">Aguardando confirmação da remoção da candidata. A publicação anterior continua selecionada.</p>{% endif %}
+  {% if job.phase == "cleaning_candidate" %}<p class="notice">Aguardando confirmação da remoção da candidata. {% if job.publication.data_cutover %}A publicação anterior já foi interrompida; o volume de dados será mantido.{% else %}A publicação anterior continua selecionada.{% endif %}</p>{% endif %}
   <dl class="meta-list"><dt>Recebido</dt><dd>{{ job.created_at|date:"d/m/Y H:i:s" }} UTC</dd><dt>Tentativas</dt><dd>{{ job.attempts }}</dd><dt>Identificador</dt><dd><code>{{ job.pk }}</code></dd></dl>
   {% if job.status == "queued" or job.status == "running" %}{% if job.publication.status != "active" %}<form method="post" action="{% url 'job_cancel' job.pk %}">{% csrf_token %}<button class="btn btn-outline-danger">Solicitar cancelamento</button></form>{% endif %}{% endif %}
   {% if job.cancel_requested and job.status == "running" %}<p class="notice">O cancelamento será confirmado após a limpeza dos recursos temporários.</p>{% endif %}

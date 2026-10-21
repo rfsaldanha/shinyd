@@ -30,6 +30,7 @@ type View struct {
 	SourceHash     string `json:"source_hash,omitempty"`
 	Image          string `json:"image,omitempty"`
 	ConfigRevision uint32 `json:"config_revision,omitempty"`
+	DataMode       string `json:"data_mode,omitempty"`
 }
 type managed struct {
 	record        Record
@@ -66,6 +67,7 @@ func (m *Manager) view(item *managed) View {
 	r := item.record
 	v := View{ID: r.ID, AppID: r.Spec.AppID, Recipe: r.Spec.Recipe, Priority: r.Spec.Priority, Desired: r.Desired, State: item.state, Error: item.reason}
 	v.ConfigRevision = r.Spec.ConfigRevision
+	v.DataMode = r.Spec.DataMode
 	if r.Spec.Artifact != "" {
 		v.Artifact, v.SourceHash, v.Image = r.Spec.Artifact, r.Spec.SourceHash, r.Image
 	}
@@ -122,6 +124,13 @@ func (m *Manager) Ensure(ctx context.Context, id string, spec Spec, environments
 	}
 	others := 0
 	for otherID, other := range m.instances {
+		// A stopped/failed writer is still reserved until removal is confirmed.
+		// Desired=removed alone is insufficient after an interrupted cleanup.
+		if otherID != id && spec.DataMode == "persistent" && other.record.Spec.DataMode == "persistent" &&
+			other.record.Spec.AppID == spec.AppID && other.state != "removed" {
+			m.mu.Unlock()
+			return View{}, ErrDataInUse
+		}
 		if otherID != id && (other.record.Desired == "running" || other.state == "failed" || other.state == "unavailable" || other.state == "stopping") {
 			others++
 		}
@@ -262,7 +271,7 @@ func (m *Manager) Stop(ctx context.Context, id string, remove bool) (View, error
 }
 func safeError(err error) string {
 	for _, allowed := range []error{ErrInvalid, ErrConflict, ErrAdmission, ErrOwnership, ErrNotFound, ErrBusy,
-		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness, ErrArtifact} {
+		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness, ErrArtifact, ErrDataInUse, ErrDataStorage} {
 		if errors.Is(err, allowed) {
 			return allowed.Error()
 		}

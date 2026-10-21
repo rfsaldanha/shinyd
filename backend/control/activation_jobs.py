@@ -61,6 +61,7 @@ def enqueue(actor, version_id, key):
         app.active_publication_id
         and app.active_publication.version_id == version.pk
         and app.active_publication.config_revision == app.config_revision
+        and bool(app.active_publication.runtime_spec.get("data_mode")) == app.data_enabled
     ):
         raise Conflict("Esta versão e revisão de configuração já estão ativas.")
     publication = Publication(
@@ -77,6 +78,7 @@ def enqueue(actor, version_id, key):
             "artifact": artifact["cache_key"],
             "source_hash": version.source_hash,
             **({"config_revision": app.config_revision} if app.config_revision else {}),
+            **({"data_mode": "persistent"} if app.data_enabled else {}),
         },
     )
     publication.environment_snapshot = snapshot(publication)
@@ -105,7 +107,7 @@ def enqueue(actor, version_id, key):
         actor=actor,
         kind="activate_version",
         idempotency_key=key,
-        message="Na fila de ativação. A publicação anterior será preservada até a troca.",
+        message="Na fila de ativação. A candidata será verificada antes da troca.",
     )
     event(actor, "activation.queued", job.pk, publication=str(publication.pk))
     return job
@@ -166,7 +168,7 @@ def invalidated(job):
         not settings.SHINYD_RUNTIME_ENABLED
         or app.revision != pub.app_revision
         or app.config_revision != pub.config_revision
-        or app.active_publication_id != pub.previous_id
+        or app.active_publication_id != (None if pub.data_cutover else pub.previous_id)
         or app.priority.slug != pub.runtime_spec["priority"]
     ):
         return "failed", "Configuração alterada durante a ativação. Solicite novamente."
@@ -180,30 +182,111 @@ def decide(job, result=None, failure=None):
         return False
     failure = invalidated(value) or failure
     pub = value.publication
+    if result and result.get("image") != pub.version.image_digest:
+        failure = failure or (
+            "failed",
+            "O executor retornou uma imagem diferente da versão preparada.",
+        )
+    if result and not failure and pub.runtime_spec.get("data_mode") == "persistent":
+        if (
+            not pub.data_preflight_passed
+            or not pub.data_cutover
+            or (pub.previous_id and pub.previous.status != "retired")
+        ):
+            return False
     if failure:
         pub.status, value.message = failure
+        if pub.data_cutover:
+            value.message = (
+                "Ativação interrompida após desligar a publicação anterior. "
+                "O volume foi mantido, mas o app pode ter alterado seus dados. "
+                "Corrija a causa e ative uma versão novamente. "
+                + failure[1].replace(" A publicação anterior foi preservada.", "")
+            )
         value.phase = "cleaning_candidate"
     elif result:
-        if result.get("image") != pub.version.image_digest:
-            pub.status, value.phase = "failed", "cleaning_candidate"
-            value.message = "O executor retornou uma imagem diferente da versão preparada."
-        else:
-            # Route and pointer change in the same transaction. Existing hosts
-            # never change target, so a cookie/WS cannot drift to another R process.
-            AppInstance.objects.filter(app=value.app, enabled=True).update(enabled=False)
-            AppInstance.objects.filter(publication=pub).update(
-                enabled=True, target=result["target"]
-            )
-            Application.objects.filter(pk=value.app_id).update(
-                active_publication=pub, desired_state="running"
-            )
-            if pub.previous_id:
-                Publication.objects.filter(pk=pub.previous_id).update(status="retiring")
-            pub.status, value.phase = "active", "retiring_previous"
-            value.message = "Versão ativada. Encerrando a instância anterior."
-            event(value.actor, "publication.activated", pub.pk, version=str(pub.version_id))
+        # Route and pointer change in the same transaction. Existing hosts
+        # never change target, so a cookie/WS cannot drift to another R process.
+        AppInstance.objects.filter(app=value.app, enabled=True).update(enabled=False)
+        AppInstance.objects.filter(publication=pub).update(enabled=True, target=result["target"])
+        Application.objects.filter(pk=value.app_id).update(
+            active_publication=pub, desired_state="running"
+        )
+        if pub.previous_id and pub.previous.status != "retired":
+            Publication.objects.filter(pk=pub.previous_id).update(status="retiring")
+        pub.status, value.phase = "active", "retiring_previous"
+        value.message = "Versão ativada. Finalizando a troca."
+        event(value.actor, "publication.activated", pub.pk, version=str(pub.version_id))
     pub.save(update_fields=["status"])
     value.save(update_fields=["phase", "message", "updated_at"])
+    return True
+
+
+@transaction.atomic
+def data_checkpoint(job, *, preflight=False, cutover=False):
+    """Durable checkpoints before discarding the probe or stopping the writer."""
+    value = current(job)
+    if (
+        not value
+        or value.publication.status != "candidate"
+        or value.publication.runtime_spec.get("data_mode") != "persistent"
+    ):
+        return False
+    if failure := invalidated(value):
+        decide(job, failure=failure)
+        return False
+    pub = value.publication
+    if preflight:
+        pub.data_preflight_passed = True
+        pub.save(update_fields=["data_preflight_passed"])
+    if cutover:
+        if not pub.data_preflight_passed:
+            return False
+        AppInstance.objects.filter(app=value.app, enabled=True).update(enabled=False)
+        Application.objects.filter(pk=value.app_id).update(
+            active_publication=None, desired_state="stopped"
+        )
+        if pub.previous_id:
+            Publication.objects.filter(pk=pub.previous_id).update(status="retiring")
+        pub.data_cutover = True
+        pub.save(update_fields=["data_cutover"])
+        event(value.actor, "data.cutover", pub.pk)
+    return True
+
+
+def prepare_persistent(job, value):
+    """One bounded stage per lease. Never expose live data to a concurrent probe."""
+    pub = value.publication
+    if not pub.data_preflight_passed:
+        result = runtime_client.inspect(pub, probe=True)
+        if result is None:
+            result = runtime_client.ensure(pub, probe=True)
+        if result["state"] == "ready" and result.get("image") == pub.version.image_digest:
+            data_checkpoint(job, preflight=True)
+        elif result["state"] in {"ready", "failed", "stopped", "removed"}:
+            decide(job, failure=("failed", "A candidata falhou no teste com dados temporários."))
+        update(
+            job, phase="data_preflight", message="Verificando a candidata com dados temporários."
+        )
+        return False
+    if not pub.data_cutover:
+        runtime_client.retire(pub, probe=True)
+        data_checkpoint(job, cutover=True)
+        update(
+            job,
+            phase="data_cutover",
+            message="Interrompendo a publicação anterior para liberar os dados.",
+        )
+        return False
+    if pub.previous_id and pub.previous.status != "retired":
+        runtime_client.retire(pub.previous)
+        Publication.objects.filter(pk=pub.previous_id).update(status="retired")
+        update(
+            job,
+            phase="data_starting",
+            message="Instância anterior removida. Preparando a partida com dados persistentes.",
+        )
+        return False
     return True
 
 
@@ -219,6 +302,10 @@ def process_one():
             if failure:
                 decide(job, failure=failure)
             else:
+                if pub.runtime_spec.get("data_mode") == "persistent" and not prepare_persistent(
+                    job, value
+                ):
+                    return True
                 result = runtime_client.inspect(pub)
                 if result is None:
                     result = runtime_client.ensure(pub)
@@ -243,10 +330,15 @@ def process_one():
             return True
         pub = value.publication
         if pub.status in {"failed", "cancelled"}:
+            if pub.runtime_spec.get("data_mode") == "persistent":
+                runtime_client.retire(pub, probe=True)
+                if pub.data_cutover and pub.previous_id:
+                    runtime_client.retire(pub.previous)
+                    Publication.objects.filter(pk=pub.previous_id).update(status="retired")
             runtime_client.retire(pub)
             update(job, phase=pub.status, message=value.message, status=pub.status)
         elif pub.status == "active":
-            if pub.previous_id:
+            if pub.previous_id and pub.previous.status != "retired":
                 runtime_client.retire(pub.previous)
                 Publication.objects.filter(pk=pub.previous_id).update(status="retired")
             update(

@@ -62,4 +62,9 @@ O marco F3-01 acrescenta [variáveis e segredos em execução](docs/VARIAVEIS_SE
 com aplicação explícita sem novo ZIP e revisão desejada/aplicada no painel.
 O fluxo passou em 99 verificações integradas no CI e 102 na homologação local,
 após instalar a dependência `crun`. Consulte os marcos 20–22 em
-[STATUS.md](docs/STATUS.md). O próximo marco é F3-02: dados persistentes dos apps.
+[STATUS.md](docs/STATUS.md).
+
+F3-02 implementa [dados persistentes por app](docs/DADOS_PERSISTENTES.md), com
+habilitação pelo painel, teste da candidata em pasta temporária e remoção
+confirmada da instância anterior antes de usar os dados reais. Requer `runtime4`
+e `control3`. A homologação integrada desta revisão está em andamento.

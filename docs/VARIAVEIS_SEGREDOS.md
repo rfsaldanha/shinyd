@@ -106,9 +106,9 @@ configurada e dados existentes são recusados pelo roteiro):
 set -o pipefail
 sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
-  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime3_amd64.deb \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control2_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control3_amd64.deb \
   | tee var/secrets-report.json
 ```
 

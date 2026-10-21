@@ -1,6 +1,7 @@
 """Typed, mutually authenticated Unix API. No sudo, arbitrary targets or commands."""
 
 import http.client
+import uuid
 
 from cryptography.exceptions import InvalidTag
 from django.conf import settings
@@ -13,6 +14,9 @@ from .agent_client import AgentUnavailable, UnixConnection
 
 MESSAGES = {
     "environment_unavailable": "Não foi possível ler a configuração cifrada. Verifique a chave.",
+    "data_in_use": "O volume ainda pertence a outra instância. Aguarde sua remoção confirmada.",
+    "data_storage_unavailable": "Dados indisponíveis. "
+    "Verifique espaço livre, permissões e suporte a idmap.",
     "artifact_rejected": "O executor recusou o artefato. Confira o builder e a política instalada.",
     "invalid_request": "O executor recusou o contrato de ativação.",
     "instance_conflict": "O identificador já pertence a outra operação ou foi encerrado.",
@@ -79,11 +83,14 @@ def request(method, identity, spec, *, retire=False, environment=None):
         if (
             not isinstance(value, dict)
             or not required <= value.keys()
-            or value.keys() - required - {"target", "error", "image", "config_revision"}
+            or value.keys()
+            - required
+            - {"target", "error", "image", "config_revision", "data_mode"}
             or value["id"] != str(identity)
             or value["recipe"] != ""
             or any(value.get(k) != v for k, v in spec.items())
             or value.get("config_revision", 0) != spec.get("config_revision", 0)
+            or value.get("data_mode", "") != spec.get("data_mode", "")
             or value["state"]
             not in {
                 "ready",
@@ -121,23 +128,38 @@ def request(method, identity, spec, *, retire=False, environment=None):
         connection.close()
 
 
-def inspect(publication):
-    return request("GET", publication.pk, publication.runtime_spec)
+def probe_id(publication):
+    return uuid.uuid5(publication.pk, "shinyd-data-preflight-v1")
+
+
+def contract(publication, probe):
+    if probe:
+        if publication.runtime_spec.get("data_mode") != "persistent":
+            raise ValueError("Probe requires persistent data")
+        return probe_id(publication), {**publication.runtime_spec, "data_mode": "scratch"}
+    return publication.pk, publication.runtime_spec
+
+
+def inspect(publication, *, probe=False):
+    identity, spec = contract(publication, probe)
+    return request("GET", identity, spec)
 
 
 @sensitive_variables()
-def ensure(publication):
+def ensure(publication, *, probe=False):
     from .environment import reveal
 
     try:
         environment = reveal(publication)
     except (InvalidTag, ValidationError, OSError, ValueError, TypeError) as exc:
         raise RuntimeRejected("environment_unavailable") from exc
-    return request("PUT", publication.pk, publication.runtime_spec, environment=environment)
+    identity, spec = contract(publication, probe)
+    return request("PUT", identity, spec, environment=environment)
 
 
-def retire(publication):
-    value = request("POST", publication.pk, publication.runtime_spec, retire=True)
+def retire(publication, *, probe=False):
+    identity, spec = contract(publication, probe)
+    value = request("POST", identity, spec, retire=True)
     if value["state"] != "removed" or value["desired"] != "removed":
         raise RuntimeUnavailable
     return value

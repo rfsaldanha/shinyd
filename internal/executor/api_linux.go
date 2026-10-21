@@ -111,7 +111,7 @@ func NewServer(uid uint32, manager *Manager, audit func(Event)) *http.Server {
 			switch err {
 			case ErrInvalid, ErrArtifact:
 				status = 400
-			case ErrConflict, ErrOwnership:
+			case ErrConflict, ErrOwnership, ErrDataInUse, ErrDataStorage:
 				status = 409
 			case ErrNotFound:
 				status = 404

@@ -7,12 +7,30 @@ ui <- fluidPage(
   verbatimTextOutput("state"),
   verbatimTextOutput("credential_boundary"),
   verbatimTextOutput("environment_fingerprint"),
+  textInput("data_value", "Dado persistente", ""),
+  actionButton("save_data", "Gravar dado"),
+  verbatimTextOutput("data_state"),
   fileInput("upload", "Arquivo de teste"),
   verbatimTextOutput("uploaded"),
   downloadButton("download", "Baixar estado")
 )
 
 server <- function(input, output, session) {
+  read_data <- function() {
+    directory <- Sys.getenv("SHINYD_DATA_DIR")
+    if (!nzchar(directory)) return("data-disabled")
+    path <- file.path(directory, "fixture.txt")
+    if (file.exists(path)) paste(readLines(path, warn=FALSE), collapse="\n") else "data-empty"
+  }
+  saved_data <- reactiveVal(read_data())
+  observeEvent(input$save_data, {
+    directory <- Sys.getenv("SHINYD_DATA_DIR")
+    req(nzchar(directory))
+    writeLines(input$data_value, file.path(directory, "fixture.txt"))
+    writeLines("temporary", "/tmp/fixture-persistence-marker")
+    saved_data(read_data())
+  })
+  output$data_state <- renderText(saved_data())
   output$environment_fingerprint <- renderText({
     # Only synthetic high-entropy values in this fixture. Never echo secrets.
     if (identical(Sys.getenv("APP_TOKEN", unset=NA_character_), NA_character_)) {

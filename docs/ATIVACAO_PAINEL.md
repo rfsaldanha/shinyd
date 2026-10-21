@@ -87,7 +87,7 @@ python3 scripts/build_builder_package.py
 go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
 set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
-  --install-runtime-package 'dist/shinyd-runtime_0.1.0~runtime3_amd64.deb' \
+  --install-runtime-package 'dist/shinyd-runtime_0.1.0~runtime4_amd64.deb' \
   --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' \
   | tee var/activation-report.json
 ```

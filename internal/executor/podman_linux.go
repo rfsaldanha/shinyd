@@ -31,6 +31,10 @@ type Inspection struct {
 		NetworkMode    string `json:"NetworkMode"`
 		ReadonlyRootfs bool   `json:"ReadonlyRootfs"`
 	} `json:"HostConfig"`
+	Mounts []struct {
+		Type, Source, Destination string
+		RW                        bool
+	} `json:"Mounts"`
 }
 type Backend interface {
 	Inspect(context.Context, Record) (*Inspection, error)
@@ -111,6 +115,17 @@ func (p Podman) Inspect(ctx context.Context, r Record) (*Inspection, error) {
 		value.Config.User != "65534:65534" || value.HostConfig.NetworkMode != "none" || !value.HostConfig.ReadonlyRootfs {
 		return nil, ErrOwnership
 	}
+	if r.Spec.DataMode == "persistent" {
+		found := false
+		for _, mount := range value.Mounts {
+			if mount.Destination == "/data" && mount.Source == dataPath(r.Spec.AppID) && mount.Type == "bind" && mount.RW {
+				found = true
+			}
+		}
+		if !found {
+			return nil, ErrOwnership
+		}
+	}
 	return &value, nil
 }
 func (p Podman) Start(ctx context.Context, r Record, environment map[string]string) error {
@@ -141,13 +156,28 @@ func (p Podman) Start(ctx context.Context, r Record, environment map[string]stri
 		"--cgroup-parent=" + Slice(r.Spec), "--restart=no",
 		"--log-driver=k8s-file", "--log-opt=max-size=1mb",
 		"--tmpfs=/tmp:rw,nosuid,nodev,size=64m,mode=1777", "--env=HOME=/tmp",
-		"--env=SHINYD_INSTANCE_ID=" + r.ID, "--env=PORT=3838", r.Image}
+		"--env=SHINYD_INSTANCE_ID=" + r.ID, "--env=PORT=3838"}
+	if r.Spec.DataMode != "" {
+		args = append([]string{"--runtime=/usr/bin/crun"}, args...)
+		args = append(args, "--env=SHINYD_DATA_DIR=/data")
+		if r.Spec.DataMode == "scratch" {
+			args = append(args, "--tmpfs=/data:rw,nosuid,nodev,noexec,size=64m,mode=1777")
+		} else {
+			if err := prepareData(DataRoot, r.Spec.AppID, 0, 65534); err != nil {
+				return ErrDataStorage
+			}
+			args = append(args, "--volume="+dataPath(r.Spec.AppID)+":/data:rw,nosuid,nodev,noexec,idmap,rprivate")
+		}
+	}
+	args = append(args, r.Image)
 	if r.Spec.ConfigRevision != 0 {
 		if p.RunEnvironment == nil {
 			return ErrUnavailable
 		}
 		args = args[:len(args)-1]
-		args = append([]string{"--runtime=/usr/bin/crun"}, args...)
+		if r.Spec.DataMode == "" {
+			args = append([]string{"--runtime=/usr/bin/crun"}, args...)
+		}
 		args = append(args, "--preserve-fds=1", "--entrypoint=Rscript", r.Image, "--vanilla", "-e", environmentLaunch)
 		_, err = p.RunEnvironment(ctx, environment, args...)
 	} else {

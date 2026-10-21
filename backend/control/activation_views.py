@@ -41,6 +41,20 @@ def activate(request, pk):
         form.add_error(None, str(exc))
         status = 409
     title = "Aplicar configuração" if applying else "Ativar versão"
+    description = (
+        "A versão candidata será iniciada e verificada antes da troca. "
+        "Falha ou falta de recursos preserva a publicação anterior. "
+        "Após a troca, usuários conectados precisarão abrir o app novamente. "
+        "Dados gravados em /tmp são temporários."
+    )
+    if version.app.data_enabled:
+        description = (
+            "A candidata será testada com dados temporários vazios. Se passar, o app anterior "
+            "será interrompido antes da partida com os dados persistentes. "
+            "Falha nessa partida deixa o app indisponível e não desfaz alterações nos dados. "
+            "Mantenha backup antes de atualizar código que modifica dados. "
+            "As sessões serão encerradas; não há drenagem nesta etapa."
+        )
     return render(
         request,
         "control/form.html",
@@ -49,10 +63,7 @@ def activate(request, pk):
             "service_error": error,
             "title": f"{title} · {version.app.name}",
             "submit_label": "Aplicar configuração e reiniciar" if applying else "Ativar versão",
-            "description": "A versão candidata será iniciada e verificada antes da troca. "
-            "Falha ou falta de recursos preserva a publicação anterior. "
-            "Após a troca, usuários conectados precisarão abrir o app novamente. "
-            "Dados gravados em /tmp são temporários; persistência ainda não está disponível.",
+            "description": description,
         },
         status=status,
     )

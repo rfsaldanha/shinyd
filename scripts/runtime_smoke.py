@@ -42,7 +42,7 @@ def command(*args, input=None, check=True, timeout=60):
 
 
 def require_crun():
-    """Check the explicit runtime3 dependency before unpacking any package."""
+    """Check the explicit runtime4 dependency before unpacking any package."""
     result = command("dpkg-query", "-W", "-f=${Status}", "crun", check=False)
     if result.returncode or result.stdout.split()[1:] != ["ok", "installed"]:
         raise RuntimeError(
@@ -168,7 +168,7 @@ def main():
                 metadata = command(
                     "dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)
                 ).stdout
-                record("package_identity", metadata == "shinyd-runtime 0.1.0~runtime3", metadata)
+                record("package_identity", metadata == "shinyd-runtime 0.1.0~runtime4", metadata)
                 command("dpkg", "--install", str(package), timeout=90)
             record(
                 "execution_disabled_after_install",

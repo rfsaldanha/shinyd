@@ -844,3 +844,34 @@ DNS público, emissão ACME, reboot, capacidade e QoS sob carga não foram testa
 F3-02 é o próximo marco: volumes persistentes por app, preservados entre
 publicações e isolados dos demais apps. Rollback com dados, drenagem e demais
 itens da fase 3 continuam no backlog.
+
+## Marco 23 — Dados persistentes por app (F3-02), homologação em andamento
+
+Implementados volume por UUID de app, habilitação autorizada e confirmada pelo
+painel, diretório `SHINYD_DATA_DIR`, preservação entre publicações e reserva de
+um único escritor pelo executor. A candidata usa tmpfs vazio; o worker registra
+etapas duráveis, encerra o teste e só libera os dados reais depois da remoção
+confirmada da publicação anterior. Essa dependência antecipa a interrupção
+imediata do ciclo de vida; drenagem continua pendente. A interface informa falhas
+antes e depois da interrupção sem prometer reversão de dados.
+
+O runtime usa bind mount com `idmap`, sem troca recursiva de donos dos arquivos.
+Raiz e diretórios por app são privados de root; apenas a pasta de arquivos é
+montada. Paths/opções de montagem não são parâmetros da API. A remoção do
+container não remove o volume. Antes de montar, o executor exige 1 GiB livre;
+isso não implementa quota nem protege contra esgotamento posterior do disco.
+
+Pacotes `runtime4` e `control3`, com migração `0008`; builder2 preservado.
+Passaram **253 testes Python**, Go com detector de concorrência, `go vet`, Ruff,
+verificação de formatação, consistência de migrações e diagnóstico Django de
+produção. Os testes cobrem autorização, cancelamento antes/depois da troca,
+falha de candidata/partida real, resposta perdida, worker antigo, remoção
+inconclusiva, reserva de escritor após recuperação e links maliciosos.
+
+O roteiro integrado foi ampliado para escrita real pelo Shiny, publicação de
+outro ZIP, reinício por configuração, falha de candidata que escreve somente
+na pasta temporária, dois apps com volumes isolados e remoção que preserva
+arquivos. Sua execução real ainda está pendente nesta revisão; não inferir
+sucesso de compatibilidade Podman/kernel a partir dos testes com doubles.
+
+Contrato, limitações e comando: [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md).

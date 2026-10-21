@@ -45,7 +45,7 @@ func run() error {
 	if err != nil || gid == 0 {
 		return errors.New("grupo do gateway inválido")
 	}
-	for _, path := range []string{"/var/lib/shinyd-runtime", "/run/shinyd-runtime/apps"} {
+	for _, path := range []string{"/var/lib/shinyd-runtime", "/run/shinyd-runtime/apps", executor.DataRoot} {
 		if err = executor.SecureDir(path, 0); err != nil {
 			return errors.New("diretórios do executor inválidos")
 		}

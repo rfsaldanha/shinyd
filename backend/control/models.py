@@ -62,6 +62,7 @@ class Application(models.Model):
     desired_state = models.CharField(default="stopped", max_length=20)
     revision = models.PositiveIntegerField(default=1)
     config_revision = models.PositiveIntegerField(default=0)
+    data_enabled = models.BooleanField(default=False)
     active_publication = models.ForeignKey(
         "Publication", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
@@ -131,6 +132,8 @@ class Publication(models.Model):
     app_revision = models.PositiveIntegerField(default=1)
     runtime_spec = models.JSONField(default=dict)
     environment_snapshot = models.BinaryField(default=bytes)
+    data_cutover = models.BooleanField(default=False)
+    data_preflight_passed = models.BooleanField(default=False)
 
 
 class EnvironmentValue(models.Model):

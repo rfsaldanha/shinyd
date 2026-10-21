@@ -294,7 +294,8 @@ def test_post_requires_acknowledgement_and_cancel_after_switch_is_refused(
 
 
 @pytest.mark.parametrize(
-    "mutation", ["target", "app_id", "artifact", "extra", "duplicate", "config_revision"]
+    "mutation",
+    ["target", "app_id", "artifact", "extra", "duplicate", "config_revision", "data_mode"],
 )
 def test_runtime_client_rejects_mismatched_or_unsafe_responses(
     app, accounts, monkeypatch, mutation
@@ -315,6 +316,8 @@ def test_runtime_client_rejects_mismatched_or_unsafe_responses(
         value["private"] = "PRIVATE_SENTINEL"
     elif mutation == "config_revision":
         value["config_revision"] = 99
+    elif mutation == "data_mode":
+        value["data_mode"] = "persistent"
     raw = json.dumps(value)
     if mutation == "duplicate":
         raw = raw.replace('"state": "ready"', '"state": "ready", "state": "ready"')

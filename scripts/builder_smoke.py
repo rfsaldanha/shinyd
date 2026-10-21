@@ -219,6 +219,7 @@ def main():
     own_policy = own_runtime = None
     previous_limits = None
     created = []
+    data_apps = []
     artifacts = []
     panel_state = None
     panel_jobs = []
@@ -235,6 +236,10 @@ def main():
                 and not (STATE / "current.json").exists()
                 and not list((STATE / "artifacts").glob("*.json")),
             )
+            data_root = Path("/var/lib/shinyd-data")
+            record(
+                "empty_data_test_namespace", not data_root.exists() or not any(data_root.iterdir())
+            )
             require_crun()
             record("crun_dependency_ready", True)
             if args.install_runtime_package:
@@ -250,13 +255,13 @@ def main():
                 ).stdout
                 record(
                     "runtime_package_identity",
-                    identity == "shinyd-runtime 0.1.0~runtime3",
+                    identity == "shinyd-runtime 0.1.0~runtime4",
                     identity,
                 )
                 command("dpkg", "--install", str(package), timeout=120)
             if args.activation:
                 identity = command("dpkg-query", "-W", "-f=${Version}", "shinyd-runtime").stdout
-                record("activation_runtime_installed", identity == "0.1.0~runtime3", identity)
+                record("activation_runtime_installed", identity == "0.1.0~runtime4", identity)
             package = args.install_package.resolve()
             checksum = hashlib.sha256(package.read_bytes()).hexdigest()
             record(
@@ -590,7 +595,7 @@ def main():
                 api("remove", ids[1])
                 record("release_second_fixture_before_configuration_rotation", True)
                 installed = installed_probe(
-                    args.install_control_package, temporary / "app-0.zip", created
+                    args.install_control_package, temporary / "app-0.zip", created, data_apps
                 )
                 report["installed"] = installed
                 record("installed_https_probe", installed.get("passed"), installed)
@@ -695,6 +700,14 @@ def main():
             if (STATE / "current.json").exists():
                 cleanup_errors.append("pending_build")
             if not cleanup_errors:
+                # Only fixture UUIDs, after all their containers are removed.
+                # Production removal never deletes app data.
+                for identity in set(data_apps):
+                    if str(uuid.UUID(identity)) != identity:
+                        raise RuntimeError("Identificador de dados inválido no roteiro.")
+                    path = Path("/var/lib/shinyd-data") / identity
+                    if path.exists():
+                        shutil.rmtree(path)
                 if own_policy is not None and POLICY.exists() and POLICY.read_bytes() == own_policy:
                     POLICY.unlink()
                 for key in artifacts:

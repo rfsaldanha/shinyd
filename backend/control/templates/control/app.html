@@ -15,6 +15,11 @@
 {% for job in jobs %}<tr><td>{{ job.created_at|date:"d/m/Y H:i" }} UTC</td><td>{{ job.get_status_display }}</td><td>{{ job.phase }}</td><td><a href="{% url 'job_detail' job.pk %}">Ver resultado</a></td></tr>{% empty %}<tr><td colspan="4">Nenhum ZIP enviado.</td></tr>{% endfor %}
 </tbody></table></div></section>
 <div class="detail-grid">
+<section class="panel"><h2>Dados persistentes</h2>
+{% if app.data_enabled %}<p>Habilitados. O app deve gravar em <code>Sys.getenv("SHINYD_DATA_DIR")</code>.</p><p class="form-help">Um processo por volume. Os dados permanecem entre publicações; /tmp continua temporário. As próximas ativações interrompem este app.</p>
+{% if active_instance and app.active_publication.runtime_spec.data_mode != "persistent" %}<p class="notice">Pendente de aplicação.</p><p><a class="btn btn-primary" href="{% url 'version_activate' app.active_publication.version_id %}">Aplicar persistência e reiniciar</a></p>{% endif %}
+{% else %}<p>Desabilitados. Arquivos temporários são descartados ao remover a instância.</p><a class="btn btn-light" href="{% url 'data_enable' app.pk %}">Habilitar dados persistentes</a>{% endif %}
+</section>
 <section class="panel"><h2>Ambiente</h2><p class="muted">Revisão desejada {{ app.config_revision }}. Os valores não são exibidos.</p>
 {% if app.active_publication_id %}<p>Revisão aplicada: {{ app.active_publication.config_revision }}.</p>
 {% if app.config_revision != app.active_publication.config_revision %}<p class="notice">Há alterações pendentes. Aplicá-las reinicia este app e encerra suas sessões atuais.</p><p><a class="btn btn-primary" href="{% url 'version_activate' app.active_publication.version_id %}">Aplicar configuração</a></p>{% endif %}

@@ -59,6 +59,23 @@ def update_app(actor, app_id, expected_revision, values):
     return app
 
 
+@transaction.atomic
+def enable_data(actor, app_id, expected_revision):
+    app = require_publish(actor, app_id)
+    if app.revision != expected_revision:
+        raise Conflict("O aplicativo mudou. Recarregue a página antes de salvar.")
+    if Job.objects.filter(
+        app=app, kind="activate_version", status__in=["queued", "running"]
+    ).exists():
+        raise Conflict("Aguarde a ativação ou limpeza em andamento.")
+    if not app.data_enabled:
+        app.data_enabled = True
+        app.revision += 1
+        app.save(update_fields=["data_enabled", "revision", "updated_at"])
+        event(actor, "data.enabled", app.pk)
+    return app
+
+
 def master_key():
     path = Path(settings.SHINYD_MASTER_KEY_FILE)
     if path.stat().st_mode & 0o077:
