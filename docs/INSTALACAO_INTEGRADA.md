@@ -160,8 +160,15 @@ O contrato atual, com `control2`/`runtime3`, passou nas **99 verificações** do
 [CI de segredos](https://github.com/rfsaldanha/shinyd/actions/runs/39486005117),
 incluindo injeção, rotação sem ZIP e remoção de variável. O
 [relatório integral](evidencias/secrets-runtime-ci.json) registra o resultado.
-A tentativa local de 21/10/2026 parou na instalação do executor por falta de
-`crun`, antes dos testes dos apps. A homologação permanece pendente; use o comando
-de recuperação e ensaio em [VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md) para
-gerar um relatório separado. A tentativa está preservada em
+A primeira tentativa local de 21/10/2026 parou na instalação do executor por
+falta de `crun`, antes dos testes dos apps; o relatório está preservado em
 [secrets-dependency-local.json](evidencias/secrets-dependency-local.json).
+Após instalar a dependência, a repetição passou nas **102 verificações**, sem
+erro de limpeza. São as 99 verificações daquele CI mais a verificação prévia de
+`crun`, checksum e identidade do pacote local do executor. O
+[relatório local integral](evidencias/secrets-runtime-local.json) comprova entrega,
+rotação e remoção de segredos, preservação dos demais apps e das sessões durante
+reinício de painel/worker. Os serviços do ensaio ficaram inativos ao terminar;
+isso não deixa uma instalação configurada para atendimento permanente.
+Detalhes no marco 22 de [STATUS.md](STATUS.md); comando para repetir em
+[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md).

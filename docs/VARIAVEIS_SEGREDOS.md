@@ -125,6 +125,14 @@ A primeira tentativa local está preservada em
 [secrets-dependency-local.json](evidencias/secrets-dependency-local.json) e não
 comprova a execução dos apps: parou antes dela.
 
+Após instalar `crun`, a repetição local de 21/10/2026 passou nas **102 verificações**,
+sem erro de limpeza nem repetições por executor ocupado. O
+[relatório integral](evidencias/secrets-runtime-local.json) registra a entrega ao
+R, rotação sem novo ZIP, remoção, preservação dos demais apps e ausência dos
+valores sintéticos nos metadados/logs verificados e no banco em texto claro.
+Isso conclui a homologação local de F3-01, sem comprovar capacidade, reboot ou
+QoS sob carga. Ambiente e estado final estão no marco 22 de [STATUS.md](STATUS.md).
+
 Fontes oficiais consultadas em 20/10/2026: o
 [Podman 4.9.3](https://docs.podman.io/en/v4.9.3/markdown/podman-run.1.html#preserve-fds-n)
 documenta a passagem de descritores no cliente local; a

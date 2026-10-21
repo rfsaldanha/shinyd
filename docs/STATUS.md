@@ -734,9 +734,9 @@ Ambiente do ensaio: Ubuntu 24.04 do workflow, kernel `7.0.0-1017-azure`,
 funcional, sem medição de capacidade, reboot ou disputa de QoS.
 O job também removeu o pacote do controle e verificou a preservação do estado.
 
-A homologação no host local ainda está pendente: a tentativa de 21/10/2026
-parou na instalação por falta de `crun` (diagnóstico e recuperação no marco 21).
-O ensaio local das versões anteriores não comprova a nova injeção.
+Na primeira tentativa local de 21/10/2026, a instalação parou por falta de
+`crun` (diagnóstico e recuperação no marco 21). A repetição após instalar a
+dependência passou; a homologação local da nova injeção está no marco 22.
 Os arquivos disponíveis neste host têm estes hashes (o CI identifica seus
 próprios pacotes no relatório):
 
@@ -771,8 +771,8 @@ e o comando fornecido não a instalava.
 
 `apt-get --simulate --no-remove --no-install-recommends install crun` indicou
 a instalação de `crun 1.14.1-1` e configuração de runtime3, com zero remoções
-e zero atualizações de outros pacotes. A instalação real ainda depende da senha
-local: `sudo -n true` foi recusado pelo sistema por exigir senha.
+e zero atualizações de outros pacotes. Naquela rodada, a instalação real dependia
+da senha local: `sudo -n true` foi recusado pelo sistema por exigir senha.
 
 Os roteiros de runtime e builder agora verificam se o pacote está configurado
 e se `/usr/bin/crun` está executável antes de instalar qualquer pacote. A recusa
@@ -787,7 +787,60 @@ de formatação passaram nos arquivos alterados.
 A verificação prévia também foi executada sem privilégios neste host e retornou
 a mensagem esperada de `crun` ausente, sem alterar a instalação.
 
-F3-01 continua homologada no CI do marco 20 e pendente neste host. A próxima ação
-é instalar a dependência e repetir o ensaio conforme
-[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md); os três checks preliminares desta
-tentativa não substituem os testes de entrega, rotação e remoção de segredos.
+F3-01 ficou homologada no CI do marco 20 e pendente neste host naquela rodada.
+O operador instalou a dependência e repetiu o ensaio conforme
+[VARIAVEIS_SEGREDOS.md](VARIAVEIS_SEGREDOS.md); o resultado está no marco 22.
+Os três checks preliminares desta tentativa não substituem os testes de entrega,
+rotação e remoção de segredos.
+
+## Marco 22 — Variáveis e segredos homologados localmente (F3-01)
+
+O operador repetiu o roteiro em 21/10/2026, após instalar `crun`, usando o
+checkout `9e50a9de8fe8ed3c007f8a12a680f7509de4f625`. As **102 verificações passaram**,
+com `passed: true`, sem erro de limpeza nem repetições por executor ocupado.
+Evidência: [secrets-runtime-local.json](evidencias/secrets-runtime-local.json),
+cópia integral de `var/secrets-report.json`, iniciado às 11:34:43 UTC.
+São as 99 verificações do CI do marco 20 mais a verificação prévia de `crun`,
+checksum e identidade do pacote local do executor.
+
+A consulta ao inventário confirmou os pacotes configurados: `shinyd-runtime
+0.1.0~runtime3`, `shinyd-control 0.1.0~control2`, `shinyd-builder
+0.1.0~builder2`, `crun 1.14.1-1` e Podman `4.9.3+ds1-1ubuntu0.2`. Os checksums
+dos três `.deb` locais passaram e coincidem com os registrados no ensaio:
+
+| Pacote local | SHA-256 do `.deb` |
+|---|---|
+| `shinyd-runtime 0.1.0~runtime3` | `30f2dfaf50ea57ad2e6b84de986e0cabbb0283269bb8a3f3e40f5096268771b5` |
+| `shinyd-control 0.1.0~control2` | `d3c59d34dce5c035f903047931dcaf3490eea2bf7bc01738cd15684970440b81` |
+| `shinyd-builder 0.1.0~builder2` | `c301c391636c27759072cf984a7c7b2838fb73bc69080dbe8e2f313f5a333dd9` |
+
+Ambiente local: Ubuntu 24.04.5 LTS amd64, kernel `7.0.0-38-generic`, 16 CPUs
+lógicas e 66.735.198.208 bytes de RAM. Os ambientes R 4.4.3/Shiny 1.10.0 e
+R 4.5.2/Shiny 1.13.0 atenderam simultaneamente. Isso é um ensaio funcional,
+sem estimativa de capacidade a partir da quantidade de verificações ou da RAM.
+
+O navegador confirmou valores recebidos pelo R, incluindo Unicode e novas linhas,
+revisão anterior mantida até a aplicação explícita, rotação sem reenviar ZIP
+(uma única versão de código) e variável removida ausente após aplicar novamente.
+A rota anterior retornou HTTP 404. Os demais apps mantiveram seus processos,
+continuaram reativos e não receberam a variável do app testado. Os valores
+sintéticos não apareceram nos metadados/logs dos containers, logs dos serviços
+ou banco SQLite em texto claro; esse resultado não garante ocultação contra
+código de app que deliberadamente exponha os próprios segredos.
+
+Também passaram bloqueio de URL direta e WebSocket privados, acesso público,
+cookies seguros, afinidade, upload/download e apresentação do painel em 360 px.
+O reinício de painel/worker preservou o processo e a sessão Shiny; os PIDs de
+auth/gateway/ingress permaneceram `865995`/`865996`/`865997` antes e depois.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Seus sockets estavam inativos e `shinyd.target` desabilitado. O socket do agente
+de diagnóstico permaneceu escutando. Os pacotes ficam instalados, mas o ensaio
+descartável não deixa o painel configurado para atendimento permanente.
+
+Isso conclui a homologação local de F3-01. Certificado e nomes são de teste;
+DNS público, emissão ACME, reboot, capacidade e QoS sob carga não foram testados.
+F3-02 é o próximo marco: volumes persistentes por app, preservados entre
+publicações e isolados dos demais apps. Rollback com dados, drenagem e demais
+itens da fase 3 continuam no backlog.

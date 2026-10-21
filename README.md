@@ -60,6 +60,6 @@ Commits e pushes são feitos por marcos verificáveis, com os testes pertinentes
 
 O marco F3-01 acrescenta [variáveis e segredos em execução](docs/VARIAVEIS_SEGREDOS.md),
 com aplicação explícita sem novo ZIP e revisão desejada/aplicada no painel.
-O fluxo passou em 99 verificações integradas no CI; a homologação local dessa
-revisão parou por falta de `crun`, antes dos testes dos apps, e está pendente.
-Consulte os marcos 20 e 21 em [STATUS.md](docs/STATUS.md).
+O fluxo passou em 99 verificações integradas no CI e 102 na homologação local,
+após instalar a dependência `crun`. Consulte os marcos 20–22 em
+[STATUS.md](docs/STATUS.md). O próximo marco é F3-02: dados persistentes dos apps.
