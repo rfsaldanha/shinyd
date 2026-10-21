@@ -1064,9 +1064,60 @@ O pacote construído no CI tem hash
 não se declara igualdade binária. Os pacotes locais `runtime4` e `builder2`
 continuam com os hashes do marco 23.
 
-F3-03 está implementada e homologada no CI. A homologação local dos containers
-desta revisão ainda depende do roteiro em [HISTORICO_ROLLBACK.md](HISTORICO_ROLLBACK.md),
-que grava `var/rollback-report.json`. O controle instalado neste host ainda é
-`control3`; esta rodada não realizou sua atualização privilegiada. A prévia
+Naquela rodada, F3-03 estava implementada e homologada no CI. A homologação local
+dos containers ainda aguardava o roteiro em [HISTORICO_ROLLBACK.md](HISTORICO_ROLLBACK.md),
+que grava `var/rollback-report.json`. O controle instalado no host ainda era
+`control3`; sua atualização e homologação posteriores estão no marco 26. A prévia
 local teve login confirmado e captura em `var/interface-preview/catalogo.png`.
 O próximo marco de implementação é F3-04: telemetria de sessões e drenagem.
+
+## Marco 26 — Histórico e rollback homologados localmente (F3-03)
+
+O operador executou o roteiro em 21/10/2026, com checkout `29cf8c6`.
+As **130 verificações passaram**, com `passed: true`, sem erro de limpeza nem
+repetições por executor ocupado. Evidência:
+[rollback-runtime-local.json](evidencias/rollback-runtime-local.json), cópia
+integral de `var/rollback-report.json`, iniciado às 14:05:11 UTC. São as 128
+verificações do CI do marco 25 mais checksum e identidade do pacote local do
+executor; as 74 verificações da instalação também passaram.
+
+O inventário confirmou os pacotes configurados: `shinyd-runtime
+0.1.0~runtime4`, `shinyd-control 0.1.0~control4`, `shinyd-builder
+0.1.0~builder2`, `crun 1.14.1-1` e Podman `4.9.3+ds1-1ubuntu0.2`.
+Os checksums dos três `.deb` locais passaram e coincidem com o ensaio.
+O controle tem hash
+`23be3efb0bf0721ba955c8201f00c29751c99fa97eef0426340d94a492d88324`,
+conforme o marco 25; runtime e builder mantêm os hashes do marco 23.
+Os pacotes construídos no CI têm seus próprios hashes.
+
+Ambiente local: Ubuntu 24.04.5 LTS amd64, kernel `7.0.0-38-generic`, 16 CPUs
+lógicas, 66.735.198.208 bytes de RAM e ext4. Os mapeamentos observados no teste
+de isolamento foram `0 655360 65536` e `0 720896 65536`. O ensaio é funcional,
+com builds offline e operações reativas; não mede capacidade de atendimento.
+
+O navegador confirmou retorno à imagem anterior sem novo ZIP/build, uma nova
+publicação com origem registrada no histórico e preservação do arquivo gravado.
+A configuração pendente foi aplicada e o segredo removido permaneceu ausente
+no R. A confirmação aberta antes de alterar a configuração foi recusada; o
+retorno concluiu depois de reabri-la. O escritor anterior foi removido e sua
+rota retornou HTTP 404. Outra sessão Shiny manteve identidade, PID e contador,
+respondendo a uma nova interação. O histórico passou em tela de 360 px.
+
+Também passaram acesso público/privado, bloqueio de URL direta e WebSocket não
+autorizados, afinidade, upload/download e verificações de segredos. Reiniciar
+painel/worker preservou a sessão Shiny; auth/gateway/ingress mantiveram os PIDs
+`1057059`/`1057060`/`1057061` antes e depois.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Seus sockets e o timer de manutenção estavam inativos; `shinyd.target`,
+desabilitado. O socket do agente de diagnóstico permaneceu escutando.
+O pacote fica instalado, mas o ensaio não deixa o atendimento permanente
+configurado. A prévia independente em `http://127.0.0.1:8010` continuou
+respondendo a `/healthz` com HTTP 200.
+
+F3-03 está homologada no CI e neste host. Certificado e nomes são de teste;
+DNS público, emissão ACME, reboot, capacidade, QoS sob carga e recuperação de
+backup não foram testados. Rollback de código não reverte escritas nem migrações
+de dados feitas pelo app. O próximo marco é **F3-04: telemetria de sessões e
+drenagem**, para permitir operações que aguardem o encerramento das sessões.

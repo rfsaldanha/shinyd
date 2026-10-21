@@ -7,9 +7,11 @@ um backup dos dados.
 
 Passaram **273 testes Python** e **128 verificações integradas no CI**, com
 todos os cinco jobs aprovados. Evidência:
-[rollback-runtime-ci.json](evidencias/rollback-runtime-ci.json). A homologação
-local com containers desta revisão ainda está pendente; a prévia do painel
-e o teste de navegador sem privilégios foram verificados localmente.
+[rollback-runtime-ci.json](evidencias/rollback-runtime-ci.json). Na homologação
+local com containers, passaram **130 verificações**, sem erro de limpeza nem
+repetições por executor ocupado. Evidência:
+[rollback-runtime-local.json](evidencias/rollback-runtime-local.json). A prévia
+do painel e o teste de navegador sem privilégios também foram verificados localmente.
 
 ## Operação pelo navegador
 
@@ -93,6 +95,15 @@ uma confirmação desatualizada e executa o retorno. Verifica imagem reutilizada
 ausência de novos uploads/builds, dados e configuração atuais, segredo removido
 ausente, rota anterior revogada e outra sessão Shiny ainda reativa. Os resultados
 efetivamente executados são registrados separadamente no STATUS.
+
+A execução local de 21/10/2026 confirmou as 128 verificações do CI e acrescentou
+checksum e identidade do pacote local do executor. Usou Ubuntu 24.04.5 LTS,
+kernel `7.0.0-38-generic`, 16 CPUs lógicas, 66.735.198.208 bytes de RAM, ext4,
+Podman 4.9.3 e crun 1.14.1. O retorno preservou o arquivo e a configuração
+pendente, não recuperou o segredo removido, revogou a rota substituída e manteve
+outra sessão Shiny reativa. Os serviços do ensaio ficaram inativos ao terminar;
+a prévia independente em `http://127.0.0.1:8010` continuou respondendo.
+Isso é validação funcional, sem medição de capacidade, reboot ou drenagem.
 
 Para repetir em uma instalação de teste vazia, após construir os pacotes:
 

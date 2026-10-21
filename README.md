@@ -74,4 +74,5 @@ F3-03 acrescenta [histórico e rollback de código](docs/HISTORICO_ROLLBACK.md),
 com paginação, confirmação de impacto e auditoria da origem. O retorno reutiliza
 a imagem preparada com a configuração atual e preserva o volume de dados.
 Requer `control4` e a migração `0009`; não reverte migrações de dados feitas pelo app.
-Validação e limites estão no marco 25 de [STATUS.md](docs/STATUS.md).
+Passaram 128 verificações integradas no CI e 130 na homologação local.
+Validação e limites estão nos marcos 25–26 de [STATUS.md](docs/STATUS.md).

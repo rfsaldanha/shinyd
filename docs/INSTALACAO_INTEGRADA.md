@@ -192,6 +192,11 @@ A revisão `control4` acrescenta [histórico e rollback](HISTORICO_ROLLBACK.md),
 com migração `0009`. Passaram as **128 verificações integradas** do
 [CI de rollback](https://github.com/rfsaldanha/shinyd/actions/runs/39609436973),
 com [relatório integral](evidencias/rollback-runtime-ci.json), sem erro de limpeza.
-A homologação local desta revisão está pendente. Detalhes e o ajuste de capacidade
-do roteiro estão no marco 25 de [STATUS.md](STATUS.md); os relatórios anteriores
-correspondem aos seus próprios pacotes, não validam automaticamente as novas operações.
+A homologação local passou nas **130 verificações**, em 21/10/2026, sem erro de
+limpeza nem repetições por executor ocupado. O
+[relatório local integral](evidencias/rollback-runtime-local.json) inclui checksum
+e identidade do pacote local do executor, além das 128 verificações do CI.
+O pacote `control4` ficou instalado; os serviços e sockets do ensaio ficaram
+inativos ao terminar, sem configuração para atendimento permanente. A prévia
+independente na porta 8010 continuou respondendo. Detalhes e o ajuste de capacidade
+do roteiro estão nos marcos 25–26 de [STATUS.md](STATUS.md).
