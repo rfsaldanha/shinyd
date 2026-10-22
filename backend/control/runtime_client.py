@@ -13,6 +13,8 @@ from builder.policy import canonical, strict_json
 from .agent_client import AgentUnavailable, UnixConnection
 
 MESSAGES = {
+    "process_not_running": "O executor confirmou que o processo não está em execução.",
+    "process_oom": "O processo foi encerrado por falta de memória. Verifique os recursos.",
     "environment_unavailable": "Não foi possível ler a configuração cifrada. Verifique a chave.",
     "data_in_use": "O volume ainda pertence a outra instância. Aguarde sua remoção confirmada.",
     "data_storage_unavailable": "Dados indisponíveis. "

@@ -37,4 +37,5 @@ def test_upgrade_remembers_only_the_active_version():
         )
         assert apps.objects.get(pk=inactive.pk).last_version_id is None
     finally:
-        MigrationExecutor(connection).migrate([after])
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())

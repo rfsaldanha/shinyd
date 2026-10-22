@@ -4,6 +4,7 @@ import time
 from django.core.management.base import BaseCommand
 
 from control.jobs import process_one
+from control.recovery import process_one as observe_one
 
 
 class Command(BaseCommand):
@@ -23,6 +24,7 @@ class Command(BaseCommand):
         signal.signal(signal.SIGINT, stop)
         while not stopping:
             processed = process_one()
+            observe_one()
             if options["once"]:
                 self.stdout.write(
                     "Trabalho processado." if processed else "Nenhum trabalho na fila."

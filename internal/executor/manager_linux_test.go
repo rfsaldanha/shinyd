@@ -194,12 +194,61 @@ func TestObserveRevokesDeadInstance(t *testing.T) {
 	backend.Stop(ctx, m.instances[firstID].record)
 	m.Observe(ctx)
 	value, _ := m.Get(firstID)
-	if !endpoint.closed || value.State != "failed" || value.Target != "" {
+	if !endpoint.closed || value.State != "failed" || value.Target != "" || value.Error != "process_not_running" {
 		t.Fatal(value)
 	}
 	m.Recover(ctx)
 	if backend.starts != 1 {
 		t.Fatal("crashed container auto-restarted")
+	}
+}
+
+func TestObservationDistinguishesExitOOMAndUncertainty(t *testing.T) {
+	for _, kind := range []string{"missing", "oom", "uncertain"} {
+		t.Run(kind, func(t *testing.T) {
+			m, backend, store := fixtureManager(t)
+			ctx := context.Background()
+			m.Ensure(ctx, firstID, testSpec)
+			endpoint := m.instances[firstID].endpoint.(*fakeEndpoint)
+			expected := "process_not_running"
+			switch kind {
+			case "missing":
+				delete(backend.values, firstID)
+			case "oom":
+				backend.values[firstID].State.Running = false
+				backend.values[firstID].State.OOMKilled = true
+				expected = "process_oom"
+			case "uncertain":
+				backend.foreign = true
+				expected = "ownership_mismatch"
+			}
+			m.Observe(ctx)
+			v, _ := m.Get(firstID)
+			if !endpoint.closed || v.Target != "" || v.Error != expected || backend.starts != 1 {
+				t.Fatal(v, backend.starts)
+			}
+			if kind == "uncertain" {
+				if v.State != "unavailable" {
+					t.Fatal(v)
+				}
+				backend.foreign = false
+				m.Observe(ctx)
+				v, _ = m.Get(firstID)
+				if v.State != "unavailable" || backend.starts != 1 {
+					t.Fatal(v)
+				}
+				return
+			}
+			recovered, err := NewManager(m.policy, store, backend, m.attach, m.admit)
+			if err != nil {
+				t.Fatal(err)
+			}
+			recovered.Recover(ctx)
+			v, _ = recovered.Get(firstID)
+			if v.Error != expected || v.State != "failed" || backend.starts != 1 {
+				t.Fatal(v)
+			}
+		})
 	}
 }
 func TestStrictJSONAndStoreBoundaries(t *testing.T) {

@@ -20,7 +20,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .connections import counts
 from .forms import AppForm, EditUserForm, EnvironmentForm, GrantForm, NewUserForm, UploadForm
-from .models import AppGrant, AuditEvent, Job, LoginAttempt, PriorityGroup, User
+from .models import AppGrant, AuditEvent, Job, LoginAttempt, PriorityGroup, RecoveryState, User
 from .permissions import can_create, is_admin, manageable_apps, visible_apps
 from .services import (
     Conflict,
@@ -154,6 +154,7 @@ def app_detail(request, pk):
         {
             "app": app,
             "manage": manage,
+            "recovery": RecoveryState.objects.filter(app=app).first() if manage else None,
             "connections": counts(app.active_publication_id)
             if manage and app.active_publication_id
             else None,

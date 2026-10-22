@@ -1483,3 +1483,71 @@ e da instalação permanente de testes. Não foi anunciado como pronto neste
 marco; o roteiro não testa reboot, emissão ACME, DNS público, capacidade,
 QoS sob disputa ou quotas de disco. Esta rodada registra evidências e
 documentação; não altera código ou pacotes nem repete testes já aprovados.
+
+## Marco 32 — recuperação de falhas com circuito persistente (F3-06)
+
+Implementada recuperação opcional por app, desabilitada por padrão, com
+confirmação pela interface, tentativas visíveis e suspensão persistente.
+O executor `runtime5` distingue processo comprovadamente encerrado/ausente,
+falta de memória e erro de inspeção. O painel `control7`, migração `0012`,
+observa um app por passagem do worker e admite até três tarefas de recuperação,
+com esperas mínimas de 10, 30 e 60 segundos. Os detalhes de operação, limites
+e comando de homologação estão em [RECUPERACAO_APPS.md](RECUPERACAO_APPS.md).
+
+A contagem e o circuito sobrevivem ao reinício do worker. Depois de três
+tentativas sem dez minutos estáveis observados, uma nova falha suspende a
+recuperação até intervenção. Há também limite independente de três tarefas
+automáticas em qualquer janela de dez minutos, inclusive após rearmar a
+política. Fila cheia aguarda sem consumir uma tentativa. Falta de memória
+suspende a recuperação, também durante a partida da candidata, após limpeza.
+Configuração pendente e perda de permissão exigem intervenção. A recuperação
+reutiliza a versão publicada e nunca restaura segredos antigos para ignorar
+uma mudança de configuração.
+
+Reservas e decisões são transacionais, com verificação da publicação e da
+intenção atual. Operações manuais pendentes têm precedência. Desabilitar
+cancela candidatas ainda não ativadas; a limpeza permanece retomável. Cada
+tentativa usa nova publicação/instância e o fluxo existente de dados temporários,
+retirada confirmada do escritor anterior e verificação da candidata. Uma
+parada explícita impede a recuperação, inclusive quando não há publicação
+ativa após uma falha na troca dos dados.
+
+Verificações locais executadas:
+
+- **331 testes Python aprovados**, incluindo circuito após três recuperações,
+  partidas malsucedidas, configuração/conta alterada, cancelamento, parada
+  durante espera, fila cheia, falta de memória na candidata, observação incerta,
+  retomada por reserva, migração de apps existentes e proteção do formulário.
+- O teste de concorrência usa duas conexões reais ao SQLite em arquivo,
+  com as opções de produção (`IMMEDIATE`), e comprova uma única tentativa
+  admitida para dois monitores concorrentes.
+- `go vet ./...` e `go test -race ./...` aprovados. O executor confirma saída
+  e OOM sem confundi-los com recurso estrangeiro ou falha de inspeção, também
+  depois de recarregar seu estado; não inicia containers por conta própria.
+- Ruff, formatação, consistência de migrações, `check --deploy` e
+  `git diff --check` aprovados. O roteiro de navegador passou, incluindo
+  habilitar recuperação e exibir a seção em 360 px. A primeira execução
+  encontrou um seletor que não incluía o sufixo de rótulo do Django; o seletor
+  foi corrigido e a execução completa passou.
+- Pacotes construídos localmente. SHA-256 de `runtime5`:
+  `6822095c318b5eb63f044fb0ef6b7063084731f5050e21c4cf51e6fed0891015`;
+  de `control7`:
+  `8141c5227d549be5b0b106d971d6eba14ca51be64cc24e7e4c7355f9fff0d941`.
+
+Os bancos de desenvolvimento e da prévia receberam `0012` após backups SQLite
+0600 em `var/backups/metadata-before-recovery-20261022T182157Z.sqlite3` e
+`var/backups/preview-before-recovery-20261022T182157Z.sqlite3`. A prévia na porta
+8010 foi reiniciada preservando contas, dados e chaves; `/healthz` respondeu
+HTTP 200. Seu executor continua desabilitado.
+
+O roteiro integrado foi ampliado para encerrar processos Shiny reais,
+observar três recuperações, manter outra sessão reativa, reiniciar o worker
+durante uma espera e depois do circuito aberto, e retomar manualmente pelo
+navegador. **Esse novo ensaio com containers ainda não tem resultado registrado
+neste marco.** Os pacotes estão prontos para o CI e para a homologação local
+pelo operador. Os resultados anteriores de F3-05 não são evidência de execução
+dos novos cenários.
+
+O próximo item do backlog é **F3-07: backup/restauração básico**. O marco
+combinado para teste manual completo ainda exige a homologação de F3-06,
+F3-07 e uma instalação permanente de testes; não foi anunciado como pronto.

@@ -231,6 +231,24 @@ class OperationItem(models.Model):
         ]
 
 
+class RecoveryState(models.Model):
+    app = models.OneToOneField(Application, primary_key=True, on_delete=models.CASCADE)
+    enabled = models.BooleanField(default=False)
+    authorized_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
+    revision = models.PositiveIntegerField(default=0)
+    state = models.CharField(default="unobserved", max_length=20)
+    message = models.TextField(default="Aguardando observação do executor.")
+    attempts = models.PositiveIntegerField(default=0)
+    halt_after_cleanup = models.BooleanField(default=False)
+    source = models.ForeignKey(Publication, null=True, on_delete=models.PROTECT)
+    job = models.ForeignKey(Job, null=True, on_delete=models.PROTECT)
+    next_attempt_at = models.DateTimeField(null=True)
+    healthy_since = models.DateTimeField(null=True)
+    checked_at = models.DateTimeField(null=True)
+    next_check_at = models.DateTimeField(default=timezone.now, db_index=True)
+    lease_token = models.UUIDField(null=True)
+
+
 class AuditEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     action = models.CharField(max_length=80)

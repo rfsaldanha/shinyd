@@ -1,8 +1,8 @@
 # Instalação integrada experimental
 
-O pacote `shinyd-control 0.1.0~control6` reúne painel, worker, autorizador,
+O pacote `shinyd-control 0.1.0~control7` reúne painel, worker, autorizador,
 gateway e entrada HTTPS. Plataforma de referência: Ubuntu 24.04 amd64,
-Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime4`
+Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime5`
 e builder `builder2`. Não constitui declaração de prontidão para produção.
 As evidências executadas e os limites estão em [STATUS.md](STATUS.md).
 
@@ -46,9 +46,9 @@ python3 scripts/build_builder_package.py
 .venv/bin/python scripts/build_control_package.py
 sudo apt-get --no-remove install podman crun uidmap slirp4netns fuse-overlayfs caddy
 sudo dpkg --install dist/shinyd-agent_0.1.0~agent1_amd64.deb \
-  dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
+  dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
   dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  dist/shinyd-control_0.1.0~control6_amd64.deb
+  dist/shinyd-control_0.1.0~control7_amd64.deb
 ```
 
 O pacote não inicia o painel automaticamente antes da configuração. Não modifica
@@ -125,9 +125,9 @@ go build -o dist/shinyd-proxy-probe ./cmd/shinyd-proxy-probe
 set -o pipefail
 sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
-  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control6_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control7_amd64.deb \
   | tee var/installed-report.json
 ```
 
@@ -212,3 +212,11 @@ os dados persistentes e reiniciar aplica a configuração atual. O executor
 `runtime4` e o builder `builder2` continuam compatíveis. A parada confirmada
 retoma a limpeza após interrupção do worker; a instalação deve migrar o banco
 antes de iniciar os componentes. As evidências ficam no marco 29 de [STATUS.md](STATUS.md).
+
+A revisão `control7` requer `runtime5` e acrescenta
+[recuperação de falhas](RECUPERACAO_APPS.md), com migração `0012`. Atualize ambos
+na mesma janela; o executor distingue processo encerrado, falta de memória e
+observação incerta. A política começa desabilitada para apps existentes e pode
+ser habilitada pelo navegador. Tentativas e suspensão sobrevivem ao reinício
+do worker. A migração não inicia apps nem altera dados ou segredos. As evidências
+deste marco são registradas separadamente em [STATUS.md](STATUS.md).

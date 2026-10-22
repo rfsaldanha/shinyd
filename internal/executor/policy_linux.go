@@ -32,6 +32,8 @@ var (
 	ErrArtifact    = errors.New("artifact_rejected")
 	ErrDataInUse   = errors.New("data_in_use")
 	ErrDataStorage = errors.New("data_storage_unavailable")
+	ErrExited      = errors.New("process_not_running")
+	ErrOOM         = errors.New("process_oom")
 )
 
 type Policy struct {

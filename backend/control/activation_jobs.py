@@ -36,7 +36,7 @@ def enqueue(
     switch_mode="immediate",
     operation="",
 ):
-    if operation not in {"", "start", "restart"}:
+    if operation not in {"", "start", "restart", "recover"}:
         raise ValidationError("Operação inválida.")
     if switch_mode not in Publication.SwitchMode.values:
         raise ValidationError("Modo de troca inválido.")
@@ -83,7 +83,7 @@ def enqueue(
     if Job.objects.filter(status__in=["queued", "running"]).count() >= 100:
         raise ValidationError("Fila cheia. Aguarde a conclusão dos trabalhos anteriores.")
     if (
-        operation != "restart"
+        operation not in {"restart", "recover"}
         and app.active_publication_id
         and app.active_publication.version_id == version.pk
         and app.active_publication.config_revision == app.config_revision
@@ -138,6 +138,10 @@ def enqueue(
         idempotency_key=key,
         message="Na fila de ativação. A candidata será verificada antes da troca.",
     )
+    if operation != "recover":
+        from .recovery import manual_request
+
+        manual_request(app)
     event(
         actor, "activation.queued", job.pk, publication=str(publication.pk), switch_mode=switch_mode
     )
@@ -215,6 +219,14 @@ def invalidated(job):
     pub, app = job.publication, job.app
     if job.cancel_requested or not manageable_apps(job.actor).filter(pk=app.pk).exists():
         return "cancelled", "Ativação cancelada. A publicação anterior foi preservada."
+    if job.operation == "recover":
+        from .models import RecoveryState
+
+        if (
+            app.desired_state != "running"
+            or not RecoveryState.objects.filter(app=app, enabled=True, job=job).exists()
+        ):
+            return "cancelled", "Recuperação desabilitada ou substituída por uma operação manual."
     if (
         pub.drain_started_at
         and not pub.data_cutover
@@ -357,7 +369,8 @@ def data_checkpoint(job, *, preflight=False, cutover=False):
             enabled=False, draining_for=None
         )
         Application.objects.filter(pk=value.app_id).update(
-            active_publication=None, desired_state="stopped"
+            active_publication=None,
+            desired_state="running" if value.operation == "recover" else "stopped",
         )
         if pub.previous_id:
             Publication.objects.filter(pk=pub.previous_id).update(status="retiring")
@@ -390,6 +403,9 @@ def prepare_persistent(job, value):
         if result["state"] == "ready" and result.get("image") == pub.version.image_digest:
             data_checkpoint(job, preflight=True)
         elif result["state"] in {"ready", "failed", "stopped", "removed"}:
+            from .recovery import observe_failure
+
+            observe_failure(job, result.get("error"))
             decide(job, failure=("failed", "A candidata falhou no teste com dados temporários."))
         update(
             job, phase="data_preflight", message="Verificando a candidata com dados temporários."
@@ -440,6 +456,9 @@ def process_one():
                     decide(job, result=result)
                 elif result["state"] in {"failed", "stopped", "removed"}:
                     code = result.get("error") or "application_readiness_failed"
+                    from .recovery import observe_failure
+
+                    observe_failure(job, code)
                     decide(
                         job,
                         failure=(

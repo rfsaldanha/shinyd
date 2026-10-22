@@ -9,6 +9,7 @@ from control import (
     gateway_views,
     history_views,
     lifecycle_views,
+    recovery_views,
     views,
 )
 
@@ -33,6 +34,7 @@ urlpatterns = [
     path("operations/", lifecycle_views.operations, name="operations"),
     path("operations/<uuid:pk>/", lifecycle_views.detail, name="operation_detail"),
     path("apps/<uuid:pk>/", views.app_detail, name="app_detail"),
+    path("apps/<uuid:pk>/recovery/", recovery_views.configure, name="app_recovery"),
     path("apps/<uuid:pk>/history/", history_views.history, name="app_history"),
     path("publications/<uuid:pk>/rollback/", history_views.rollback, name="publication_rollback"),
     path("apps/<uuid:pk>/edit/", views.app_edit, name="app_edit"),

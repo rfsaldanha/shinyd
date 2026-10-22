@@ -5,6 +5,7 @@
   {% if operation_item %}<p><a href="{% url 'operation_detail' operation_item.batch_id %}">Resultado da operação: {{ operation_item.batch.get_action_display }}</a></p>{% endif %}
   {% if job.kind == "activate_version" and job.publication.restored_from_id %}<p class="notice">Retorno ao código da publicação <code>{{ job.publication.restored_from_id }}</code>, com a configuração atual na revisão {{ job.publication.config_revision }}. Os dados persistentes são mantidos; alterações feitas pelo app não são desfeitas.</p>{% endif %}
   <p class="eyebrow">{{ job.phase }}</p><h2>{{ job.get_status_display }}</h2>
+  {% if job.operation == "recover" %}<p class="notice">Tentativa automática de recuperação. As sessões da instância encerrada não são restauradas.</p>{% endif %}
   <p>{{ job.message|default:"Aguardando o worker. A página será atualizada automaticamente." }}</p>
   {% if job.kind == "activate_version" %}<p>Modo de troca: {{ job.publication.get_switch_mode_display }}.</p>{% elif job.kind == "stop_app" %}<p>Modo de parada: {{ operation_item.batch.get_switch_mode_display }}.</p>{% endif %}
   {% if job.phase == "waiting_connections" %}<p>{{ connections.websockets }} WebSocket abertas · {{ connections.opening }} em abertura · {{ connections.http }} requisições HTTP em curso.</p><p class="form-help">Espera iniciada em {{ drain_started_at|date:"H:i:s" }} UTC. Cancelar reabre novas conexões na publicação anterior; o fim do prazo não força a troca.</p>{% endif %}

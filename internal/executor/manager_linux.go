@@ -271,7 +271,7 @@ func (m *Manager) Stop(ctx context.Context, id string, remove bool) (View, error
 }
 func safeError(err error) string {
 	for _, allowed := range []error{ErrInvalid, ErrConflict, ErrAdmission, ErrOwnership, ErrNotFound, ErrBusy,
-		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness, ErrArtifact, ErrDataInUse, ErrDataStorage} {
+		ErrProcess, ErrProfile, ErrMapping, ErrCgroup, ErrNamespace, ErrReadiness, ErrArtifact, ErrDataInUse, ErrDataStorage, ErrExited, ErrOOM} {
 		if errors.Is(err, allowed) {
 			return allowed.Error()
 		}
@@ -300,6 +300,10 @@ func (m *Manager) Recover(ctx context.Context) {
 			continue
 		}
 		value, err := m.backend.Inspect(ctx, r)
+		if err == nil && (value == nil || !value.State.Running) {
+			m.set(item, "failed", exitReason(value))
+			continue
+		}
 		if err == nil {
 			item.endpoint, err = m.attach(ctx, r, value)
 		}
@@ -374,16 +378,29 @@ func (m *Manager) Observe(ctx context.Context) {
 	}
 	defer m.operation.Unlock()
 	for _, item := range m.instances {
-		if item.endpoint == nil {
+		if item.record.Desired != "running" || (item.endpoint == nil && item.state != "unavailable") {
 			continue
 		}
 		value, err := m.backend.Inspect(ctx, item.record)
 		if err != nil || value == nil || !value.State.Running {
-			item.endpoint.Close()
+			if item.endpoint != nil {
+				item.endpoint.Close()
+			}
 			item.endpoint = nil
-			m.set(item, "failed", safeError(ErrUnavailable))
+			if err != nil {
+				m.set(item, "unavailable", safeError(err))
+			} else {
+				m.set(item, "failed", exitReason(value))
+			}
 		}
 	}
+}
+
+func exitReason(value *Inspection) string {
+	if value != nil && value.State.OOMKilled {
+		return ErrOOM.Error()
+	}
+	return ErrExited.Error()
 }
 func (m *Manager) Close() {
 	m.operation.Lock()

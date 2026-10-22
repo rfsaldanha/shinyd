@@ -20,8 +20,9 @@ type Inspection struct {
 	Image           string `json:"Image"`
 	AppArmorProfile string `json:"AppArmorProfile"`
 	State           struct {
-		Running bool `json:"Running"`
-		Pid     int  `json:"Pid"`
+		Running   bool `json:"Running"`
+		Pid       int  `json:"Pid"`
+		OOMKilled bool `json:"OOMKilled"`
 	} `json:"State"`
 	Config struct {
 		Labels map[string]string `json:"Labels"`

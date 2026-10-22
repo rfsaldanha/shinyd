@@ -255,13 +255,13 @@ def main():
                 ).stdout
                 record(
                     "runtime_package_identity",
-                    identity == "shinyd-runtime 0.1.0~runtime4",
+                    identity == "shinyd-runtime 0.1.0~runtime5",
                     identity,
                 )
                 command("dpkg", "--install", str(package), timeout=120)
             if args.activation:
                 identity = command("dpkg-query", "-W", "-f=${Version}", "shinyd-runtime").stdout
-                record("activation_runtime_installed", identity == "0.1.0~runtime4", identity)
+                record("activation_runtime_installed", identity == "0.1.0~runtime5", identity)
             package = args.install_package.resolve()
             checksum = hashlib.sha256(package.read_bytes()).hexdigest()
             record(

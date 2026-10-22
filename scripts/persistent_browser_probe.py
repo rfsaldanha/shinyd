@@ -248,6 +248,9 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     from lifecycle_browser_probe import probe as lifecycle_probe
 
     third = lifecycle_probe(page, app_url, other_url, data, value, run, check, open_app)
+    from recovery_browser_probe import probe as recovery_probe
+
+    third = recovery_probe(page, app_url, other_url, data, value, run, admin, check, open_app)
     check(
         "data_container_removal_preserves_files",
         (other_data / "fixture.txt").read_text().strip() == "other-app-value",

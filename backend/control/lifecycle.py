@@ -74,8 +74,22 @@ def enqueue(actor, action, mode, key, targets):
                 if (action == "start" and app.active_publication_id) or (
                     action == "stop" and not app.active_publication_id
                 ):
+                    if (
+                        action == "start"
+                        and not app.instances.filter(
+                            publication_id=app.active_publication_id, enabled=True
+                        ).exists()
+                    ):
+                        raise ValidationError(
+                            "Publicação indisponível. Use Reiniciar ou ative uma versão."
+                        )
                     item.status = "succeeded"
                     item.message = "App já iniciado." if action == "start" else "App já parado."
+                    if action == "stop":
+                        from .recovery import manual_request
+
+                        Application.objects.filter(pk=app.pk).update(desired_state="stopped")
+                        manual_request(app)
                 else:
                     if Job.objects.filter(status__in=["queued", "running"]).count() >= 100:
                         raise ValidationError("Fila cheia. Aguarde e solicite novamente este app.")
@@ -179,6 +193,9 @@ def checkpoint(job):
         last_version_id=value.publication.version_id,
         desired_state="stopped",
     )
+    from .recovery import manual_request
+
+    manual_request(value.app)
     Publication.objects.filter(pk=value.publication_id).update(status="retiring")
     item.committed = True
     item.save(update_fields=["committed"])

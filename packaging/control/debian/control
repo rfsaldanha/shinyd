@@ -1,9 +1,9 @@
 Package: shinyd-control
-Version: 0.1.0~control6
+Version: 0.1.0~control7
 Section: web
 Priority: optional
 Architecture: amd64
 Maintainer: shinyd contributors
-Depends: python3 (>= 3.12), python3 (<< 3.13), libc6, caddy (>= 2.6), shinyd-agent, shinyd-runtime (>= 0.1.0~runtime4), shinyd-builder (>= 0.1.0~builder2), systemd
+Depends: python3 (>= 3.12), python3 (<< 3.13), libc6, caddy (>= 2.6), shinyd-agent, shinyd-runtime (>= 0.1.0~runtime5), shinyd-builder (>= 0.1.0~builder2), systemd
 Description: Painel, worker, autorizador e entrada HTTPS do shinyd
  Serviços integrados para Ubuntu 24.04 amd64, com configuração inicial explícita.

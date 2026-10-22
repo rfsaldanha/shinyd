@@ -126,6 +126,17 @@ with tempfile.TemporaryDirectory(prefix="shinyd-browser-") as state, ExitStack()
             assert "Nenhum código foi executado" in page.locator("#job-status").inner_text()
             page.screenshot(path=str(evidence / "inspection-desktop.png"), full_page=True)
             page.get_by_role("link", name="Voltar ao app", exact=True).click()
+            page.get_by_role("link", name="Configurar recuperação", exact=True).click()
+            page.get_by_label(
+                "Recuperar automaticamente após encerramento do processo", exact=False
+            ).check()
+            page.get_by_label("Entendo que as sessões encerradas", exact=False).check()
+            page.get_by_role("button", name="Salvar", exact=True).click()
+            page.set_viewport_size({"width": 360, "height": 800})
+            assert "habilitada" in page.locator("#recovery-status").inner_text()
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+            page.screenshot(path=str(evidence / "recovery-mobile.png"), full_page=True)
+            page.set_viewport_size({"width": 1440, "height": 1000})
             page.get_by_role("link", name="Histórico de versões e publicações", exact=True).click()
             assert page.locator("tr[data-version]").count() == 1
             assert "Validado" in page.locator("#versions").inner_text()
