@@ -82,6 +82,6 @@ Ativação, configuração e rollback permitem aguardar conexões existentes por
 até cinco minutos, sem forçar seu encerramento ao fim do prazo. O painel mostra
 WebSockets e requisições HTTP em curso; esses números não equivalem a usuários
 ou sessões internas do R. Requer `control5`, migração `0010` e atualização
-conjunta do gateway/autorizador. O marco 27 de [STATUS.md](docs/STATUS.md)
-registra 284 testes Python e 137 verificações integradas no CI aprovadas.
-A homologação local deste marco com containers permanece pendente.
+conjunta do gateway/autorizador. Os marcos 27–28 de [STATUS.md](docs/STATUS.md)
+registram 284 testes Python, 137 verificações integradas no CI e 139 na
+homologação local com containers aprovadas.

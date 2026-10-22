@@ -7,8 +7,12 @@ Evidências efetivamente executadas ficam em [STATUS.md](STATUS.md).
 
 Passaram **284 testes Python** e **137 verificações integradas no CI**, com os
 cinco jobs aprovados. O [relatório do CI](evidencias/drain-runtime-ci.json)
-inclui 83 verificações da instalação e do navegador. Homologação local com
-containers ainda pendente; os testes locais sem privilégios passaram.
+inclui 83 verificações da instalação e do navegador. A homologação local com
+containers passou nas **139 verificações**, incluindo as mesmas 83 do roteiro
+instalado e duas conferências adicionais do pacote do executor. Não houve erro
+de limpeza nem repetição por executor ocupado. Evidência:
+[drain-runtime-local.json](evidencias/drain-runtime-local.json). Os testes locais
+sem privilégios também passaram.
 
 ## Operação pela interface
 

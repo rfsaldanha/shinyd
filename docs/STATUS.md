@@ -1206,10 +1206,58 @@ O pacote construído localmente tem seu próprio SHA-256:
 `76bc9947cb7ec8abf885ed587449d7f8cb1a34f97424aee6a6ebbe279f1648b6`.
 Os três pacotes locais passaram na conferência de checksum.
 
-A homologação local com containers permanece pendente. `sudo -n true`
-informou que é necessária senha no host; nenhuma instalação privilegiada foi
-tentada nesta rodada. O comando local está em [DRENAGEM_SESSOES.md](DRENAGEM_SESSOES.md).
+Naquela rodada, a homologação local com containers permanecia pendente.
+`sudo -n true` informou que era necessária senha no host; nenhuma instalação
+privilegiada foi tentada pelo agente. O usuário executou depois o comando de
+[DRENAGEM_SESSOES.md](DRENAGEM_SESSOES.md), com o resultado registrado no marco 28.
 
 O próximo item é F3-05, operações individuais e em lote. O marco de teste
 manual combinado com o usuário ainda depende de F3-05 a F3-07 e de uma
 instalação permanente de testes; esta entrega não constitui esse aviso.
+
+## Marco 28 — Drenagem homologada localmente (F3-04)
+
+O usuário executou o roteiro instalado com `runtime4`, `builder2` e `control5`.
+O relatório `var/drain-report.json`, com início registrado em
+`2026-10-22T12:19:31.369865+00:00`, foi conferido e preservado byte a byte em
+[drain-runtime-local.json](evidencias/drain-runtime-local.json), com 34.304 bytes.
+Passaram **139 verificações**, incluindo as **83** do roteiro instalado e
+as **13** de ativação. Não houve erro de limpeza nem repetição por executor
+ocupado. Em relação ao CI, as duas verificações adicionais conferem checksum
+e identidade do pacote local do executor; os demais nomes de verificações
+coincidem com os do ensaio aprovado do marco 27.
+
+O SHA-256 do pacote `control5` instalado corresponde ao artefato local:
+`76bc9947cb7ec8abf885ed587449d7f8cb1a34f97424aee6a6ebbe279f1648b6`.
+Os checksums de `runtime4` e `builder2` também foram conferidos, sem alterações.
+O sistema registra os três pacotes como instalados e configurados.
+
+Ambiente observado: Ubuntu 24.04.5 LTS amd64, kernel `7.0.0-38-generic`,
+16 CPUs lógicas, 66.735.198.208 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4.
+Os mapeamentos de usuários observados foram `0 655360 65536` e
+`0 720896 65536`. O ensaio é funcional; não mede capacidade de atendimento.
+
+O navegador confirmou a sessão Shiny reativa durante a drenagem, o bloqueio
+de nova conexão autorizada e upload/download na sessão existente. Cancelar
+reabriu a admissão na publicação anterior. Uma segunda espera sobreviveu ao
+reinício do worker e a troca concluiu após fechar a última conexão, mantendo
+o arquivo persistente e removendo o escritor anterior. Outra sessão Shiny
+permaneceu reativa. A telemetria foi verificada em tela de 360 px.
+
+Também passaram os cenários de autenticação, isolamento, segredos, persistência
+e rollback. No teste de reinício de painel/worker, os PIDs de auth, gateway
+e ingress permaneceram `1978473`, `1978474` e `1978475`, respectivamente.
+A rota da publicação anterior no teste de configuração retornou HTTP 404.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Seus sockets e o timer de manutenção estavam inativos; `shinyd.target`,
+desabilitado. O socket do agente de diagnóstico permaneceu escutando.
+A prévia independente em `http://127.0.0.1:8010` respondeu HTTP 200 em
+`/healthz`. O ensaio não deixa configurado o atendimento permanente.
+
+F3-04 está homologada no CI e neste host, com os limites de telemetria de
+conexões descritos no marco 27. O próximo item é **F3-05: iniciar, parar e
+reiniciar apps individualmente ou em conjunto**. O ponto combinado para
+testar os apps do usuário ainda exige F3-05 a F3-07 e a instalação permanente
+de testes; não foi atingido nesta homologação.
