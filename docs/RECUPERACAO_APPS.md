@@ -4,6 +4,16 @@
 recuperação opcional por app. O builder continua em `builder2`. O estado da
 homologação e os resultados efetivamente obtidos estão em [STATUS.md](STATUS.md).
 
+A homologação local de 22/10/2026 aprovou **179 verificações**, incluindo 123
+da instalação/navegador e 13 da ativação, sem erro de limpeza. O
+[relatório local](evidencias/recovery-runtime-local.json) registra três
+recuperações reais, suspensão após a quarta falha e retomada manual. O
+[ensaio integrado do CI](evidencias/recovery-runtime-ci.json) aprovou 177
+verificações. O workflow geral foi cancelado: o job isolado do executor
+excedeu seu limite de 20 minutos, sem relatório disponível. Essa pendência
+não é registrada como aprovação do CI completo. Os 331 testes Python e os
+testes Go executados localmente também passaram, conforme o marco 32.
+
 ## Uso pela interface
 
 Na página do app, **Recuperação de falhas** mostra a política, a última

@@ -1551,3 +1551,79 @@ dos novos cenários.
 O próximo item do backlog é **F3-07: backup/restauração básico**. O marco
 combinado para teste manual completo ainda exige a homologação de F3-06,
 F3-07 e uma instalação permanente de testes; não foi anunciado como pronto.
+
+## Marco 33 — homologação local da recuperação de falhas (F3-06)
+
+O relatório produzido pelo operador, iniciado em
+`2026-10-22T18:36:52.205940+00:00`, foi conferido e preservado integralmente em
+[recovery-runtime-local.json](evidencias/recovery-runtime-local.json).
+Passaram **179 verificações integradas**, incluindo **123 da instalação e
+navegador** e **13 da ativação**. Não há erro de execução ou limpeza. A API
+repetiu uma remoção após HTTP 429, usando o mesmo ID
+`8e52a290-9da1-524b-8226-c5501077a141`, e concluiu. Não houve repetição por
+executor ocupado no ensaio de ativação. O teste do segundo escritor recebeu
+`data_in_use` na primeira tentativa.
+
+Os 22 novos critérios de recuperação passaram: habilitação pela interface,
+três esperas seguidas de novas instâncias, preservação do dado persistente,
+remoção dos escritores anteriores, fechamento das rotas antigas e outra
+sessão Shiny ainda reativa. O worker foi reiniciado durante a segunda espera,
+mantendo o contador. A quarta falha abriu o circuito; outro reinício do worker
+e uma observação posterior confirmaram ausência de tentativa adicional.
+A suspensão ficou visível, sem link para abrir o processo encerrado, e a
+seção coube em 360 px. Desabilitar a política e reiniciar manualmente restaurou
+o app com os dados preservados. Os cenários anteriores de publicação,
+autenticação, segredos, rollback, drenagem e operações em lote também passaram.
+
+Os processos foram encerrados explicitamente pelo roteiro com sinal KILL;
+isso não é um ensaio de esgotamento real de RAM. As decisões de OOM e
+observação incerta foram verificadas nos testes automatizados descritos no
+marco 32. Este ensaio não mede capacidade, latência sob carga, reboot, emissão
+ACME, DNS público ou QoS sob disputa.
+
+Ambiente registrado: kernel `7.0.0-38-generic`, x86_64, 16 CPUs lógicas,
+66.735.198.208 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4. Os mapas de
+usuários foram `0 655360 65536` e `0 720896 65536`. No teste de reinício de
+painel/worker, os PIDs de auth, gateway e ingress permaneceram `2382778`,
+`2382779` e `2382780`, respectivamente. O pacote `control7` instalado tem
+SHA-256 `8141c5227d549be5b0b106d971d6eba14ca51be64cc24e7e4c7355f9fff0d941`,
+igual ao artefato local. Os checksums de `runtime5` e `builder2` também foram
+conferidos, e os três pacotes constam instalados.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Seus sockets e o timer de manutenção estavam inativos; `shinyd.target`,
+desabilitado. O socket do agente de diagnóstico permaneceu ativo. A prévia
+independente na porta 8010 respondeu HTTP 200 em `/healthz`. O ensaio não
+deixou configurado atendimento permanente.
+
+### CI: ensaio integrado aprovado, workflow cancelado
+
+O [workflow do commit de implementação](https://github.com/rfsaldanha/shinyd/actions/runs/39831018892),
+`87c73fbae13d7f0d14cd5143dc62d924948a970f`, terminou como
+`completed/cancelled`. Python, Go e agente concluíram com sucesso. O job
+isolado `runtime` foi cancelado, e sua anotação informa que excedeu o limite
+de 20 minutos. Seus logs retornaram `NOT_FOUND`; não há relatório que permita
+atribuir a causa a uma operação específica. Esse teste permanece sem conclusão
+funcional comprovada nesta execução, e o workflow não é declarado aprovado.
+
+Separadamente, o job builder produziu um
+[relatório integrado aprovado](evidencias/recovery-runtime-ci.json), iniciado
+em `2026-10-22T18:28:27.567748+00:00`, com **177 verificações**, incluindo
+123 de instalação/navegador e 13 de ativação. Todas as etapas do job, inclusive
+remoção do pacote preservando estado e envio de artefatos, constavam como
+`completed/success`; seu estado agregado ainda aparecia `in_progress` na API.
+Essa distinção foi preservada na evidência. Não houve erro de limpeza ou
+repetições nesse relatório. As duas verificações adicionais do ensaio local
+são a identidade e o checksum do runtime, instalado em etapa anterior no CI.
+
+O runner integrado registrou kernel `6.17.0-1022-azure`, x86_64, quatro CPUs
+lógicas e 16.765.378.560 bytes de RAM. Seu pacote `control7` tem SHA-256
+`310b6118bbe66c00d0f8236615f6498b87e5f4798ee9f4f81654f323c9cdeef6`;
+é uma construção distinta do artefato local, não identidade binária.
+
+F3-06 está homologada neste host, com ensaio integrado remoto também aprovado
+e a pendência do job isolado do executor registrada acima. O próximo item é
+**F3-07: backup/restauração básico**. O teste manual completo combinado ainda
+depende dessa etapa e da instalação permanente de testes. Esta rodada
+preserva evidências e atualiza documentação; não altera código ou pacotes.

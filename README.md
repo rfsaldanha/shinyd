@@ -99,5 +99,8 @@ F3-06 acrescenta [recuperação opcional de falhas](docs/RECUPERACAO_APPS.md),
 com até três tentativas, esperas crescentes e suspensão persistente. Requer
 `control7`, migração `0012`, e `runtime5`. Não inicia outro processo com base
 em observação incerta e suspende após falta de memória. Configurações pendentes
-continuam exigindo aplicação manual. O estado de validação está em
-[STATUS.md](docs/STATUS.md); o próximo item é F3-07, backup/restauração básico.
+continuam exigindo aplicação manual. Passaram 331 testes Python e 179 verificações
+na homologação local. O ensaio integrado do CI aprovou 177 verificações; o
+workflow geral foi cancelado porque o teste isolado do executor excedeu 20 minutos.
+Evidências e limites estão em [STATUS.md](docs/STATUS.md). O próximo item é
+F3-07, backup/restauração básico.
