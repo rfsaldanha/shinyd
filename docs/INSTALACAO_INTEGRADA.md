@@ -1,6 +1,6 @@
 # Instalação integrada experimental
 
-O pacote `shinyd-control 0.1.0~control4` reúne painel, worker, autorizador,
+O pacote `shinyd-control 0.1.0~control5` reúne painel, worker, autorizador,
 gateway e entrada HTTPS. Plataforma de referência: Ubuntu 24.04 amd64,
 Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime4`
 e builder `builder2`. Não constitui declaração de prontidão para produção.
@@ -48,7 +48,7 @@ sudo apt-get --no-remove install podman crun uidmap slirp4netns fuse-overlayfs c
 sudo dpkg --install dist/shinyd-agent_0.1.0~agent1_amd64.deb \
   dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  dist/shinyd-control_0.1.0~control4_amd64.deb
+  dist/shinyd-control_0.1.0~control5_amd64.deb
 ```
 
 O pacote não inicia o painel automaticamente antes da configuração. Não modifica
@@ -127,7 +127,7 @@ sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control4_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control5_amd64.deb \
   | tee var/installed-report.json
 ```
 
@@ -200,3 +200,8 @@ O pacote `control4` ficou instalado; os serviços e sockets do ensaio ficaram
 inativos ao terminar, sem configuração para atendimento permanente. A prévia
 independente na porta 8010 continuou respondendo. Detalhes e o ajuste de capacidade
 do roteiro estão nos marcos 25–26 de [STATUS.md](STATUS.md).
+
+A revisão `control5` acrescenta [telemetria e drenagem](DRENAGEM_SESSOES.md),
+com migração `0010` e novo contrato privado do gateway. Atualize todos os
+componentes do pacote na mesma janela. As evidências deste marco são
+registradas separadamente em [STATUS.md](STATUS.md).

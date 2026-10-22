@@ -76,3 +76,11 @@ a imagem preparada com a configuração atual e preserva o volume de dados.
 Requer `control4` e a migração `0009`; não reverte migrações de dados feitas pelo app.
 Passaram 128 verificações integradas no CI e 130 na homologação local.
 Validação e limites estão nos marcos 25–26 de [STATUS.md](docs/STATUS.md).
+
+F3-04 acrescenta [telemetria de conexões e drenagem](docs/DRENAGEM_SESSOES.md).
+Ativação, configuração e rollback permitem aguardar conexões existentes por
+até cinco minutos, sem forçar seu encerramento ao fim do prazo. O painel mostra
+WebSockets e requisições HTTP em curso; esses números não equivalem a usuários
+ou sessões internas do R. Requer `control5`, migração `0010` e atualização
+conjunta do gateway/autorizador. O marco 27 de [STATUS.md](docs/STATUS.md)
+registra as verificações e a situação da homologação instalada.

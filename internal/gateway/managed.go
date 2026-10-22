@@ -3,8 +3,10 @@ package gateway
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"net"
@@ -36,8 +38,17 @@ type Credential struct {
 }
 
 type Control interface {
-	Authorize(context.Context, string, string) (Decision, error)
+	Track(context.Context, RequestActivity) (Decision, error)
 	Exchange(context.Context, string, string) (Credential, error)
+}
+
+// RequestActivity contains no URL, application payload or client-supplied identity.
+type RequestActivity struct {
+	Operation  string `json:"operation"`
+	RequestID  string `json:"request_id"`
+	Host       string `json:"host"`
+	Credential string `json:"credential"`
+	Kind       string `json:"kind"`
 }
 
 // UnixControl has no TCP fallback, redirect support or ambient proxy settings.
@@ -93,9 +104,9 @@ func (c *UnixControl) call(ctx context.Context, path string, input, output any) 
 	return nil
 }
 
-func (c *UnixControl) Authorize(ctx context.Context, host, credential string) (Decision, error) {
+func (c *UnixControl) Track(ctx context.Context, activity RequestActivity) (Decision, error) {
 	var result Decision
-	err := c.call(ctx, "/v1/authorize", map[string]string{"host": host, "credential": credential}, &result)
+	err := c.call(ctx, "/v2/request", activity, &result)
 	return result, err
 }
 
@@ -204,8 +215,32 @@ func (g *Managed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			credential, found = cookie.Value, true
 		}
 	}
+	var identity [16]byte
+	if _, err := rand.Read(identity[:]); err != nil {
+		http.Error(w, "Controle indisponível.", http.StatusServiceUnavailable)
+		return
+	}
+	identity[6] = (identity[6] & 0x0f) | 0x40
+	identity[8] = (identity[8] & 0x3f) | 0x80
+	activity := RequestActivity{
+		Operation: "open",
+		RequestID: fmt.Sprintf("%x-%x-%x-%x-%x", identity[:4], identity[4:6], identity[6:8], identity[8:10], identity[10:]),
+		Host:      strings.ToLower(r.Host), Credential: credential, Kind: "http",
+	}
+	if strings.EqualFold(r.Header.Get("Upgrade"), "websocket") {
+		activity.Kind = "websocket"
+	}
+	// Even a lost admission response may have committed a reservation. Release only
+	// after proxying ends; unavailable control leaves an uncertain reservation.
+	defer func() {
+		closeContext, closeCancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer closeCancel()
+		closed := activity
+		closed.Operation = "close"
+		_, _ = g.control.Track(closeContext, closed)
+	}()
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-	decision, err := g.control.Authorize(ctx, strings.ToLower(r.Host), credential)
+	decision, err := g.control.Track(ctx, activity)
 	cancel()
 	if err != nil {
 		http.Error(w, "Controle de acesso indisponível.", http.StatusServiceUnavailable)
@@ -214,6 +249,9 @@ func (g *Managed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !decision.Allowed {
 		if decision.Reason == "not_found" {
 			http.NotFound(w, r)
+		} else if decision.Reason == "draining" {
+			w.Header().Set("Retry-After", "5")
+			http.Error(w, "O aplicativo aguarda o encerramento das conexões para atualizar. Tente novamente pelo painel.", http.StatusServiceUnavailable)
 		} else {
 			g.denied(w, decision.InstanceID)
 		}
@@ -230,7 +268,9 @@ func (g *Managed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if initial.Swap(false) {
 			return nil // The check immediately above already authorized this request.
 		}
-		next, err := g.control.Authorize(ctx, strings.ToLower(request.Host), credential)
+		pulse := activity
+		pulse.Operation = "pulse"
+		next, err := g.control.Track(ctx, pulse)
 		if err != nil || !next.Allowed || next.InstanceID != route.InstanceID || next.Target != decision.Target {
 			return errors.New("access revoked or route changed")
 		}
@@ -241,6 +281,17 @@ func (g *Managed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Destino indisponível.", http.StatusServiceUnavailable)
 		return
+	}
+	proxy.upgraded = func(ctx context.Context) error {
+		upgrade := activity
+		upgrade.Operation = "upgrade"
+		checkContext, checkCancel := context.WithTimeout(ctx, 2*time.Second)
+		defer checkCancel()
+		next, err := g.control.Track(checkContext, upgrade)
+		if err != nil || !next.Allowed || next.InstanceID != decision.InstanceID || next.Target != decision.Target {
+			return errors.New("upgrade tracking unavailable")
+		}
+		return nil
 	}
 	proxy.ServeHTTP(w, r)
 }

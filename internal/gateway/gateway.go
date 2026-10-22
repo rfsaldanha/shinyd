@@ -29,6 +29,7 @@ type Gateway struct {
 	authorize       Authorizer
 	scheme          string
 	recheckInterval time.Duration
+	upgraded        func(context.Context) error
 }
 
 func New(routes []Route, authorize Authorizer, scheme string, interval time.Duration) (*Gateway, error) {
@@ -38,7 +39,7 @@ func New(routes []Route, authorize Authorizer, scheme string, interval time.Dura
 	if interval <= 0 || interval > 30*time.Second {
 		return nil, errors.New("authorization recheck must be between 0 and 30 seconds")
 	}
-	g := &Gateway{make(map[string]Route), authorize, scheme, interval}
+	g := &Gateway{routes: make(map[string]Route), authorize: authorize, scheme: scheme, recheckInterval: interval}
 	for _, route := range routes {
 		if route.Target == nil {
 			return nil, errors.New("invalid target")
@@ -119,7 +120,8 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	done := make(chan struct{})
 	defer close(done)
-	if websocket && !route.Public {
+	if !route.Public {
+		// Long uploads/downloads also need fresh authorization and telemetry.
 		// Request metadata is read-only. Never mutate the authorization copy.
 		authRequest := r.Clone(ctx)
 		go func() {
@@ -144,6 +146,7 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var transport http.RoundTripper
 	if target.Scheme == "unix" {
 		transport = unixTransport(target.Path, 0)
+		defer transport.(*http.Transport).CloseIdleConnections()
 		target = &url.URL{Scheme: "http", Host: "runtime"}
 	}
 	proxy := &httputil.ReverseProxy{
@@ -170,6 +173,14 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		},
 		ModifyResponse: func(response *http.Response) error {
+			if response.StatusCode == http.StatusSwitchingProtocols && g.upgraded != nil {
+				if !websocket {
+					return errors.New("unsupported protocol upgrade")
+				}
+				if err := g.upgraded(ctx); err != nil {
+					return err
+				}
+			}
 			response.Header.Del("Clear-Site-Data")
 			response.Header.Del("Service-Worker-Allowed")
 			response.Header.Set("Cache-Control", "no-store")

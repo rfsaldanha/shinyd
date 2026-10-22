@@ -1,5 +1,6 @@
 import io
 import json
+import uuid
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -226,14 +227,21 @@ def call_api(path, body, key=SERVICE_KEY, **extra):
 
 
 def test_internal_api_is_separate_authenticated_and_strict(client, registration):
-    body = {"host": registration.host, "credential": ""}
-    assert client.post("/v1/authorize", body).status_code == 404
-    assert call_api("/v1/authorize", body, key="wrong")[0] == 403
-    assert call_api("/v1/authorize", body, REQUEST_METHOD="GET")[0] == 405
-    assert call_api("/v1/authorize", {**body, "target": "injection"})[0] == 400
-    assert call_api("/v1/authorize", body, CONTENT_LENGTH="2049")[0] == 400
-    assert call_api("/v1/authorize", body, QUERY_STRING="credential=forbidden")[0] == 404
-    assert call_api("/v1/authorize", body) == (
+    body = {
+        "operation": "open",
+        "request_id": str(uuid.uuid4()),
+        "kind": "http",
+        "host": registration.host,
+        "credential": "",
+    }
+    assert client.post("/v2/request", body).status_code == 404
+    assert call_api("/v1/authorize", body)[0] == 404  # No untracked legacy forwarding.
+    assert call_api("/v2/request", body, key="wrong")[0] == 403
+    assert call_api("/v2/request", body, REQUEST_METHOD="GET")[0] == 405
+    assert call_api("/v2/request", {**body, "target": "injection"})[0] == 400
+    assert call_api("/v2/request", body, CONTENT_LENGTH="2049")[0] == 400
+    assert call_api("/v2/request", body, QUERY_STRING="credential=forbidden")[0] == 404
+    assert call_api("/v2/request", body) == (
         200,
         {"allowed": False, "instance_id": str(registration.pk)},
     )
@@ -241,9 +249,16 @@ def test_internal_api_is_separate_authenticated_and_strict(client, registration)
 
 def test_internal_api_fails_closed_without_logging_credentials(registration, caplog):
     sensitive = "must-never-be-logged"
-    with patch("control.gateway_api.authorize", side_effect=RuntimeError(sensitive)):
+    with patch("control.gateway_api.track", side_effect=RuntimeError(sensitive)):
         status, result = call_api(
-            "/v1/authorize", {"host": registration.host, "credential": sensitive}
+            "/v2/request",
+            {
+                "operation": "open",
+                "request_id": str(uuid.uuid4()),
+                "kind": "http",
+                "host": registration.host,
+                "credential": sensitive,
+            },
         )
     assert status == 503 and not result["allowed"]
     assert sensitive not in caplog.text

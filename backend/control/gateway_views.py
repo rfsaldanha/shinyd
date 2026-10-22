@@ -24,6 +24,10 @@ def connect(request, pk):
         # Host headers from other allowed administration aliases cannot mint handoffs.
         if request.build_absolute_uri("/").rstrip("/") != settings.SHINYD_PANEL_ORIGIN:
             return HttpResponse("Use o endereço configurado do painel.", status=403)
+        if instance.draining_for_id:
+            response = render(request, "control/connect.html", {"instance": instance}, status=503)
+            response["Retry-After"] = "5"
+            return response
         if request.method == "POST":
             code = issue_ticket(request.user, request.session.session_key, instance)
             response = render(

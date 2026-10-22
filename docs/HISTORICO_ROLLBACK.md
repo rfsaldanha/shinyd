@@ -73,8 +73,9 @@ Tentativas que falham ou são canceladas permanecem visíveis com seus resultado
 
 O retorno usa os mesmos identificadores, checkpoints, verificação de imagem,
 limpeza confirmada e retomada do worker que a ativação comum. Interrupção imediata
-é o comportamento desta etapa. Drenagem, número de sessões afetadas e endereço
-estável por app continuam no backlog.
+era o comportamento original desta etapa. `control5` acrescenta a opção de
+[aguardar conexões](DRENAGEM_SESSOES.md) também no rollback. Endereço estável
+por app e estatísticas de sessões internas do R continuam no backlog.
 
 ## Validação reproduzível
 
@@ -112,7 +113,7 @@ set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control4_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control5_amd64.deb \
   | tee var/rollback-report.json
 ```
 

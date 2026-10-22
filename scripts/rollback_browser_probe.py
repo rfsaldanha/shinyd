@@ -43,7 +43,7 @@ def probe(page, app_url, app_id, other_url, data, value, run, admin, check, open
     other_state = other_page.locator("#state").inner_text().split("|")
 
     def confirm():
-        page.get_by_label("Entendo que a troca interrompe", exact=False).check()
+        page.get_by_label("Entendo o impacto do modo de troca", exact=False).check()
         page.get_by_label("Entendo que voltar o código", exact=False).check()
         page.get_by_role("button", name="Confirmar retorno à versão", exact=True).click()
 

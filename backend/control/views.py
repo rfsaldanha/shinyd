@@ -18,6 +18,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_POST
 
+from .connections import counts
 from .forms import AppForm, EditUserForm, EnvironmentForm, GrantForm, NewUserForm, UploadForm
 from .models import AppGrant, AuditEvent, Job, LoginAttempt, PriorityGroup, User
 from .permissions import can_create, is_admin, manageable_apps, visible_apps
@@ -153,6 +154,9 @@ def app_detail(request, pk):
         {
             "app": app,
             "manage": manage,
+            "connections": counts(app.active_publication_id)
+            if manage and app.active_publication_id
+            else None,
             "versions": app.versions.all()[:20] if manage else [],
             "jobs": Job.objects.filter(app=app).order_by("-created_at")[:20] if manage else [],
             "environment": app.environment.defer("ciphertext").all() if manage else [],
@@ -333,7 +337,13 @@ def accessible_job(request, pk):
 @login_required
 @require_GET
 def job_detail(request, pk):
-    return render(request, "control/job.html", {"job": accessible_job(request, pk)})
+    job = accessible_job(request, pk)
+    activity = (
+        counts(job.publication.previous_id)
+        if job.publication_id and job.publication.drain_started_at
+        else None
+    )
+    return render(request, "control/job.html", {"job": job, "connections": activity})
 
 
 @login_required

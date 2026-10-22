@@ -10,7 +10,8 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.db import close_old_connections
 
-from .gateway_auth import TooManyConnections, authorize, exchange
+from .connections import track
+from .gateway_auth import TooManyConnections, exchange
 
 
 def load_key():
@@ -62,16 +63,21 @@ class GatewayAPI:
         if env.get("REQUEST_METHOD") != "POST":
             return "405 Method Not Allowed", {"allowed": False}
         operation = env.get("PATH_INFO")
-        if operation not in {"/v1/authorize", "/v1/exchange"} or env.get("QUERY_STRING"):
+        # Legacy authorization cannot safely serve untracked requests during drain.
+        if operation not in {"/v2/request", "/v1/exchange"} or env.get("QUERY_STRING"):
             return "404 Not Found", {"allowed": False}
         length = int(env.get("CONTENT_LENGTH") or 0)
         if length < 1 or length > 2048 or env.get("CONTENT_TYPE") != "application/json":
             return "400 Bad Request", {"allowed": False}
         data = json.loads(env["wsgi.input"].read(length))
-        expected = {"host", "credential"} if operation == "/v1/authorize" else {"host", "code"}
+        expected = (
+            {"operation", "request_id", "host", "credential", "kind"}
+            if operation == "/v2/request"
+            else {"host", "code"}
+        )
         if not isinstance(data, dict) or set(data) != expected:
             return "400 Bad Request", {"allowed": False}
         if any(not isinstance(value, str) for value in data.values()) or len(data["host"]) > 259:
             return "400 Bad Request", {"allowed": False}
-        result = authorize(**data) if operation == "/v1/authorize" else exchange(**data)
+        result = track(**data) if operation == "/v2/request" else exchange(**data)
         return "200 OK", result

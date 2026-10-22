@@ -2,5 +2,9 @@
 {% block title %}Abrir {{ instance.app.name }} · shinyd{% endblock %}
 {% block content %}
 <section class="panel"><h1>{{ instance.app.name }}</h1><p>Você está conectado como {{ user.username }}.</p>
-<form method="post">{% csrf_token %}<button class="btn btn-primary" type="submit">Abrir aplicativo</button></form></section>
+{% if instance.draining_for_id %}<p class="notice">Atualização em espera. O app aguarda o encerramento das conexões existentes. Tente abrir novamente em alguns instantes.</p><a class="btn btn-light" href="{% url 'app_detail' instance.app_id %}">Voltar ao app</a>
+{% else %}
+<form method="post">{% csrf_token %}<button class="btn btn-primary" type="submit">Abrir aplicativo</button></form>
+{% endif %}
+</section>
 {% endblock %}

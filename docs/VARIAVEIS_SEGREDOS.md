@@ -101,7 +101,7 @@ executados são registrados em [STATUS.md](STATUS.md), separados da homologaçã
 
 Para repetir o ensaio no host local após construir os pacotes (instalação
 configurada e dados existentes são recusados pelo roteiro): o comando atual usa
-`runtime4`/`control4` e inclui também [dados persistentes](DADOS_PERSISTENTES.md)
+`runtime4`/`control5` e inclui também [dados persistentes](DADOS_PERSISTENTES.md)
 e [histórico/rollback](HISTORICO_ROLLBACK.md).
 
 ```sh
@@ -110,7 +110,7 @@ sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime4_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control4_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control5_amd64.deb \
   | tee var/secrets-report.json
 ```
 

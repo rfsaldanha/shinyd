@@ -121,8 +121,8 @@ configuração é ação separada. Migração do próprio app não tem reversão
 
 Entrega incremental F3-02: antecipa a interrupção imediata confirmada da instância
 anterior para garantir um único escritor, com confirmação de impacto no painel.
-A candidata usa pasta temporária vazia. Drenagem será acrescentada no marco de
-ciclo de vida; falha depois da interrupção pode deixar o app indisponível e não
+A candidata usa pasta temporária vazia. F3-04 acrescenta a
+[troca com espera das conexões](DRENAGEM_SESSOES.md); falha depois da interrupção pode deixar o app indisponível e não
 reverte escritas. O contrato desta etapa está em [DADOS_PERSISTENTES.md](DADOS_PERSISTENTES.md).
 
 Segredos: criptografia autenticada por biblioteca consolidada, chave fora do banco,

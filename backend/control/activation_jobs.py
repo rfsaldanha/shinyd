@@ -12,10 +12,10 @@ from django.utils import timezone
 from builder.policy import IMAGE
 from builder.protocol import DIGEST
 
-from . import runtime_client
+from . import connections, runtime_client
 from .environment import snapshot
 from .gateway_auth import instance_origin
-from .models import AppInstance, Application, Job, Publication, Version
+from .models import AppInstance, Application, GatewayRequest, Job, Publication, Version
 from .permissions import manageable_apps
 from .services import Conflict, event, require_publish
 
@@ -26,7 +26,11 @@ def eligible(app):
 
 
 @transaction.atomic
-def enqueue(actor, version_id, key, *, restored_from=None, expected_state=None):
+def enqueue(
+    actor, version_id, key, *, restored_from=None, expected_state=None, switch_mode="immediate"
+):
+    if switch_mode not in Publication.SwitchMode.values:
+        raise ValidationError("Modo de troca inválido.")
     version = Version.objects.select_related("app__priority").get(pk=version_id)
     app = require_publish(actor, version.app_id)
     existing = Job.objects.filter(idempotency_key=key).first()
@@ -37,6 +41,7 @@ def enqueue(actor, version_id, key, *, restored_from=None, expected_state=None):
             or existing.version_id != version.pk
             or not existing.publication_id
             or existing.publication.restored_from_id != restored_from
+            or existing.publication.switch_mode != switch_mode
         ):
             raise Conflict("Identificador já utilizado para outra operação.")
         return existing
@@ -82,6 +87,7 @@ def enqueue(actor, version_id, key, *, restored_from=None, expected_state=None):
         app_revision=app.revision,
         previous_id=app.active_publication_id,
         restored_from_id=restored_from,
+        switch_mode=switch_mode,
         runtime_spec={
             "app_id": str(app.pk),
             "recipe": "",
@@ -120,7 +126,9 @@ def enqueue(actor, version_id, key, *, restored_from=None, expected_state=None):
         idempotency_key=key,
         message="Na fila de ativação. A candidata será verificada antes da troca.",
     )
-    event(actor, "activation.queued", job.pk, publication=str(publication.pk))
+    event(
+        actor, "activation.queued", job.pk, publication=str(publication.pk), switch_mode=switch_mode
+    )
     if restored_from:
         event(
             actor,
@@ -195,7 +203,15 @@ def invalidated(job):
     pub, app = job.publication, job.app
     if job.cancel_requested or not manageable_apps(job.actor).filter(pk=app.pk).exists():
         return "cancelled", "Ativação cancelada. A publicação anterior foi preservada."
-    if timezone.now() > job.created_at + timedelta(minutes=15):
+    if (
+        pub.drain_started_at
+        and not pub.data_cutover
+        and timezone.now() >= pub.drain_started_at + timedelta(minutes=5)
+    ):
+        return "failed", "Espera de cinco minutos encerrada. A publicação anterior foi preservada."
+    if timezone.now() > job.created_at + timedelta(
+        minutes=20 if pub.switch_mode == "drain" else 15
+    ):
         return "failed", "Prazo de ativação excedido. A publicação anterior foi preservada."
     if (
         not settings.SHINYD_RUNTIME_ENABLED
@@ -206,6 +222,43 @@ def invalidated(job):
     ):
         return "failed", "Configuração alterada durante a ativação. Solicite novamente."
     return None
+
+
+def wait_for_connections(value):
+    """Called only under cutover's transaction; no admit/zero-count race."""
+    pub = value.publication
+    if pub.switch_mode != "drain" or not pub.previous_id or pub.data_cutover:
+        return False
+    if pub.drain_started_at is None:
+        pub.drain_started_at = timezone.now()
+        pub.save(update_fields=["drain_started_at"])
+        AppInstance.objects.filter(publication_id=pub.previous_id, enabled=True).update(
+            draining_for=pub
+        )
+        event(value.actor, "drain.started", pub.pk, previous=str(pub.previous_id))
+    activity = connections.counts(pub.previous_id)
+    if activity["uncertain"]:
+        decide(
+            value,
+            failure=(
+                "failed",
+                "Não foi possível confirmar o encerramento das conexões. "
+                "A publicação anterior foi preservada. Use a troca imediata somente "
+                "se puder interromper os usuários.",
+            ),
+        )
+        return True
+    if activity["total"]:
+        value.phase = "waiting_connections"
+        value.message = (
+            f"Aguardando conexões: {activity['websockets']} WebSocket, "
+            f"{activity['opening']} em abertura e {activity['http']} requisições HTTP. "
+            "Novas conexões interativas estão bloqueadas. Prazo máximo: cinco minutos; "
+            "o fim do prazo cancela a troca, sem forçar o encerramento."
+        )
+        value.save(update_fields=["phase", "message", "updated_at"])
+        return True
+    return False
 
 
 @transaction.atomic
@@ -228,6 +281,7 @@ def decide(job, result=None, failure=None):
         ):
             return False
     if failure:
+        AppInstance.objects.filter(draining_for=pub).update(draining_for=None)
         pub.status, value.message = failure
         if pub.data_cutover:
             value.message = (
@@ -238,9 +292,13 @@ def decide(job, result=None, failure=None):
             )
         value.phase = "cleaning_candidate"
     elif result:
+        if wait_for_connections(value):
+            return False
         # Route and pointer change in the same transaction. Existing hosts
         # never change target, so a cookie/WS cannot drift to another R process.
-        AppInstance.objects.filter(app=value.app, enabled=True).update(enabled=False)
+        AppInstance.objects.filter(app=value.app, enabled=True).update(
+            enabled=False, draining_for=None
+        )
         AppInstance.objects.filter(publication=pub).update(enabled=True, target=result["target"])
         Application.objects.filter(pk=value.app_id).update(
             active_publication=pub, desired_state="running"
@@ -281,7 +339,11 @@ def data_checkpoint(job, *, preflight=False, cutover=False):
     if cutover:
         if not pub.data_preflight_passed:
             return False
-        AppInstance.objects.filter(app=value.app, enabled=True).update(enabled=False)
+        if wait_for_connections(value):
+            return False
+        AppInstance.objects.filter(app=value.app, enabled=True).update(
+            enabled=False, draining_for=None
+        )
         Application.objects.filter(pk=value.app_id).update(
             active_publication=None, desired_state="stopped"
         )
@@ -291,6 +353,19 @@ def data_checkpoint(job, *, preflight=False, cutover=False):
         pub.save(update_fields=["data_cutover"])
         event(value.actor, "data.cutover", pub.pk)
     return True
+
+
+def retire_previous(pub):
+    runtime_client.retire(pub)
+    Publication.objects.filter(pk=pub.pk).update(status="retired")
+    # Confirmed runtime removal is proof that these connections cannot survive.
+    GatewayRequest.objects.filter(instance_id=pub.pk).delete()
+
+
+def waiting(job):
+    value = current(job)
+    if value:
+        update(job, phase=value.phase, message=value.message)
 
 
 def prepare_persistent(job, value):
@@ -310,7 +385,9 @@ def prepare_persistent(job, value):
         return False
     if not pub.data_cutover:
         runtime_client.retire(pub, probe=True)
-        data_checkpoint(job, cutover=True)
+        if not data_checkpoint(job, cutover=True):
+            waiting(job)
+            return False
         update(
             job,
             phase="data_cutover",
@@ -318,8 +395,7 @@ def prepare_persistent(job, value):
         )
         return False
     if pub.previous_id and pub.previous.status != "retired":
-        runtime_client.retire(pub.previous)
-        Publication.objects.filter(pk=pub.previous_id).update(status="retired")
+        retire_previous(pub.previous)
         update(
             job,
             phase="data_starting",
@@ -368,18 +444,18 @@ def process_one():
         if not value:
             return True
         pub = value.publication
+        if pub.status == "candidate":
+            waiting(job)
         if pub.status in {"failed", "cancelled"}:
             if pub.runtime_spec.get("data_mode") == "persistent":
                 runtime_client.retire(pub, probe=True)
                 if pub.data_cutover and pub.previous_id:
-                    runtime_client.retire(pub.previous)
-                    Publication.objects.filter(pk=pub.previous_id).update(status="retired")
+                    retire_previous(pub.previous)
             runtime_client.retire(pub)
             update(job, phase=pub.status, message=value.message, status=pub.status)
         elif pub.status == "active":
             if pub.previous_id and pub.previous.status != "retired":
-                runtime_client.retire(pub.previous)
-                Publication.objects.filter(pk=pub.previous_id).update(status="retired")
+                retire_previous(pub.previous)
             update(
                 job,
                 phase="active",

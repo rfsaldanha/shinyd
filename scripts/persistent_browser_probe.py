@@ -21,7 +21,7 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
         page.get_by_role("button", name="Habilitar dados persistentes", exact=True).click()
 
     def activate(button="Ativar versão", success=True):
-        page.get_by_label("Entendo que a troca interrompe", exact=False).check()
+        page.get_by_label("Entendo o impacto do modo de troca", exact=False).check()
         page.get_by_role("button", name=button, exact=True).click()
         page.get_by_role("heading", name="Concluído" if success else "Falhou", exact=True).wait_for(
             timeout=240000
@@ -205,6 +205,9 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     third = rollback_probe(
         page, app_url, app_id, other_url, data, value, run, admin, check, open_app
     )
+    from drain_browser_probe import probe as drain_probe
+
+    third = drain_probe(page, app_url, other_url, data, value, run, check, open_app)
     admin(
         "from control.models import Application, AppInstance\n"
         "from control.runtime_client import retire\n"

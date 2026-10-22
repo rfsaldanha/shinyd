@@ -1141,3 +1141,57 @@ A prévia local com containers desabilitados e os ensaios descartáveis não
 atendem sozinhos a esse marco. Concorrência e QoS permanecem como testes da
 Fase 4; o aviso não significa prontidão para produção. O marco ainda não foi
 atingido.
+
+## Marco 27 — Telemetria de conexões e drenagem (F3-04)
+
+Em 22/10/2026, implementada a [troca com espera](DRENAGEM_SESSOES.md) para
+ativação, aplicação de configuração e rollback. O pacote é `control5`, com
+migração `0010`; executor `runtime4` e builder `builder2` permanecem iguais.
+O formulário permite troca imediata ou espera de até cinco minutos. Durante
+a espera, novas conexões WebSocket são recusadas, as existentes continuam
+autorizadas e requisições HTTP em curso também impedem a troca. Dados
+persistentes continuam com um único escritor.
+
+O gateway reserva cada requisição antes de encaminhá-la, confirma a abertura
+WebSocket após HTTP 101 e confirma o encerramento ao terminar o encaminhamento.
+Renovações verificam autorização e telemetria. Ausência de confirmação não é
+convertida em zero conexões; telemetria incerta aborta a troca preservando a
+publicação anterior. Cancelamento, prazo esgotado, alteração de configuração
+ou revogação do publicador também abortam a troca. Reiniciar o worker mantém
+o prazo e o bloqueio no banco. `/v1/authorize` deixa de ser aceito: atualizações
+exigem a janela e a atualização conjunta dos componentes de controle.
+
+O painel diferencia WebSockets abertas, aberturas pendentes e HTTP em curso.
+Essas medidas não são contagem de pessoas ou sessões internas do R. Não há
+garantia de conclusão de tarefas R independentes ou de callbacks depois de
+fechar a conexão, nem recuperação de sessão após queda de rede. Estatísticas
+históricas e custo do registro no SQLite sob carga continuam pendentes.
+
+Validação local sem privilégios:
+
+- 284 testes Python passaram, incluindo público/restrito, revogação,
+  cancelamento, prazo, telemetria incerta, transferência e escritor persistente.
+- O teste com SQLite em arquivo e duas conexões reais confirmou a serialização
+  entre admissão e troca, nas duas ordens, usando `IMMEDIATE` como em produção.
+- `go vet ./...` e `go test -race ./...` passaram. O gateway foi verificado
+  com WebSocket real, bloqueio de nova conexão e HTTP longo que perde telemetria.
+- Ruff, formatação, consistência de migrações e Django `check --deploy` passaram.
+- O teste de navegador sem privilégios passou em desktop e 360 px.
+
+Antes de migrar os bancos locais, cópias SQLite consistentes foram gravadas em
+`var/backups/metadata-before-drain-20261022T115852Z.sqlite3` e
+`var/backups/preview-before-drain-20261022T115852Z.sqlite3`, com modo 0600.
+A prévia em `http://127.0.0.1:8010` foi reiniciada e respondeu HTTP 200 em
+`/healthz`; mantém contas, dados e execução de containers desabilitada.
+
+O roteiro integrado agora inclui sessão Shiny reativa durante a drenagem,
+recusa de nova conexão autorizada, upload/download, cancelamento/reabertura,
+reinício do worker, troca após a última conexão, volume preservado e outra
+sessão não interrompida. Nesta gravação inicial, sua execução no CI e a
+homologação local com containers ainda estavam pendentes. `sudo -n true`
+informou que é necessária senha no host; nenhuma instalação privilegiada foi
+tentada nesta rodada. O comando local está em [DRENAGEM_SESSOES.md](DRENAGEM_SESSOES.md).
+
+O próximo item é F3-05, operações individuais e em lote. O marco de teste
+manual combinado com o usuário ainda depende de F3-05 a F3-07 e de uma
+instalação permanente de testes; esta entrega não constitui esse aviso.

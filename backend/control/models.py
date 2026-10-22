@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser, Group
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.crypto import salted_hmac
 
 
@@ -121,6 +122,10 @@ class Version(models.Model):
 
 
 class Publication(models.Model):
+    class SwitchMode(models.TextChoices):
+        IMMEDIATE = "immediate", "Imediata — encerrar conexões na troca"
+        DRAIN = "drain", "Aguardar conexões — até cinco minutos"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     app = models.ForeignKey(Application, on_delete=models.CASCADE)
     version = models.ForeignKey(Version, on_delete=models.PROTECT)
@@ -137,6 +142,8 @@ class Publication(models.Model):
     environment_snapshot = models.BinaryField(default=bytes)
     data_cutover = models.BooleanField(default=False)
     data_preflight_passed = models.BooleanField(default=False)
+    switch_mode = models.CharField(max_length=12, choices=SwitchMode, default=SwitchMode.IMMEDIATE)
+    drain_started_at = models.DateTimeField(null=True)
 
 
 class EnvironmentValue(models.Model):
@@ -213,7 +220,21 @@ class AppInstance(models.Model):
     target = models.CharField(max_length=100)
     enabled = models.BooleanField(default=False)
     publication = models.OneToOneField(Publication, null=True, on_delete=models.PROTECT)
+    draining_for = models.ForeignKey(
+        Publication, null=True, on_delete=models.PROTECT, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class GatewayRequest(models.Model):
+    """Gateway-owned reservations; expiry is uncertainty, never proof of closure."""
+
+    id = models.UUIDField(primary_key=True)
+    instance = models.ForeignKey(AppInstance, on_delete=models.CASCADE, related_name="requests")
+    kind = models.CharField(max_length=10, choices=[("http", "HTTP"), ("websocket", "WebSocket")])
+    upgraded = models.BooleanField(default=False)
+    started_at = models.DateTimeField(auto_now_add=True)
+    heartbeat_at = models.DateTimeField(default=timezone.now)
 
 
 class GatewayTicket(models.Model):

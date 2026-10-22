@@ -118,6 +118,7 @@ def rollback(request, pk):
                 form.cleaned_data["idempotency_key"],
                 restored_from=source.pk,
                 expected_state=form.cleaned_data["confirmation"],
+                switch_mode=form.cleaned_data["switch_mode"],
             )
             return redirect("job_detail", pk=job.pk)
     except ValidationError as exc:
@@ -129,7 +130,7 @@ def rollback(request, pk):
         f"Será reutilizada a imagem preparada da versão {source.version_id}, "
         f"com a configuração atual na revisão {app.config_revision}. "
         "Variáveis removidas não serão recuperadas e segredos antigos não serão restaurados. "
-        "As sessões deste app serão encerradas após a verificação da candidata. "
+        "Escolha encerrar as conexões ou aguardar seu encerramento após verificar a candidata. "
     )
     if app.data_enabled:
         description += (

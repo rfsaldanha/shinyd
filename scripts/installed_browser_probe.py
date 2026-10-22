@@ -128,7 +128,7 @@ def installed_probe(package, fixture, created, data_apps):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control4",
+            == "shinyd-control 0.1.0~control5",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))
@@ -280,7 +280,7 @@ def installed_probe(package, fixture, created, data_apps):
                 page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=180000)
                 check("browser_prepare_real_image")
                 page.get_by_role("link", name="Ativar versão", exact=True).click()
-                page.get_by_label("Entendo que a troca interrompe", exact=False).check()
+                page.get_by_label("Entendo o impacto do modo de troca", exact=False).check()
                 page.get_by_role("button", name="Ativar versão", exact=True).click()
                 page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=180000)
                 check("browser_activate_real_instance")
@@ -413,7 +413,9 @@ def installed_probe(package, fixture, created, data_apps):
 
                 def apply_and_open():
                     panel_page.get_by_role("link", name="Aplicar configuração", exact=True).click()
-                    panel_page.get_by_label("Entendo que a troca interrompe", exact=False).check()
+                    panel_page.get_by_label(
+                        "Entendo o impacto do modo de troca", exact=False
+                    ).check()
                     panel_page.get_by_role(
                         "button", name="Aplicar configuração e reiniciar", exact=True
                     ).click()

@@ -19,12 +19,19 @@ const testInstance = "11111111-1111-4111-8111-111111111111"
 const testToken = "0123456789012345678901234567890123456789012"
 
 type controlStub struct {
+	track    func(context.Context, RequestActivity) (Decision, error)
 	auth     func(context.Context, string, string) (Decision, error)
 	exchange func(context.Context, string, string) (Credential, error)
 }
 
-func (s controlStub) Authorize(ctx context.Context, host, token string) (Decision, error) {
-	return s.auth(ctx, host, token)
+func (s controlStub) Track(ctx context.Context, activity RequestActivity) (Decision, error) {
+	if s.track != nil {
+		return s.track(ctx, activity)
+	}
+	if activity.Operation == "close" {
+		return Decision{Allowed: true}, nil
+	}
+	return s.auth(ctx, activity.Host, activity.Credential)
 }
 func (s controlStub) Exchange(ctx context.Context, host, code string) (Credential, error) {
 	return s.exchange(ctx, host, code)
@@ -220,12 +227,13 @@ func TestUnixControlUsesOnlySocketAndDoesNotFollowRedirects(t *testing.T) {
 	go server.Serve(listener)
 	defer server.Close()
 	control, _ := NewUnixControl(socket, key)
-	decision, err := control.Authorize(context.Background(), "app.localhost", testToken)
+	activity := RequestActivity{Operation: "open", RequestID: testInstance, Host: "app.localhost", Credential: testToken, Kind: "http"}
+	decision, err := control.Track(context.Background(), activity)
 	if err != nil || !decision.Allowed {
 		t.Fatal("unix auth failed", err)
 	}
 	redirect.Store(true)
-	if _, err := control.Authorize(context.Background(), "app.localhost", testToken); err == nil {
+	if _, err := control.Track(context.Background(), activity); err == nil {
 		t.Fatal("control redirect accepted")
 	}
 	control.client.Transport.(*http.Transport).CloseIdleConnections()
