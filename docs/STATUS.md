@@ -1424,3 +1424,62 @@ O ajuste do roteiro está pronto para repetição com o comando de
 nenhuma execução privilegiada nova foi realizada pelo agente. F3-05 continua
 sem homologação local concluída, e o marco de teste manual combinado ainda
 depende de F3-06, F3-07 e da instalação permanente de testes.
+
+## Marco 31 — F3-05 homologada localmente após o ajuste do roteiro
+
+O operador repetiu o ensaio com o roteiro do commit
+`82cfaa2d3583ec321bd0fbc5ba76e2c11d39a7dd`. O relatório iniciado em
+`2026-10-22T16:35:07.306168+00:00` foi conferido e preservado integralmente em
+[lifecycle-runtime-local.json](evidencias/lifecycle-runtime-local.json).
+Passaram **157 verificações integradas**, incluindo **101 da instalação e
+navegador** e **13 da ativação**. Não há erro de execução ou limpeza, nem
+repetição na API do executor ou no ensaio de ativação. A verificação do segundo
+escritor registrou `data_second_writer_outcomes: ["data_in_use"]`: a recusa
+específica foi observada já na primeira tentativa. Isso conclui a pendência
+local registrada no marco 30; a evidência da primeira falha foi mantida.
+
+O navegador confirmou reinício individual com nova instância e dados
+preservados, fechamento da rota anterior e outra sessão Shiny ainda reativa.
+A parada com espera retomou após reinício do worker e concluiu ao fechar a
+última conexão; visitar o app parado não o iniciou. Iniciar uma seleção
+preservou o processo do app já ativo e restaurou versão, dados e configuração
+do app parado. Reiniciar a seleção trocou ambas as instâncias; parar todos
+removeu ambas. A nova partida preservou os dados. Os resultados couberam em
+360 px, sem erro JavaScript observado. Também passaram acesso público/privado,
+bloqueio por URL e WebSocket, segredos, persistência, rollback e drenagem.
+
+O SHA-256 do `control6` observado na instalação corresponde ao artefato local:
+`2bd91c8a99f61e9b8651f80a4ed17aa2ffcc1334189d129bbfd32449f2dc5316`.
+Os checksums de `runtime4` e `builder2` também foram conferidos. Os três pacotes
+constam instalados. O ambiente registrou kernel `7.0.0-38-generic`, arquitetura
+x86_64, 16 CPUs lógicas, 66.735.198.208 bytes de RAM, Podman 4.9.3, crun 1.14.1
+e ext4. Os mapas de usuários foram `0 655360 65536` e `0 720896 65536`.
+No teste de reinício de painel/worker, auth, gateway e ingress mantiveram os
+PIDs `2263394`, `2263395` e `2263396`. A rota anterior no teste de configuração
+retornou HTTP 404. O ensaio não mede capacidade nem latência sob carga.
+
+A consulta posterior ao systemd confirmou painel, auth, worker, gateway,
+ingress, manutenção, builder e runtime inativos, com resultado `success`.
+Os sockets correspondentes e o timer de manutenção estavam inativos;
+`shinyd.target`, desabilitado. O socket de diagnóstico permaneceu ativo.
+A prévia independente em `http://127.0.0.1:8010` respondeu HTTP 200 em `/healthz`.
+O ensaio não deixou configurado atendimento permanente.
+
+O [CI da correção](https://github.com/rfsaldanha/shinyd/actions/runs/39813293208)
+também concluiu com os cinco jobs em `completed/success`. Seu
+[relatório integrado](evidencias/lifecycle-runtime-ci-retry.json) aprovou
+155 verificações, incluindo 101 de instalação/navegador e 13 de ativação, sem
+erro de limpeza e sem repetição por executor ocupado. A diferença de duas
+verificações no ensaio local decorre da instalação explícita do pacote runtime
+por seu roteiro; o CI o instala em uma etapa anterior. O pacote `control6`
+construído no CI tem SHA-256
+`2880ef411cdd4e814cd176ec18f11b6426b347b02491d527a0f69d1984ee661b`;
+é uma construção distinta do artefato local, não identidade binária.
+
+F3-05 está homologada no CI e neste host. A próxima implementação é
+**F3-06: recuperação de falhas com limite de tentativas**. O teste manual
+completo combinado ainda depende de F3-06, F3-07 (backup/restauração básico)
+e da instalação permanente de testes. Não foi anunciado como pronto neste
+marco; o roteiro não testa reboot, emissão ACME, DNS público, capacidade,
+QoS sob disputa ou quotas de disco. Esta rodada registra evidências e
+documentação; não altera código ou pacotes nem repete testes já aprovados.

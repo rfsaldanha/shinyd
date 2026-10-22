@@ -5,17 +5,21 @@ operações individuais e em lote. Usa o executor `runtime4`, o builder `builder
 e o mesmo contrato de autorização e telemetria de `control5`. As verificações
 efetivamente executadas e suas evidências estão em [STATUS.md](STATUS.md).
 
-Passaram **310 testes Python** e **155 verificações integradas no CI**, incluindo
-101 da instalação/navegador. O [relatório integrado](evidencias/lifecycle-runtime-ci.json)
-registra sucesso do ensaio e ausência de erros de limpeza, antes do ajuste do
-roteiro descrito abaixo. A primeira tentativa local recebeu HTTP 429 no teste
-do segundo escritor e encerrou antes das operações. O roteiro agora repete
-somente `runtime_busy`, até quatro tentativas com o mesmo ID e cinco segundos
-entre elas; exige `data_in_use` para aprovar a proteção do volume. Registra
-os resultados em `installed.data_second_writer_outcomes` e o nome da verificação
-que falhou em `installed.failed_check`. A homologação local precisa ser repetida
-com o comando abaixo, usando os mesmos pacotes. O relatório original foi
-[preservado](evidencias/lifecycle-runtime-local-initial.json).
+Passaram **310 testes Python**, **155 verificações integradas no CI** após o
+ajuste do roteiro e **157 na homologação local**, em 22/10/2026. Ambos os ensaios
+aprovaram as 101 verificações da instalação/navegador e as 13 da ativação,
+sem erro de limpeza. F3-05 está homologada nesses ambientes. Estão preservados
+o [relatório local](evidencias/lifecycle-runtime-local.json), o
+[relatório do CI após o ajuste](evidencias/lifecycle-runtime-ci-retry.json) e a
+[primeira tentativa local](evidencias/lifecycle-runtime-local-initial.json).
+
+O roteiro repete somente `runtime_busy`, até quatro tentativas com o mesmo ID
+e cinco segundos entre elas; exige `data_in_use` para aprovar a proteção do
+volume. Registra os resultados em `installed.data_second_writer_outcomes` e
+o nome da verificação que falhou em `installed.failed_check`. A repetição local
+aprovada recebeu `data_in_use` na primeira tentativa, sem precisar esperar.
+O ensaio é descartável: não deixa atendimento permanente configurado nem
+substitui o marco combinado para testes manuais com os apps do usuário.
 
 ## Uso pela interface
 
