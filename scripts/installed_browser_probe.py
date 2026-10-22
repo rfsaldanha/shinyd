@@ -102,6 +102,7 @@ def installed_probe(package, fixture, created, data_apps):
 
     def check(name, value=True):
         if not value:
+            report["failed_check"] = name
             raise AssertionError(name)
         report["checks"].append(name)
 
@@ -500,7 +501,16 @@ def installed_probe(package, fixture, created, data_apps):
                 from persistent_browser_probe import probe as data_probe
 
                 app_origin, report["persistent_data"] = data_probe(
-                    panel_page, app_url, fixture, temporary, run, admin, check, created, data_apps
+                    panel_page,
+                    app_url,
+                    fixture,
+                    temporary,
+                    run,
+                    admin,
+                    check,
+                    created,
+                    data_apps,
+                    report,
                 )
                 check(
                     "other_apps_keep_processes_during_data_publications",

@@ -2,13 +2,60 @@
 
 import hashlib
 import json
+import time
 import uuid
 import zipfile
 from pathlib import Path
 from urllib.parse import urlsplit
 
 
-def probe(page, app_url, fixture, temporary, run, admin, check, created, data_apps):
+def verify_single_writer(admin, check, report, app_id, contender):
+    """A busy executor is not evidence of the volume's single-writer protection."""
+    app_id, contender = str(uuid.UUID(app_id)), str(uuid.UUID(contender))
+    code = (
+        "from control.models import Application\n"
+        "from control import runtime_client\n"
+        "from control.environment import reveal\n"
+        f"p=Application.objects.get(pk='{app_id}').active_publication\n"
+        "try:\n"
+        f" runtime_client.request('PUT','{contender}',p.runtime_spec,environment=reveal(p))\n"
+        "except runtime_client.RuntimeRejected as exc:\n"
+        " print('REFUSAL='+ (exc.code if exc.code in "
+        "{'runtime_busy','data_in_use','admission_denied'} else 'unexpected_refusal'))\n"
+        "except runtime_client.RuntimeUnavailable:\n"
+        " print('REFUSAL=runtime_unavailable')\n"
+        "else:\n"
+        " print('REFUSAL=accepted')\n"
+    )
+    outcomes = report["data_second_writer_outcomes"] = []
+    for attempt in range(4):
+        lines = [
+            line.removeprefix("REFUSAL=")
+            for line in admin(code).splitlines()
+            if line.startswith("REFUSAL=")
+        ]
+        outcome = (
+            lines[0]
+            if len(lines) == 1
+            and lines[0]
+            in {
+                "runtime_busy",
+                "data_in_use",
+                "admission_denied",
+                "unexpected_refusal",
+                "runtime_unavailable",
+                "accepted",
+            }
+            else "invalid_probe_result"
+        )
+        outcomes.append(outcome)
+        if outcome != "runtime_busy" or attempt == 3:
+            break
+        time.sleep(5)  # API Retry-After; same contender, at most three waits.
+    check("data_second_writer_denied", outcomes[-1] == "data_in_use")
+
+
+def probe(page, app_url, fixture, temporary, run, admin, check, created, data_apps, report):
     app_id = str(uuid.UUID(urlsplit(app_url).path.strip("/").split("/")[-1]))
     data_apps.append(app_id)
     data = Path("/var/lib/shinyd-data") / app_id / "files"
@@ -94,17 +141,7 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     check("data_cannot_reach_control_or_host_parent")
     contender = str(uuid.uuid4())
     created.append(contender)  # Cleanup even if the negative test unexpectedly creates it.
-    outcome = admin(
-        "from control.models import Application\n"
-        "from control import runtime_client\n"
-        "from control.environment import reveal\n"
-        f"p=Application.objects.get(pk='{app_id}').active_publication\n"
-        "try:\n"
-        f" runtime_client.request('PUT','{contender}',p.runtime_spec,environment=reveal(p))\n"
-        "except runtime_client.RuntimeRejected as exc:\n"
-        " print('REFUSAL='+exc.code)\n"
-    )
-    check("data_second_writer_denied", "REFUSAL=data_in_use" in outcome)
+    verify_single_writer(admin, check, report, app_id, contender)
 
     failed = temporary / "data-failed.zip"
     archive(

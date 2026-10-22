@@ -5,10 +5,17 @@ operações individuais e em lote. Usa o executor `runtime4`, o builder `builder
 e o mesmo contrato de autorização e telemetria de `control5`. As verificações
 efetivamente executadas e suas evidências estão em [STATUS.md](STATUS.md).
 
-Passaram **300 testes Python** e **155 verificações integradas no CI**, incluindo
+Passaram **310 testes Python** e **155 verificações integradas no CI**, incluindo
 101 da instalação/navegador. O [relatório integrado](evidencias/lifecycle-runtime-ci.json)
-registra sucesso do ensaio e ausência de erros de limpeza. A homologação local
-com containers ainda está pendente; o pacote e o comando estão preparados.
+registra sucesso do ensaio e ausência de erros de limpeza, antes do ajuste do
+roteiro descrito abaixo. A primeira tentativa local recebeu HTTP 429 no teste
+do segundo escritor e encerrou antes das operações. O roteiro agora repete
+somente `runtime_busy`, até quatro tentativas com o mesmo ID e cinco segundos
+entre elas; exige `data_in_use` para aprovar a proteção do volume. Registra
+os resultados em `installed.data_second_writer_outcomes` e o nome da verificação
+que falhou em `installed.failed_check`. A homologação local precisa ser repetida
+com o comando abaixo, usando os mesmos pacotes. O relatório original foi
+[preservado](evidencias/lifecycle-runtime-local-initial.json).
 
 ## Uso pela interface
 

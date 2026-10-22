@@ -1367,3 +1367,60 @@ pronto e seu checksum foi conferido; a homologação com `sudo` permanece para
 o operador. O ensaio é descartável e não deixa configurado o atendimento
 permanente. O marco de teste manual completo combinado não foi atingido:
 continuam necessários F3-06, F3-07 e a instalação permanente de testes.
+
+## Marco 30 — diagnóstico da primeira homologação local de F3-05
+
+O relatório produzido pelo operador em 22/10/2026, iniciado às
+`15:53:05.078500+00:00`, foi lido e preservado integralmente em
+[lifecycle-runtime-local-initial.json](evidencias/lifecycle-runtime-local-initial.json).
+**A homologação não passou.** Há 55 verificações no nível principal, sendo
+`installed_https_probe` a única reprovada; o ensaio instalado registrou 45
+verificações aprovadas, incluindo sua coleta de IDs para limpeza, e a ativação
+aprovou as 13 verificações. Não há erro de limpeza reportado. O teste parou
+na exigência `data_second_writer_denied`, antes dos novos fluxos de operações;
+não comprovou esses fluxos neste host. A ausência do arquivo registrada no
+marco anterior descreve a situação anterior à execução do operador.
+
+O [evento correspondente do journal](evidencias/lifecycle-runtime-local-diagnostic.json)
+mostra HTTP 429 às 12:58:01, horário local, no `ensure` da instância concorrente
+`bb30cd78-f4c0-4a7f-ab50-56dc81eaccee`. O relatório antigo não guardava o código
+da recusa. Pelo código de `Manager.Ensure`, com volume ocupado e menos de 256
+registros, `runtime_busy` pode preceder `data_in_use`; os demais controles de
+admissão são posteriores à verificação do escritor. A atribuição a executor
+ocupado é uma inferência apoiada nessa ordem e no HTTP observado, não um código
+de resposta capturado pelo relatório antigo. O processo ativo continuava
+presente nos diagnósticos; não há evidência de segundo escritor iniciado.
+
+Corrigido o roteiro para repetir somente `runtime_busy`, no máximo quatro
+tentativas com o mesmo ID e três esperas de cinco segundos. Aceitação, outra
+recusa, executor indisponível, resposta inválida ou ocupação persistente
+continuam reprovando o teste. Somente `data_in_use` o aprova. O relatório passa
+a preservar `installed.data_second_writer_outcomes`, sem valores de ambiente,
+e `installed.failed_check`. Não se alterou o executor, o painel, o contrato
+de isolamento, o banco ou os pacotes.
+
+Verificações executadas após a correção:
+
+- **310 testes Python aprovados**, incluindo dez cenários novos que executam
+  o mesmo código enviado a `shinyd-admin`, com o cliente do executor substituído
+  para controlar as respostas, e conferem limites, identidade e ausência de
+  segredo no diagnóstico. O conjunto específico com testes de instalação
+  aprovou 34 casos.
+- Ruff, formatação e `git diff --check` aprovados. O teste Go
+  `TestOnlyConfirmedRemovalReleasesDataWriterAcrossRecovery` passou, comprovando
+  a reserva do escritor até a remoção confirmada também após recuperação.
+- Checksums de `control6`, `runtime4` e `builder2` conferidos; o `control6`
+  instalado tem o mesmo SHA-256 local `2bd91c8a99f61e9b8651f80a4ed17aa2ffcc1334189d129bbfd32449f2dc5316`.
+- Painel, auth, worker, gateway, ingress, manutenção, builder e runtime estavam
+  inativos com `Result=success` após o ensaio. Seus sockets e timer estavam
+  inativos, `shinyd.target` desabilitado e o socket de diagnóstico ativo.
+  A prévia independente na porta 8010 respondeu HTTP 200 em `/healthz`.
+
+Uma nova consulta ao CI do marco 29 confirmou os cinco jobs como
+`completed/success`, incluindo builder. Isso encerra a pendência de estado
+agregado registrada naquele marco; não substitui a nova execução local.
+O ajuste do roteiro está pronto para repetição com o comando de
+[OPERACOES_APPS.md](OPERACOES_APPS.md). O ambiente exige senha para `sudo`;
+nenhuma execução privilegiada nova foi realizada pelo agente. F3-05 continua
+sem homologação local concluída, e o marco de teste manual combinado ainda
+depende de F3-06, F3-07 e da instalação permanente de testes.

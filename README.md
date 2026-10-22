@@ -91,6 +91,7 @@ individualmente, por seleção ou todos sob sua gestão, com revisão de impacto
 e resultados por app. Requer `control6` e migração `0011`. A próxima etapa é
 F3-06, recuperação de falhas com limite de tentativas. O teste manual completo
 combinado para o fim da Fase 3 ainda depende também de F3-07 e da instalação
-permanente de testes. Passaram 300 testes Python e 155 verificações integradas
-no CI; a homologação local com containers ainda está pendente. Evidências e
+permanente de testes. Passaram 310 testes Python e 155 verificações integradas
+no CI anterior ao ajuste do roteiro. A primeira tentativa local parou numa
+recusa transitória do executor; o roteiro foi corrigido e precisa ser repetido. Evidências e
 limites estão em [STATUS.md](docs/STATUS.md).

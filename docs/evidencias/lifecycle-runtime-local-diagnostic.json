@@ -1,0 +1,18 @@
+{
+  "report_sha256": "9f8772ef6baf8074ab5d92f9fa98a398c82fe7cea4b020c1c935c961ab26b701",
+  "source": "journalctl -u shinyd-runtime.service; horário local America/Sao_Paulo",
+  "events": [
+    {
+      "realtime_timestamp_us": "1792684681482637",
+      "unit": "shinyd-runtime.service",
+      "event": {
+        "event": "runtime.request",
+        "operation": "ensure",
+        "instance_id": "bb30cd78-f4c0-4a7f-ab50-56dc81eaccee",
+        "caller_uid": 982,
+        "result": 429
+      }
+    }
+  ],
+  "limitation": "O journal registra HTTP 429, mas não o código da resposta. runtime_busy é inferido da ordem das verificações em Manager.Ensure e do volume já ocupado; o novo roteiro registra o código observado."
+}

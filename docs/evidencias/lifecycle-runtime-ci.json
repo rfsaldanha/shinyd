@@ -1363,5 +1363,45 @@
     },
     "runtime_api_retries": [],
     "passed": true
+  },
+  "completion_confirmed": {
+    "observed_at": "2026-10-22T16:20:44.011559+00:00",
+    "jobs": [
+      {
+        "id": 119870914519,
+        "name": "go",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-10-22T14:02:39Z"
+      },
+      {
+        "id": 119870914755,
+        "name": "agent-package",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-10-22T14:02:56Z"
+      },
+      {
+        "id": 119870914825,
+        "name": "runtime",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-10-22T14:05:13Z"
+      },
+      {
+        "id": 119870914976,
+        "name": "builder",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-10-22T14:20:04Z"
+      },
+      {
+        "id": 119870915041,
+        "name": "python",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-10-22T14:02:55Z"
+      }
+    ]
   }
 }
