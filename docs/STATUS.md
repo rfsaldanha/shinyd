@@ -1316,3 +1316,12 @@ ainda exige senha neste host.
 O próximo item é **F3-06: recuperação de falhas com limite de tentativas**.
 O marco combinado de teste manual completo ainda depende também de F3-07
 e de uma instalação permanente de testes; não foi atingido nesta etapa.
+
+A primeira execução do [CI deste marco](https://github.com/rfsaldanha/shinyd/actions/runs/39789436763)
+aprovou Python, Go, agente e executor. O ensaio instalado chegou ao primeiro
+reinício, confirmou a conclusão, a nova instância e o dado preservado, mas
+falhou na chamada `APIRequestContext.get` que consultava a rota anterior.
+Esse cliente não herda a configuração de DNS/SPKI passada ao Chrome no fixture.
+A verificação foi alterada para uma aba separada do navegador, preservando a
+sessão em uso e o critério HTTP 404. Os fluxos posteriores ainda não haviam
+sido executados nessa primeira tentativa; não houve erro de limpeza reportado.

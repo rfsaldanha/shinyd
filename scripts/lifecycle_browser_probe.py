@@ -64,10 +64,16 @@ def probe(page, app_url, other_url, data, value, run, check, open_app):
     page.wait_for_function("!Shiny.shinyapp.$socket || Shiny.shinyapp.$socket.readyState !== 1")
     current = open_app(app_url)
     check(
-        "lifecycle_restart_new_instance_same_code_and_data",
+        "lifecycle_restart_new_instance_preserves_data",
         current != previous and (data / "fixture.txt").read_text().strip() == value,
     )
-    check("lifecycle_old_route_closed", page.context.request.get(old_origin).status == 404)
+    # APIRequestContext does not inherit Chrome's test DNS/SPKI configuration.
+    # A separate browser tab checks the old route without closing the live session.
+    route_probe = page.context.new_page()
+    try:
+        check("lifecycle_old_route_closed", route_probe.goto(old_origin).status == 404)
+    finally:
+        route_probe.close()
     other_state = reactive(other, other_state)
     check("lifecycle_individual_restart_preserves_other_session")
     submit("stop", "drain")
