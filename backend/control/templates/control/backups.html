@@ -1,0 +1,24 @@
+{% extends "control/base.html" %}
+{% block title %}Backup e restauração · shinyd{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">MANUTENÇÃO</p><h1>Backup e restauração</h1><p class="muted">Prepare uma cópia consistente do servidor em uma janela de manutenção.</p></div></div>
+<div class="stats">
+  <div class="stat"><span>Apps a parar</span><strong>{{ active_apps }}</strong></div>
+  <div class="stat"><span>Operações pendentes</span><strong>{{ pending_jobs }}</strong></div>
+  <div class="stat"><span>Rotas habilitadas</span><strong>{{ registered_routes }}</strong></div>
+</div>
+<section class="panel">
+  <h2>Preparar o backup</h2>
+  <p>Avise as pessoas conectadas. Em “Operar aplicativos”, pare todos os apps e aguarde a conclusão das operações. A parada imediata encerra conexões; a opção de aguardar pode exigir nova tentativa.</p>
+  <p><a class="btn btn-primary" href="{% url 'operations' %}">Operar aplicativos</a></p>
+  <p>Depois, o operador do Linux deve parar os serviços e executar <code>sudo shinyd-backup</code>, seguindo o guia <code>BACKUP_RESTAURACAO.md</code> instalado com o pacote. O painel ficará indisponível durante a cópia.</p>
+  <p>Estes contadores mostram os registros do painel. A ferramenta também verifica containers, tarefas de build, arquivos e espaço livre. Zerar os contadores ainda não confirma que o servidor está pronto.</p>
+</section>
+<section class="panel">
+  <h2>Guardar e recuperar</h2>
+  <p>A cópia criptografada inclui código, imagens, dados persistentes, contas, permissões, configurações e segredos. Guarde a chave de recuperação separadamente, fora do servidor, junto com os pacotes da instalação. Sem essa chave não será possível recuperar o backup.</p>
+  <p>A restauração exige uma instalação vazia e versões compatíveis. Os apps ficam parados, as sessões anteriores expiram e a recuperação automática fica desabilitada até sua conferência.</p>
+  {% if receipt %}<p><strong>Última restauração registrada:</strong> {{ receipt.restored_at }}<br>Cópia: <span class="text-break">{{ receipt.backup_id }}</span></p>{% else %}<p>Nenhuma restauração registrada nesta instalação.</p>{% endif %}
+  <p>Este marco oferece preparação visual e execução pelo operador. Agendamento, download e restauração pelo navegador ainda não estão disponíveis.</p>
+</section>
+{% endblock %}

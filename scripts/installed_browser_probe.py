@@ -81,7 +81,7 @@ def require_empty_control(state, configuration_paths):
         raise RuntimeError("installed_control_not_empty")
 
 
-def installed_probe(package, fixture, created, data_apps):
+def installed_probe(package, fixture, created, data_apps, before_backup=None):
     from playwright.sync_api import sync_playwright
 
     report = {
@@ -129,7 +129,7 @@ def installed_probe(package, fixture, created, data_apps):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control7",
+            == "shinyd-control 0.1.0~control8",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))
@@ -563,6 +563,13 @@ def installed_probe(package, fixture, created, data_apps):
                     "credentials_absent_from_service_logs",
                     all(value not in log for value in sensitive),
                 )
+                if before_backup is not None:
+                    from backup_browser_probe import probe as backup_probe
+
+                    stage = "backup_restore"
+                    backup_probe(
+                        panel_page, app_url, password, run, admin, check, before_backup, report
+                    )
                 browser.close()
         report["passed"] = True
     except Exception as exc:

@@ -28,6 +28,11 @@ em `var/`, ignorada pelo Git. `bootstrap.py` é idempotente e não substitui cha
 
 ## Verificações
 
+Os testes de backup usam criptografia real com `age` e `age-keygen`.
+No Ubuntu, instale `age` com `sudo apt-get --no-remove install age` antes
+de executar a suíte. Os testes comuns não precisam de root nem de containers;
+o roteiro de homologação instalada é separado.
+
 ```sh
 .venv/bin/pytest -q
 .venv/bin/ruff check backend tests scripts manage.py

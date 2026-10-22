@@ -32,7 +32,7 @@ def main():
     args = parser.parse_args()
     if sys.version_info[:2] != (3, 12):
         parser.error("Use Python 3.12 para gerar o pacote Ubuntu 24.04.")
-    output = ROOT / "dist/shinyd-control_0.1.0~control7_amd64.deb"
+    output = ROOT / "dist/shinyd-control_0.1.0~control8_amd64.deb"
     output.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="shinyd-control-package-") as temporary:
         work = Path(temporary)
@@ -93,7 +93,7 @@ def main():
             ROOT / "backend", lib / "backend", ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
         )
         shutil.copytree(ROOT / "backend/control/static", lib / "static")
-        for name in ("launch.py", "configure.py"):
+        for name in ("launch.py", "configure.py", "backup.py"):
             shutil.copyfile(ROOT / "packaging/control" / name, lib / name)
         (lib / "dependency-hashes.json").write_text(json.dumps(manifest, indent=2) + "\n")
         (lib / "requirements.lock").write_bytes(requirements.read_bytes())
@@ -104,7 +104,33 @@ def main():
             ("tmpfiles", "usr/lib/tmpfiles.d"),
         ]:
             shutil.copytree(ROOT / "packaging/control" / source, target / dest)
-        for name in ("shinyd-admin", "shinyd-configure"):
+        # A durable guard prevents socket/timer/reboot activation during a cold restore.
+        for unit in (
+            "shinyd.target",
+            "shinyd-maintenance.timer",
+            "shinyd-build@.service",
+            *[
+                f"shinyd-{n}.service"
+                for n in (
+                    "panel",
+                    "auth",
+                    "worker",
+                    "gateway",
+                    "ingress",
+                    "maintenance",
+                    "runtime",
+                    "builder",
+                )
+            ],
+            *[f"shinyd-{n}.socket" for n in ("panel", "auth", "gateway", "runtime", "builder")],
+        ):
+            directory = target / "usr/lib/systemd/system" / (unit + ".d")
+            directory.mkdir()
+            (directory / "backup.conf").write_text(
+                "[Unit]\nConditionPathExists=!/var/lib/shinyd-backup/maintenance\n"
+                "ConditionPathExists=!/var/lib/shinyd-backup/restore-incomplete\n"
+            )
+        for name in ("shinyd-admin", "shinyd-configure", "shinyd-backup"):
             path = target / "usr/bin" / name
             path.parent.mkdir(exist_ok=True, parents=True)
             shutil.copyfile(ROOT / "packaging/control" / name, path)
@@ -121,6 +147,7 @@ def main():
         docs.mkdir(parents=True)
         shutil.copyfile(ROOT / "LICENSE", docs / "copyright")
         shutil.copyfile(ROOT / "docs/INSTALACAO_INTEGRADA.md", docs / "README.md")
+        shutil.copyfile(ROOT / "docs/BACKUP_RESTAURACAO.md", docs / "BACKUP_RESTAURACAO.md")
         target.chmod(0o755)
         for path in target.rglob("*"):
             path.chmod(
@@ -133,6 +160,7 @@ def main():
                     "postrm",
                     "shinyd-admin",
                     "shinyd-configure",
+                    "shinyd-backup",
                     "shinyd-gateway",
                 }
                 else 0o644

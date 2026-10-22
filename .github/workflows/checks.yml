@@ -53,6 +53,7 @@ jobs:
           cache: pip
           cache-dependency-path: requirements.lock
       - run: pip install -r requirements.lock
+      - run: sudo -n apt-get update -qq && sudo -n apt-get install -y age
       - run: ruff check backend tests scripts manage.py
       - run: ruff format --check backend tests scripts manage.py
       - run: pytest -q
@@ -102,7 +103,8 @@ jobs:
             dist/agent-after-runtime.json
   builder:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # Includes cold export, full verification and restore of all fixture images.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -111,7 +113,7 @@ jobs:
       - name: Prepare disposable builder runner
         run: |
           sudo -n apt-get update -qq
-          sudo -n apt-get install -y podman crun uidmap slirp4netns fuse-overlayfs caddy
+          sudo -n apt-get install -y podman crun uidmap slirp4netns fuse-overlayfs caddy age
           python3 -m venv .venv
           .venv/bin/pip install -r requirements.lock playwright==1.64.0
           sudo -n python3 scripts/container_subids.py --apply
@@ -124,7 +126,7 @@ jobs:
       - name: Verify ZIP, offline restoration, cache, failures and actual Shiny
         run: |
           set -o pipefail
-          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control7_amd64.deb' | tee dist/builder-report.json
+          sudo -n .venv/bin/python scripts/builder_smoke.py --activation --backup --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control8_amd64.deb' | tee dist/builder-report.json
       - name: Removing the integrated package preserves state
         run: |
           sudo -n touch /var/lib/shinyd-control/package-test-sentinel

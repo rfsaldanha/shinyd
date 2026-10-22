@@ -1627,3 +1627,72 @@ e a pendência do job isolado do executor registrada acima. O próximo item é
 **F3-07: backup/restauração básico**. O teste manual completo combinado ainda
 depende dessa etapa e da instalação permanente de testes. Esta rodada
 preserva evidências e atualiza documentação; não altera código ou pacotes.
+
+## Marco 34 — backup criptografado e restauração em vazio (F3-07)
+
+Implementado em `control8`, sem novas migrações, mantendo `runtime5` e
+`builder2`. O [guia de backup](BACKUP_RESTAURACAO.md) descreve a janela de
+manutenção, armazenamento externo, tratamento das chaves e recuperação.
+
+O operador pode criar, verificar e restaurar uma cópia com `shinyd-backup`.
+O arquivo age contém banco consistente, fontes, artefatos, imagens OCI,
+dados persistentes, configurações, certificado e chaves. A identidade age
+fica fora da cópia. Links, arquivos especiais, excesso de tamanho e
+referências ausentes são recusados. Apps, serviços e tarefas precisam estar
+parados; não há desligamento automático de sessões pela ferramenta.
+
+A restauração autentica todo o arquivo antes de interpretá-lo e exige uma
+instalação vazia, com os mesmos pacotes, sistema e arquitetura. Confere IDs
+das imagens carregadas, preserva dados e a chave dos segredos, troca chaves
+de transporte, invalida acessos antigos e desabilita a recuperação automática.
+Apps permanecem parados para conferência. Falha normal de instalação remove
+apenas caminhos novos. Marcadores persistentes e 16 configurações systemd
+impedem inicialização durante manutenção ou restauração incompleta. Queda
+de energia, KILL e falha na própria limpeza não são tratados como transação
+atômica; o guia orienta preservar o estado e restaurar em outra instalação vazia.
+
+A página “Backup e restauração”, exclusiva de administradores, apresenta
+contadores para preparação e o recibo da última restauração. Não recebe
+arquivos, caminhos arbitrários ou chaves. O backup inicial é operado pelo
+Linux; automação e execução pelo navegador permanecem para F6-01.
+
+Verificações executadas:
+
+* **361 testes Python aprovados**, incluindo 30 cenários novos de backup:
+  age real, SQLite real, preservação de dados e segredos atuais/históricos,
+  invalidação de acessos, chave errada, corrupção, truncamento, traversal,
+  links, filas ativas, versões incompatíveis, espaço/limites, destino ocupado
+  e limpeza de gravação parcial. O teste de orquestração simula os comandos
+  Podman; não é evidência de transporte real de imagens.
+* Ruff, ausência de novas migrações e `check --deploy` aprovados.
+  `go vet ./...` e `go test -race ./...` aprovados, com resultados em cache
+  para os pacotes Go, cujo código não mudou.
+* Chrome local: nova página HTTP 200 em 1280 px e 360 px, sem overflow
+  horizontal nem erros JavaScript. Capturas locais em
+  `var/backup-panel-1280.png` e `var/backup-panel-360.png`.
+* Pacote construído; três comandos executáveis, guia e 16 proteções systemd
+  conferidos no conteúdo extraído. `systemd-analyze verify` terminou com
+  código zero. A prévia da porta 8010 foi reiniciada com contas/chaves
+  preservadas e executor desabilitado, sem alteração de esquema.
+
+O artefato local `shinyd-control_0.1.0~control8_amd64.deb` tem SHA-256
+`125a334ad0ca8938fabb188937c072773b7218d6fcca791006efe6a10d75bd6e`.
+A dependência `age` foi obtida do repositório Ubuntu e extraída somente em
+`var/age-toolchain` para os testes sem privilégios. Sua instalação no sistema
+e a atualização do pacote de controle ainda precisam do operador; `sudo -n`
+continua exigindo senha.
+
+O roteiro `builder_smoke.py --activation --backup` foi preparado para repetir
+o fluxo real, parar os apps pela interface, guardar a fixture original,
+remover uma imagem publicada do cache, restaurar em vazio e verificar no
+navegador dados, segredos e reatividade. Também verifica o bloqueio systemd
+e as recusas de chave errada, truncamento, links e destino ocupado. O job
+builder do CI passa a ter 45 minutos para incluir exportação, verificação
+completa e restauração das imagens; isso não resolve nem reclassifica o
+timeout anterior do job isolado runtime.
+
+**A nova homologação com containers ainda não foi executada localmente.**
+Não há evidência de aprovação desse novo fluxo no CI neste marco. F3-07 está
+implementada e aguarda essa verificação. O momento combinado para teste
+manual completo ainda exige sua homologação e a instalação permanente de
+testes. Não foi declarado pronto para uso real ou para produção.

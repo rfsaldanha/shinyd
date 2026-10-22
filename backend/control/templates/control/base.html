@@ -19,6 +19,7 @@
     <a href="{% url 'dashboard' %}">Aplicativos</a>
     {% if user.is_superuser %}
     <a href="{% url 'diagnostics' %}">Diagnóstico do servidor</a>
+    <a href="{% url 'backups' %}">Backup e restauração</a>
     <a href="{% url 'users' %}">Pessoas e permissões</a>
     <a href="{% url 'audit' %}">Atividade administrativa</a>
     {% endif %}

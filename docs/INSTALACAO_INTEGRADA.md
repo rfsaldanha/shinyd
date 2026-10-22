@@ -1,6 +1,6 @@
 # Instalação integrada experimental
 
-O pacote `shinyd-control 0.1.0~control7` reúne painel, worker, autorizador,
+O pacote `shinyd-control 0.1.0~control8` reúne painel, worker, autorizador,
 gateway e entrada HTTPS. Plataforma de referência: Ubuntu 24.04 amd64,
 Python 3.12, systemd, cgroups v2 e os pacotes de agente, executor `runtime5`
 e builder `builder2`. Não constitui declaração de prontidão para produção.
@@ -44,11 +44,11 @@ python3 scripts/build_agent_package.py
 python3 scripts/build_agent_package.py --component runtime
 python3 scripts/build_builder_package.py
 .venv/bin/python scripts/build_control_package.py
-sudo apt-get --no-remove install podman crun uidmap slirp4netns fuse-overlayfs caddy
+sudo apt-get --no-remove install podman crun uidmap slirp4netns fuse-overlayfs caddy age
 sudo dpkg --install dist/shinyd-agent_0.1.0~agent1_amd64.deb \
   dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
   dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  dist/shinyd-control_0.1.0~control7_amd64.deb
+  dist/shinyd-control_0.1.0~control8_amd64.deb
 ```
 
 O pacote não inicia o painel automaticamente antes da configuração. Não modifica
@@ -90,11 +90,13 @@ Esses arquivos são legíveis somente pelos grupos necessários.
 
 `shinyd-configure` não altera nomes de uma instalação existente. Repeti-lo com
 os mesmos parâmetros e serviços parados preserva chaves e cria backup SQLite
-antes de migrar metadados. Não é backup completo: arquive também chaves,
-configurações, fontes e estados do builder/runtime antes de atualizar.
+antes de migrar metadados. Essa cópia SQLite não é backup completo. Use o
+[backup criptografado com restauração em vazio](BACKUP_RESTAURACAO.md), que
+inclui chaves, configurações, fontes, imagens e dados persistentes.
 Não substitua o banco enquanto serviços estiverem escrevendo nele.
 
-Atualizações exigem janela: pare `shinyd.target`, faça backup, instale pacotes,
+Atualizações exigem janela: pare os apps e os serviços conforme o guia de
+backup, faça a cópia, instale pacotes,
 repita a configuração para aplicar migrações e inicie o target. Reiniciar
 gateway/entrada HTTPS interrompe WebSockets. A reinstalação não reinicia
 automaticamente a pilha. Recuperação automática de uma atualização malsucedida
@@ -127,7 +129,7 @@ sudo apt-get --no-remove install crun && \
 sudo .venv/bin/python scripts/builder_smoke.py --activation \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control7_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control8_amd64.deb \
   | tee var/installed-report.json
 ```
 

@@ -175,6 +175,9 @@ def main():
     )
     parser.add_argument("--install-runtime-package", type=Path)
     parser.add_argument(
+        "--backup", action="store_true", help="Inclui backup e restauração em vazio"
+    )
+    parser.add_argument(
         "--install-control-package",
         type=Path,
         help="Inclui homologação do pacote integrado pelo navegador e HTTPS",
@@ -182,6 +185,8 @@ def main():
     args = parser.parse_args()
     if args.install_control_package and not args.activation:
         parser.error("--install-control-package exige --activation.")
+    if args.backup and not args.install_control_package:
+        parser.error("--backup exige --install-control-package.")
     if os.geteuid() != 0 or not os.environ.get("SUDO_UID"):
         parser.error("Execute com sudo a partir de uma conta comum.")
     os.umask(0o077)
@@ -595,25 +600,43 @@ def main():
                 # Leave room for two persistent apps and a probe in the five-slot test policy.
                 api("remove", ids[1])
                 record("release_second_fixture_before_configuration_rotation", True)
+
+                def outer_apps():
+                    browser = command(
+                        sys.executable,
+                        str(ROOT / "scripts/builder_browser_probe.py"),
+                        "--instances",
+                        activated["active_instance"],
+                        ids[0],
+                        timeout=120,
+                    )
+                    record(
+                        "other_apps_reactive_and_without_installed_secrets",
+                        json.loads(browser.stdout).get("passed"),
+                    )
+
+                def before_backup():
+                    outer_apps()
+                    for identity in [*ids, *activated["instances"]]:
+                        api("remove", identity)
+                    # Backup excludes terminal build jobs; retain cleanup ownership here.
+                    for path in (STATE / "artifacts").glob("*.json"):
+                        if path.stem not in artifacts:
+                            artifacts.append(path.stem)
+
                 installed = installed_probe(
-                    args.install_control_package, temporary / "app-0.zip", created, data_apps
+                    args.install_control_package,
+                    temporary / "app-0.zip",
+                    created,
+                    data_apps,
+                    before_backup=before_backup if args.backup else None,
                 )
                 report["installed"] = installed
                 record("installed_https_probe", installed.get("passed"), installed)
                 for name in installed["checks"]:
                     record(name, True)
-                browser = command(
-                    sys.executable,
-                    str(ROOT / "scripts/builder_browser_probe.py"),
-                    "--instances",
-                    activated["active_instance"],
-                    ids[0],
-                    timeout=120,
-                )
-                record(
-                    "other_apps_reactive_and_without_installed_secrets",
-                    json.loads(browser.stdout).get("passed"),
-                )
+                if not args.backup:
+                    outer_apps()
         except Exception as exc:
             report["error"] = str(exc)
             # Only repository-owned fixtures, never uploads or app environments.

@@ -102,5 +102,12 @@ em observação incerta e suspende após falta de memória. Configurações pend
 continuam exigindo aplicação manual. Passaram 331 testes Python e 179 verificações
 na homologação local. O ensaio integrado do CI aprovou 177 verificações; o
 workflow geral foi cancelado porque o teste isolado do executor excedeu 20 minutos.
-Evidências e limites estão em [STATUS.md](docs/STATUS.md). O próximo item é
-F3-07, backup/restauração básico.
+Evidências e limites estão em [STATUS.md](docs/STATUS.md).
+
+F3-07 implementa [backup criptografado e restauração em vazio](docs/BACKUP_RESTAURACAO.md),
+com preparação visual, preservação de código/imagens/dados/segredos e invalidação
+de sessões antigas. Requer `control8` e `age`, sem nova migração de banco.
+A execução inicial é pelo operador Linux, com apps parados. Passaram 361 testes
+Python e a página foi verificada no Chrome em 1280 px e 360 px.
+**A homologação instalada de F3-07 ainda está pendente.** O teste manual
+completo combinado continua dependendo dela e da instalação permanente de testes.

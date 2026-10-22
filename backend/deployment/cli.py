@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from deployment.config import CONFIG, STATE, caddyfile, load, validate
 
 
-def verify_certificate(certificate, key, config):
+def verify_certificate(certificate, key, config, *, require_current=True):
     cert = x509.load_pem_x509_certificate(certificate)
     private = serialization.load_pem_private_key(key, password=None)
     encoding, form = serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
@@ -26,7 +26,7 @@ def verify_certificate(certificate, key, config):
     ):
         raise ValueError("Certificado e chave não correspondem.")
     now = datetime.now(UTC)
-    if not cert.not_valid_before_utc <= now < cert.not_valid_after_utc:
+    if require_current and not cert.not_valid_before_utc <= now < cert.not_valid_after_utc:
         raise ValueError("Certificado fora do período de validade.")
     public = cert.public_key()
     if not (
