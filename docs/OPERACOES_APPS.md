@@ -5,6 +5,11 @@ operações individuais e em lote. Usa o executor `runtime4`, o builder `builder
 e o mesmo contrato de autorização e telemetria de `control5`. As verificações
 efetivamente executadas e suas evidências estão em [STATUS.md](STATUS.md).
 
+Passaram **300 testes Python** e **155 verificações integradas no CI**, incluindo
+101 da instalação/navegador. O [relatório integrado](evidencias/lifecycle-runtime-ci.json)
+registra sucesso do ensaio e ausência de erros de limpeza. A homologação local
+com containers ainda está pendente; o pacote e o comando estão preparados.
+
 ## Uso pela interface
 
 No catálogo, abra **Operar aplicativos**. Na página de um app, o link

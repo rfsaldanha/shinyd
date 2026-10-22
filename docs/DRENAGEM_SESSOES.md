@@ -130,5 +130,6 @@ sudo .venv/bin/python scripts/builder_smoke.py --activation \
 
 O ensaio limpa os serviços e dados descartáveis ao terminar. Não prepara a
 instalação permanente de testes combinada para o fim da Fase 3. Operações
-individuais/em lote de iniciar, parar e reiniciar seguem em F3-05; recuperação
-com limite de tentativas em F3-06 e backup/restauração em F3-07.
+individuais/em lote de iniciar, parar e reiniciar estão em
+[F3-05, com o pacote control6](OPERACOES_APPS.md); recuperação com limite de
+tentativas segue em F3-06 e backup/restauração em F3-07.

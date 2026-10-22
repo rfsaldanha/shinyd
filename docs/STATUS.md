@@ -1308,8 +1308,8 @@ A prévia na porta 8010 foi reiniciada preservando conta, dados e chaves;
 
 O roteiro instalado foi ampliado para reiniciar um app mantendo outro reativo,
 parar com espera e reiniciar o worker, iniciar uma seleção com app já ativo,
-reiniciar ambos, parar todos e voltar a iniciar um. A homologação com containers
-no CI e a homologação local deste pacote ainda aguardam execução neste registro.
+reiniciar ambos, parar todos e voltar a iniciar um. O resultado do CI está
+registrado abaixo; a homologação local deste pacote continua pendente.
 O comando local está em [OPERACOES_APPS.md](OPERACOES_APPS.md); `sudo -n true`
 ainda exige senha neste host.
 
@@ -1325,3 +1325,45 @@ Esse cliente não herda a configuração de DNS/SPKI passada ao Chrome no fixtur
 A verificação foi alterada para uma aba separada do navegador, preservando a
 sessão em uso e o critério HTTP 404. Os fluxos posteriores ainda não haviam
 sido executados nessa primeira tentativa; não houve erro de limpeza reportado.
+
+### Evidência integrada após a correção do roteiro
+
+O [segundo ensaio](https://github.com/rfsaldanha/shinyd/actions/runs/39792232209),
+no commit `865e8be5fd97d0ebc967876f58cedcbe78b1ea22`, aprovou as **155 verificações
+integradas**, incluindo **101 da instalação/navegador** e 13 da ativação.
+O relatório completo está em
+[lifecycle-runtime-ci.json](evidencias/lifecycle-runtime-ci.json). Não houve erro
+de limpeza, repetição por executor ocupado ou repetição da API do executor.
+
+O navegador confirmou nova instância no reinício individual, HTTP 404 na rota
+anterior, outra sessão ainda reativa, parada com espera retomada após reinício
+do worker e ausência de partida automática ao visitar o app parado. Iniciar
+uma seleção reutilizou a versão, os dados e a configuração, sem reiniciar o
+app já ativo. Reiniciar a seleção trocou as duas instâncias; parar todos removeu
+ambas. Uma nova partida manteve o dado persistente. Os resultados couberam em
+360 px. As verificações anteriores de acesso, segredos, dados e rollback também
+passaram.
+
+O runner registrou kernel `6.17.0-1022-azure`, arquitetura x86_64, quatro CPUs
+lógicas, 16.766.414.848 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4. Os mapas
+de usuário observados no teste de persistência foram `0 327680 65536` e
+`0 393216 65536`. Esse perfil não é um teste de capacidade.
+
+O SHA-256 do `control6` usado no CI foi
+`377a47c9134f0fc42e770e6df8c0ca2a84d65d4240e4c82d83de3373933d0bdf`.
+O pacote construído localmente tem o checksum registrado acima; são construções
+distintas, não uma afirmação de identidade binária. A correção do roteiro não
+altera o conteúdo do pacote local.
+
+Na consulta ao GitHub, Python, Go, agente e executor já constavam como
+`completed/success`. Todas as etapas do job builder, incluindo o ensaio,
+a remoção do pacote preservando estado e o envio dos artefatos, também constavam
+como `completed/success`; o estado agregado desse job ainda era `in_progress`.
+Essa distinção está preservada nos metadados da evidência, sem antecipar a
+conclusão administrativa do workflow.
+
+Ainda não existe `var/lifecycle-report.json` neste host. O pacote local está
+pronto e seu checksum foi conferido; a homologação com `sudo` permanece para
+o operador. O ensaio é descartável e não deixa configurado o atendimento
+permanente. O marco de teste manual completo combinado não foi atingido:
+continuam necessários F3-06, F3-07 e a instalação permanente de testes.
