@@ -9,15 +9,16 @@
 </div>
 {% if active_instance %}<p><a class="btn btn-primary" href="{% url 'gateway_connect' active_instance.pk %}">Abrir aplicativo</a></p>{% endif %}
 {% if manage %}
-{% if active_instance %}
 <section class="panel" id="connections" hx-get="{% url 'app_detail' app.pk %}" hx-trigger="every 5s" hx-target="this" hx-select="#connections" hx-swap="outerHTML" aria-live="polite">
 <h2>Conexões da publicação</h2>
+{% if active_instance %}
 <p>{{ connections.websockets }} WebSocket abertas · {{ connections.opening }} em abertura · {{ connections.http }} requisições HTTP em curso.</p>
 <p class="form-help">Conexões não equivalem a pessoas ou sessões internas do R. Duas abas podem abrir duas conexões.</p>
 {% if connections.uncertain %}<p class="notice">Há {{ connections.uncertain }} conexões sem confirmação recente. A troca com espera será recusada; ausência de resposta não significa encerramento.</p>{% endif %}
 {% if active_instance.draining_for_id %}<p class="notice">Aguardando o encerramento das conexões. Novas conexões interativas estão bloqueadas.</p>{% endif %}
-</section>
+{% else %}<p>Nenhuma publicação ativa.</p>
 {% endif %}
+</section>
 <div class="toolbar"><a class="btn btn-light" href="{% url 'app_edit' app.pk %}">Configurar app</a><a class="btn btn-light" href="{% url 'app_access' app.pk %}">Conceder acesso</a><a class="btn btn-light" href="{% url 'app_config' app.pk %}">Adicionar variável ou segredo</a></div>
 <section class="panel"><h2>Envios e publicações</h2><p class="muted">Valide o ZIP, prepare a versão em um ambiente R aprovado e solicite a ativação.</p><p><a class="btn btn-light" href="{% url 'app_history' app.pk %}">Histórico de versões e publicações</a></p>
 <div class="table-responsive"><table class="table"><thead><tr><th>Envio</th><th>Estado</th><th>Etapa</th><th></th></tr></thead><tbody>

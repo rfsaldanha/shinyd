@@ -246,7 +246,7 @@ def installed_probe(package, fixture, created, data_apps):
                 check(
                     "internal_api_not_exposed",
                     page.evaluate(
-                        "async () => (await fetch('/v1/authorize', {method:'POST'})).status"
+                        "async () => (await fetch('/v2/request', {method:'POST'})).status"
                     )
                     in (403, 404),
                 )
