@@ -1121,3 +1121,23 @@ DNS público, emissão ACME, reboot, capacidade, QoS sob carga e recuperação d
 backup não foram testados. Rollback de código não reverte escritas nem migrações
 de dados feitas pelo app. O próximo marco é **F3-04: telemetria de sessões e
 drenagem**, para permitir operações que aguardem o encerramento das sessões.
+
+### Ponto combinado para teste manual pela interface
+
+Em 22/10/2026, o usuário pediu para ser avisado quando a **Fase 3 estiver
+concluída e uma instalação permanente de testes estiver disponível**. Dar esse
+aviso ao atingir o marco, apresentando endereço, instruções de acesso e roteiro
+para publicar e administrar apps reais. O aviso depende de:
+
+- Concluir e validar F3-04 a F3-07, incluindo drenagem, operações de ciclo de
+  vida, proteção contra ciclos de reinício e backup com restauração comprovada.
+- Manter painel, worker, gateway, builder e executor configurados para uso
+  contínuo no ambiente de testes, com HTTPS, conta de acesso e catálogo de
+  ambientes adequado aos apps escolhidos.
+- Verificar pelo navegador publicação, configuração, persistência, atualização
+  e rollback nesse ambiente, documentando as limitações observadas.
+
+A prévia local com containers desabilitados e os ensaios descartáveis não
+atendem sozinhos a esse marco. Concorrência e QoS permanecem como testes da
+Fase 4; o aviso não significa prontidão para produção. O marco ainda não foi
+atingido.
