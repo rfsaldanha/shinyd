@@ -83,4 +83,5 @@ até cinco minutos, sem forçar seu encerramento ao fim do prazo. O painel mostr
 WebSockets e requisições HTTP em curso; esses números não equivalem a usuários
 ou sessões internas do R. Requer `control5`, migração `0010` e atualização
 conjunta do gateway/autorizador. O marco 27 de [STATUS.md](docs/STATUS.md)
-registra as verificações e a situação da homologação instalada.
+registra 284 testes Python e 137 verificações integradas no CI aprovadas.
+A homologação local deste marco com containers permanece pendente.

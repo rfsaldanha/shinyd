@@ -5,6 +5,11 @@ telemetria de conexões e drenagem às ativações, aplicações de configuraç�
 rollbacks. Executor `runtime4` e builder `builder2` permanecem compatíveis.
 Evidências efetivamente executadas ficam em [STATUS.md](STATUS.md).
 
+Passaram **284 testes Python** e **137 verificações integradas no CI**, com os
+cinco jobs aprovados. O [relatório do CI](evidencias/drain-runtime-ci.json)
+inclui 83 verificações da instalação e do navegador. Homologação local com
+containers ainda pendente; os testes locais sem privilégios passaram.
+
 ## Operação pela interface
 
 Na confirmação da ativação ou retorno, escolha **Modo de troca**:
@@ -21,6 +26,8 @@ O contador na página do app diferencia WebSockets abertas, aberturas ainda
 pendentes e requisições HTTP. A tarefa mostra a espera, seu início e o botão
 de cancelamento. Cancelar reabre a admissão de conexões na publicação anterior
 quando o worker processa o pedido, sem esperar a limpeza da candidata.
+Para encerrar conexões deliberadamente após iniciar uma espera, cancele a
+tarefa, aguarde sua limpeza e solicite novamente no modo imediato.
 
 Uploads e downloads de usuários conectados continuam autorizados durante a
 drenagem e também impedem a troca enquanto estiverem em curso. A entrada pelo

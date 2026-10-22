@@ -1184,11 +1184,29 @@ Antes de migrar os bancos locais, cópias SQLite consistentes foram gravadas em
 A prévia em `http://127.0.0.1:8010` foi reiniciada e respondeu HTTP 200 em
 `/healthz`; mantém contas, dados e execução de containers desabilitada.
 
-O roteiro integrado agora inclui sessão Shiny reativa durante a drenagem,
-recusa de nova conexão autorizada, upload/download, cancelamento/reabertura,
-reinício do worker, troca após a última conexão, volume preservado e outra
-sessão não interrompida. Nesta gravação inicial, sua execução no CI e a
-homologação local com containers ainda estavam pendentes. `sudo -n true`
+No CI, passaram **137 verificações integradas**, sendo **83** do roteiro
+instalado, e os cinco jobs concluíram com sucesso. Execução
+[39775184217](https://github.com/rfsaldanha/shinyd/actions/runs/39775184217),
+commit `fd8c9112aac380ce729a2ee781dd43dac7b924a0`, job builder `119812203593`.
+A evidência completa está em [drain-runtime-ci.json](evidencias/drain-runtime-ci.json).
+Não houve erro de limpeza nem repetição por executor ocupado.
+
+O navegador confirmou sessão Shiny reativa durante a drenagem, recusa de
+nova conexão autorizada, upload/download, cancelamento/reabertura, reinício
+do worker, troca após a última conexão, volume preservado, outra sessão não
+interrompida e telemetria em tela de 360 px. Também passaram os cenários
+anteriores de acesso público/restrito, segredos, persistência e rollback.
+O teste de API interna agora verifica `/v2/request` na entrada pública.
+
+Ambiente do CI: runner Ubuntu 24.04, kernel `7.0.0-1017-azure`, quatro CPUs
+lógicas, 16.760.344.576 bytes de RAM, Podman 4.9.3, crun 1.14.1 e ext4.
+O SHA-256 do `control5` instalado no CI foi
+`211187f083279d5c861e827bef4e5cf1ebe8ce9cfde3d93c72285172e6d3c0e3`.
+O pacote construído localmente tem seu próprio SHA-256:
+`76bc9947cb7ec8abf885ed587449d7f8cb1a34f97424aee6a6ebbe279f1648b6`.
+Os três pacotes locais passaram na conferência de checksum.
+
+A homologação local com containers permanece pendente. `sudo -n true`
 informou que é necessária senha no host; nenhuma instalação privilegiada foi
 tentada nesta rodada. O comando local está em [DRENAGEM_SESSOES.md](DRENAGEM_SESSOES.md).
 
