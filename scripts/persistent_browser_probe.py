@@ -208,15 +208,9 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     from drain_browser_probe import probe as drain_probe
 
     third = drain_probe(page, app_url, other_url, data, value, run, check, open_app)
-    admin(
-        "from control.models import Application, AppInstance\n"
-        "from control.runtime_client import retire\n"
-        f"a=Application.objects.get(pk='{other_id}')\n"
-        "p=a.active_publication\nretire(p)\n"
-        "AppInstance.objects.filter(publication=p).update(enabled=False)\n"
-        "p.status='retired';p.save(update_fields=['status'])\n"
-        "a.active_publication=None;a.save(update_fields=['active_publication'])\n"
-    )
+    from lifecycle_browser_probe import probe as lifecycle_probe
+
+    third = lifecycle_probe(page, app_url, other_url, data, value, run, check, open_app)
     check(
         "data_container_removal_preserves_files",
         (other_data / "fixture.txt").read_text().strip() == "other-app-value",

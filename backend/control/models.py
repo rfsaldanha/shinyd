@@ -67,6 +67,9 @@ class Application(models.Model):
     active_publication = models.ForeignKey(
         "Publication", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
+    last_version = models.ForeignKey(
+        "Version", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -176,6 +179,7 @@ class Job(models.Model):
     publication = models.ForeignKey(Publication, null=True, on_delete=models.PROTECT)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     kind = models.CharField(max_length=30)
+    operation = models.CharField(max_length=12, blank=True)
     build_environment = models.CharField(max_length=40, blank=True)
     idempotency_key = models.UUIDField(default=uuid.uuid4, unique=True)
     status = models.CharField(max_length=12, choices=Status, default=Status.QUEUED)
@@ -191,6 +195,40 @@ class Job(models.Model):
     class Meta:
         ordering = ["created_at"]
         indexes = [models.Index(fields=["status", "created_at"])]
+
+
+class OperationBatch(models.Model):
+    class Action(models.TextChoices):
+        START = "start", "Iniciar"
+        STOP = "stop", "Parar"
+        RESTART = "restart", "Reiniciar"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    action = models.CharField(max_length=12, choices=Action)
+    switch_mode = models.CharField(max_length=12, choices=Publication.SwitchMode)
+    idempotency_key = models.UUIDField(unique=True)
+    request_state = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class OperationItem(models.Model):
+    batch = models.ForeignKey(OperationBatch, on_delete=models.CASCADE, related_name="items")
+    app = models.ForeignKey(Application, on_delete=models.PROTECT)
+    job = models.OneToOneField(
+        Job, null=True, on_delete=models.PROTECT, related_name="operation_item"
+    )
+    expected_state = models.JSONField()
+    # Rejections and already-satisfied requests have no background job.
+    status = models.CharField(max_length=12, default="queued")
+    message = models.TextField(blank=True)
+    drain_started_at = models.DateTimeField(null=True)
+    committed = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["batch", "app"], name="unique_operation_app")
+        ]
 
 
 class AuditEvent(models.Model):

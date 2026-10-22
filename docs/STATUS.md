@@ -1261,3 +1261,58 @@ conexões descritos no marco 27. O próximo item é **F3-05: iniciar, parar e
 reiniciar apps individualmente ou em conjunto**. O ponto combinado para
 testar os apps do usuário ainda exige F3-05 a F3-07 e a instalação permanente
 de testes; não foi atingido nesta homologação.
+
+## Marco 29 — operações individuais e em lote (F3-05)
+
+Implementados iniciar, parar e reiniciar pela interface, para um app, uma
+seleção ou todos sob a gestão do usuário. A confirmação apresenta o conjunto
+e o impacto, com modo imediato ou espera de conexões. Os resultados são
+individuais; recusas de permissão, configuração alterada, fila cheia ou outra
+operação pendente não impedem enviar os demais apps. Repetir a confirmação
+retorna o mesmo lote. Há até 100 apps por lote e 100 tarefas globais pendentes.
+
+Iniciar usa a última versão publicada com sucesso e a configuração atual;
+reiniciar reutiliza o código ativo, inclusive sem mudanças, em nova instância.
+Parar mantém o volume, a configuração e a versão. A parada registra a retirada
+da rota antes de chamar o executor e retoma a remoção com o mesmo ID após perda
+de resposta ou reinício do worker. Depois desse ponto, cancelamento e revogação
+não abandonam a limpeza. Uma nova partida aguarda a remoção confirmada.
+
+O pacote é `control6`, com migração `0011`, compatível com `runtime4` e `builder2`.
+A migração retém a versão da publicação ativa; não escolhe automaticamente
+uma tentativa antiga para apps sem publicação ativa. O funcionamento, limites
+e roteiro estão em [OPERACOES_APPS.md](OPERACOES_APPS.md).
+
+Verificações locais executadas em 22/10/2026:
+
+- **300 testes Python aprovados**, incluindo migração sobre dados existentes,
+  falhas parciais de lote, CSRF, permissões, repetição, capacidade da fila,
+  parada imediata/com espera, cancelamento, timeout, telemetria incerta,
+  perda de resposta e execução antiga do worker.
+- O teste de concorrência usa SQLite em arquivo com opções de produção e
+  duas conexões reais, nas duas ordens de admissão e retirada da rota, para
+  ativação e parada.
+- Ruff, formatação, consistência de migrações, `check --deploy` e `git diff --check`
+  aprovados. O teste de navegador passou em 360 px, incluindo seleção,
+  confirmação e resultado de operação com execução desabilitada.
+- Após o ajuste final da apresentação, os 24 testes de ciclo de vida/drenagem
+  e o roteiro de navegador passaram novamente.
+- Pacote local construído. SHA-256 de `shinyd-control_0.1.0~control6_amd64.deb`:
+  `2bd91c8a99f61e9b8651f80a4ed17aa2ffcc1334189d129bbfd32449f2dc5316`.
+
+Os bancos de desenvolvimento e da prévia receberam `0011` após backup SQLite
+em `var/backups/metadata-before-lifecycle-20261022T134004Z.sqlite3` e
+`var/backups/preview-before-lifecycle-20261022T134004Z.sqlite3`, ambos 0600.
+A prévia na porta 8010 foi reiniciada preservando conta, dados e chaves;
+`/healthz` respondeu HTTP 200.
+
+O roteiro instalado foi ampliado para reiniciar um app mantendo outro reativo,
+parar com espera e reiniciar o worker, iniciar uma seleção com app já ativo,
+reiniciar ambos, parar todos e voltar a iniciar um. A homologação com containers
+no CI e a homologação local deste pacote ainda aguardam execução neste registro.
+O comando local está em [OPERACOES_APPS.md](OPERACOES_APPS.md); `sudo -n true`
+ainda exige senha neste host.
+
+O próximo item é **F3-06: recuperação de falhas com limite de tentativas**.
+O marco combinado de teste manual completo ainda depende também de F3-07
+e de uma instalação permanente de testes; não foi atingido nesta etapa.

@@ -74,9 +74,9 @@ def history(request, pk):
     ).get_page(request.GET.get("publications"))
     jobs = {
         job.publication_id: job
-        for job in Job.objects.filter(publication_id__in=[p.pk for p in publications]).only(
-            "id", "publication_id"
-        )
+        for job in Job.objects.filter(
+            publication_id__in=[p.pk for p in publications], kind="activate_version"
+        ).only("id", "publication_id")
     }
     for version in versions:
         version.state_label = VERSION_STATES.get(version.status, "Em processamento")

@@ -1,5 +1,5 @@
 Package: shinyd-control
-Version: 0.1.0~control5
+Version: 0.1.0~control6
 Section: web
 Priority: optional
 Architecture: amd64

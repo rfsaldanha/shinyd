@@ -128,7 +128,7 @@ def installed_probe(package, fixture, created, data_apps):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control5",
+            == "shinyd-control 0.1.0~control6",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))

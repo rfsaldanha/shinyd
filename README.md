@@ -85,3 +85,10 @@ ou sessões internas do R. Requer `control5`, migração `0010` e atualização
 conjunta do gateway/autorizador. Os marcos 27–28 de [STATUS.md](docs/STATUS.md)
 registram 284 testes Python, 137 verificações integradas no CI e 139 na
 homologação local com containers aprovadas.
+
+F3-05 acrescenta [iniciar, parar e reiniciar apps](docs/OPERACOES_APPS.md),
+individualmente, por seleção ou todos sob sua gestão, com revisão de impacto
+e resultados por app. Requer `control6` e migração `0011`. A próxima etapa é
+F3-06, recuperação de falhas com limite de tentativas. O teste manual completo
+combinado para o fim da Fase 3 ainda depende também de F3-07 e da instalação
+permanente de testes. Validações efetivas estão em [STATUS.md](docs/STATUS.md).

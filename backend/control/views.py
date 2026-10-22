@@ -343,14 +343,41 @@ def job_detail(request, pk):
         if job.publication_id and job.publication.drain_started_at
         else None
     )
-    return render(request, "control/job.html", {"job": job, "connections": activity})
+    item = getattr(job, "operation_item", None)
+    if job.kind == "stop_app" and item and item.drain_started_at:
+        activity = counts(job.publication_id)
+    can_cancel = (
+        job.status in {"queued", "running"}
+        and not (item and item.committed)
+        and not (job.kind == "activate_version" and job.publication.status == "active")
+    )
+    return render(
+        request,
+        "control/job.html",
+        {
+            "job": job,
+            "connections": activity,
+            "operation_item": item,
+            "can_cancel": can_cancel,
+            "drain_started_at": item.drain_started_at
+            if job.kind == "stop_app" and item
+            else job.publication.drain_started_at
+            if job.publication_id
+            else None,
+        },
+    )
 
 
 @login_required
 @require_POST
 def job_cancel(request, pk):
-    job = accessible_job(request, pk)
     with transaction.atomic():
+        job = accessible_job(request, pk)
+        if job.kind == "stop_app" and job.operation_item.committed:
+            messages.info(
+                request, "A parada já encerrou o acesso. A remoção continuará até ser confirmada."
+            )
+            return redirect("job_detail", pk=pk)
         if job.kind == "activate_version" and job.publication_id:
             from .models import Publication
 

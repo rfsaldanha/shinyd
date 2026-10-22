@@ -83,7 +83,10 @@ def finish(job, *, manifest=None, error=None):
 def process_one():
     from .activation_jobs import process_one as process_activation
     from .build_jobs import process_one as process_build
+    from .lifecycle import process_one as process_stop
 
+    if process_stop():
+        return True
     if process_activation():
         return True
     if process_build():

@@ -65,7 +65,7 @@ def enable_data(actor, app_id, expected_revision):
     if app.revision != expected_revision:
         raise Conflict("O aplicativo mudou. Recarregue a página antes de salvar.")
     if Job.objects.filter(
-        app=app, kind="activate_version", status__in=["queued", "running"]
+        app=app, kind__in=["activate_version", "stop_app"], status__in=["queued", "running"]
     ).exists():
         raise Conflict("Aguarde a ativação ou limpeza em andamento.")
     if not app.data_enabled:

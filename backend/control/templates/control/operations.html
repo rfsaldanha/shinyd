@@ -1,0 +1,22 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">CICLO DE VIDA</p><h1>Operar aplicativos</h1><p class="muted">Inicie, pare ou reinicie um app, uma seleção ou todos os apps sob sua gestão.</p></div></div>
+{% if service_error %}<p class="notice" role="alert">{{ service_error }}</p>{% endif %}
+{% if confirmation %}
+<section class="panel"><h2>Confirmar: {{ action_label }}</h2>
+{% if action == "start" %}<p>Iniciar reutiliza a última versão publicada com sucesso, com a configuração atual, incluindo alterações pendentes de variáveis e segredos. Os dados persistentes são mantidos. Apps já iniciados permanecem como estão.</p>
+{% else %}<p>{{ mode_label }}.</p>
+{% if action == "stop" %}<p>Parar encerra o atendimento. O código e a configuração ficam disponíveis para uma nova partida. Apps já parados permanecem como estão.</p>
+{% else %}<p>Reiniciar usa o código ativo e a configuração atual, incluindo alterações pendentes de variáveis e segredos. Apps parados exigem Iniciar.</p><p>Com dados persistentes, o reinício interrompe a instância anterior após o teste inicial. Falha na partida final deixa o app indisponível.</p>{% endif %}
+<p>Conexões encerradas não são transferidas. Dados temporários são descartados; dados persistentes são mantidos, mas escritas do app não são desfeitas.</p>
+{% if mode == "drain" %}<p>A espera bloqueia novas conexões interativas e dura até cinco minutos. Ao exceder o prazo ou perder a confirmação das conexões, a operação é cancelada e o app continua disponível.</p>{% else %}<p>As conexões existentes serão encerradas quando a operação retirar a publicação atual.</p>{% endif %}
+{% endif %}
+<p>As contagens abaixo são conexões, não pessoas nem sessões internas do R; podem mudar até a execução.</p>
+<ul>{% for row in rows %}<li><strong>{{ row.app.name }}</strong> · {% if row.state.active %}Em execução · {{ row.connections.websockets }} WebSocket · {{ row.connections.opening }} em abertura · {{ row.connections.http }} HTTP{% if row.connections.uncertain %} · contagem sem confirmação recente{% endif %}{% else %}Parado{% endif %} · configuração {{ row.state.config_revision }}{% if row.app.data_enabled %} · dados persistentes{% endif %}</li>{% endfor %}</ul>
+<p>Esta lista está congelada. Apps criados depois não serão incluídos. Falhas são apresentadas por app; mudanças de configuração ou permissão exigem nova confirmação.</p>
+<form method="post">{% csrf_token %}{{ confirmation.as_p }}<div class="form-actions"><button class="btn btn-primary">Confirmar operação</button><a class="btn btn-light" href="{% url 'operations' %}">Alterar seleção</a></div></form>
+</section>
+{% else %}
+<section class="panel form-panel"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">Revisar impacto</button></form></section>
+{% endif %}
+{% endblock %}

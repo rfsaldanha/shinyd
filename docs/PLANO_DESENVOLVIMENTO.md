@@ -227,7 +227,7 @@ reproduzível; nenhum item conclui apenas por uma afirmação.
 | F3-02 | P0 | Volumes preservados e isolados | F2-04 |
 | F3-03 | P0 | Histórico/ativação/rollback preservam dados/configuração | F3-01,F3-02 |
 | F3-04 | P0 | Telemetria/drenagem preserva sessão antiga | F0-04,F2-05 |
-| F3-05 | P0 | Operações/lotes com impacto e falhas individuais | F3-04 |
+| F3-05 | P0 | [Operações/lotes](OPERACOES_APPS.md): confirmação do conjunto/impacto, resultados individuais, parada retomável e dados preservados | F3-04 |
 | F3-06 | P0 | Circuito interrompe crash loop | F2-07 |
 | F3-07 | P0 | Backup básico restaura app/dados/segredo em vazio | F3-01–03 |
 | F4-01 | P0 | Distribuição e afinidade de múltiplas instâncias | F3-04 |

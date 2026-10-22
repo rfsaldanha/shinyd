@@ -27,8 +27,17 @@ def eligible(app):
 
 @transaction.atomic
 def enqueue(
-    actor, version_id, key, *, restored_from=None, expected_state=None, switch_mode="immediate"
+    actor,
+    version_id,
+    key,
+    *,
+    restored_from=None,
+    expected_state=None,
+    switch_mode="immediate",
+    operation="",
 ):
+    if operation not in {"", "start", "restart"}:
+        raise ValidationError("Operação inválida.")
     if switch_mode not in Publication.SwitchMode.values:
         raise ValidationError("Modo de troca inválido.")
     version = Version.objects.select_related("app__priority").get(pk=version_id)
@@ -37,6 +46,7 @@ def enqueue(
     if existing:
         if (
             existing.kind != "activate_version"
+            or existing.operation != operation
             or existing.actor_id != actor.pk
             or existing.version_id != version.pk
             or not existing.publication_id
@@ -67,13 +77,14 @@ def enqueue(
     ):
         raise ValidationError("Esta versão não possui artefato preparado válido.")
     if Job.objects.filter(
-        app=app, kind="activate_version", status__in=["queued", "running"]
+        app=app, kind__in=["activate_version", "stop_app"], status__in=["queued", "running"]
     ).exists():
         raise Conflict("Este app já tem uma ativação ou limpeza em andamento.")
     if Job.objects.filter(status__in=["queued", "running"]).count() >= 100:
         raise ValidationError("Fila cheia. Aguarde a conclusão dos trabalhos anteriores.")
     if (
-        app.active_publication_id
+        operation != "restart"
+        and app.active_publication_id
         and app.active_publication.version_id == version.pk
         and app.active_publication.config_revision == app.config_revision
         and bool(app.active_publication.runtime_spec.get("data_mode")) == app.data_enabled
@@ -123,6 +134,7 @@ def enqueue(
         publication=publication,
         actor=actor,
         kind="activate_version",
+        operation=operation,
         idempotency_key=key,
         message="Na fila de ativação. A candidata será verificada antes da troca.",
     )
@@ -155,9 +167,9 @@ def rollback_state(app, source):
 
 
 @transaction.atomic
-def claim():
+def claim(kind="activate_version"):
     job = (
-        Job.objects.filter(kind="activate_version", status__in=["queued", "running"])
+        Job.objects.filter(kind=kind, status__in=["queued", "running"])
         .filter(Q(lease_until__isnull=True) | Q(lease_until__lte=timezone.now()))
         .first()
     )
@@ -301,7 +313,7 @@ def decide(job, result=None, failure=None):
         )
         AppInstance.objects.filter(publication=pub).update(enabled=True, target=result["target"])
         Application.objects.filter(pk=value.app_id).update(
-            active_publication=pub, desired_state="running"
+            active_publication=pub, last_version=pub.version, desired_state="running"
         )
         if pub.previous_id and pub.previous.status != "retired":
             Publication.objects.filter(pk=pub.previous_id).update(status="retiring")

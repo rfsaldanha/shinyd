@@ -10,6 +10,7 @@
   <div class="stat"><span>Operações pendentes</span><strong>{{ active_jobs }}</strong><small>Na fila ou em andamento</small></div>
 </div>
 <div class="readiness"><span class="status-dot"></span><div><strong>Envie, prepare e ative</strong><p>Após validar o ZIP, prepare uma versão em um ambiente R aprovado. A ativação exige que o administrador configure os serviços de publicação.</p></div></div>
+{% if managed_count %}<p><a class="btn btn-light" href="{% url 'operations' %}">Operar aplicativos</a></p>{% endif %}
 <section aria-label="Catálogo de aplicativos" class="app-grid">
 {% for app in apps %}
   <a class="app-card" href="{% url 'app_detail' app.pk %}">

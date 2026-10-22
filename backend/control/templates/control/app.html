@@ -5,10 +5,11 @@
 <div class="stats">
   <div class="stat"><span>Acesso</span><strong class="stat-text">{{ app.get_visibility_display }}</strong><small>Responsável: {{ app.owner.username }}</small></div>
   <div class="stat"><span>Prioridade desejada</span><strong class="stat-text">{{ app.priority.name }}</strong><small>Peso {{ app.priority.weight }} · aplicado na próxima ativação</small></div>
-  <div class="stat"><span>Publicação</span><strong class="stat-text">{% if active_instance %}Ativada{% else %}Não publicada{% endif %}</strong><small>{% if active_instance %}Versão {{ app.active_publication.version_id }}{% else %}Prepare e ative uma versão{% endif %}</small></div>
+  <div class="stat"><span>Publicação</span><strong class="stat-text">{% if active_instance %}Ativada{% elif app.last_version_id %}Parada{% else %}Não publicada{% endif %}</strong><small>{% if active_instance %}Versão {{ app.active_publication.version_id }}{% elif app.last_version_id %}Use Iniciar para retomar o atendimento{% else %}Prepare e ative uma versão{% endif %}</small></div>
 </div>
 {% if active_instance %}<p><a class="btn btn-primary" href="{% url 'gateway_connect' active_instance.pk %}">Abrir aplicativo</a></p>{% endif %}
 {% if manage %}
+<p><a class="btn btn-light" href="{% url 'operations' %}?app={{ app.pk }}">Iniciar, parar ou reiniciar</a></p>
 <section class="panel" id="connections" hx-get="{% url 'app_detail' app.pk %}" hx-trigger="every 5s" hx-target="this" hx-select="#connections" hx-swap="outerHTML" aria-live="polite">
 <h2>Conexões da publicação</h2>
 {% if active_instance %}

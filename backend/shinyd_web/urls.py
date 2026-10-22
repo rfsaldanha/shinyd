@@ -8,6 +8,7 @@ from control import (
     data_views,
     gateway_views,
     history_views,
+    lifecycle_views,
     views,
 )
 
@@ -29,6 +30,8 @@ urlpatterns = [
     path("users/<int:pk>/", views.user_edit, name="user_edit"),
     path("users/<int:pk>/recovery/", views.recovery_issue, name="recovery_issue"),
     path("apps/new/", views.app_create, name="app_create"),
+    path("operations/", lifecycle_views.operations, name="operations"),
+    path("operations/<uuid:pk>/", lifecycle_views.detail, name="operation_detail"),
     path("apps/<uuid:pk>/", views.app_detail, name="app_detail"),
     path("apps/<uuid:pk>/history/", history_views.history, name="app_history"),
     path("publications/<uuid:pk>/rollback/", history_views.rollback, name="publication_rollback"),

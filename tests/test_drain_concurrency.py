@@ -5,9 +5,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 
-def test_admission_and_cutover_are_serialized_in_both_orders(tmp_path):
+
+@pytest.mark.parametrize("operation", ["activation", "stop"])
+def test_admission_and_cutover_are_serialized_in_both_orders(tmp_path, operation):
     source = r"""
+import os
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
@@ -16,7 +20,7 @@ django.setup()
 from django.conf import settings
 from django.core.management import call_command
 from django.db import connections as databases, transaction
-from control import activation_jobs as activation, connections
+from control import activation_jobs as activation, connections, lifecycle
 from control.models import AppInstance, Application, Publication, PriorityGroup, User
 from tests.test_activation import prepared, ready
 
@@ -37,13 +41,21 @@ for admission_first in [True, False]:
     app.save()
     instance = AppInstance.objects.create(id=old.pk, app=app, publication=old,
         host="p"+old.pk.hex+".apps.localhost", target="http://127.0.0.1:3838", enabled=True)
-    queued = activation.enqueue(actor, prepared(app, actor).pk, uuid.uuid4(), switch_mode="drain")
-    job = activation.claim()
+    stopping = os.environ["SHINYD_TEST_OPERATION"] == "stop"
+    if stopping:
+        batch = lifecycle.enqueue(actor, "stop", "drain", uuid.uuid4(), [lifecycle.state(app)])
+        queued = batch.items.get().job
+    else:
+        queued = activation.enqueue(actor, prepared(app, actor).pk, uuid.uuid4(),
+            switch_mode="drain")
+    job = activation.claim("stop_app" if stopping else "activate_version")
     assert job.pk == queued.pk
     activity = dict(operation="open", request_id=str(uuid.uuid4()), host=instance.host,
         credential="", kind="websocket")
     admitted = lambda: connections.track(**activity)
-    cutover = lambda: activation.decide(job, ready(queued.publication))
+    def cutover():
+        return (lifecycle.checkpoint(job) if stopping
+            else activation.decide(job, ready(queued.publication)))
     entered = threading.Event()
     def contender():
         try:
@@ -71,7 +83,7 @@ for admission_first in [True, False]:
         assert connections.counts(old.pk)["opening"] == 1
     else:
         assert result == {"allowed": False, "reason": "not_found"}
-        assert app.active_publication_id == queued.publication_id
+        assert app.active_publication_id == (None if stopping else queued.publication_id)
         assert connections.counts(old.pk)["total"] == 0
 print("admission-and-cutover-serialized")
 """
@@ -84,6 +96,7 @@ print("admission-and-cutover-serialized")
             "PYTHONPATH": "backend:.",
             "SHINYD_DEV": "1",
             "SHINYD_STATE_DIR": str(tmp_path),
+            "SHINYD_TEST_OPERATION": operation,
         },
         capture_output=True,
         text=True,

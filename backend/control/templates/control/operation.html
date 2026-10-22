@@ -1,0 +1,10 @@
+{% extends "control/base.html" %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">CICLO DE VIDA</p><h1>{{ batch.get_action_display }} aplicativos</h1><p class="muted">{{ batch.get_switch_mode_display }}. Cada app tem seu próprio resultado.</p></div><a class="btn btn-light" href="{% url 'dashboard' %}">Voltar ao catálogo</a></div>
+<section class="panel" id="operation-status" {% if pending %}hx-get="{% url 'operation_detail' batch.pk %}" hx-trigger="every 3s" hx-target="this" hx-select="#operation-status" hx-swap="outerHTML"{% endif %} aria-live="polite">
+{% if pending %}<p>Há operações pendentes. Esta página será atualizada automaticamente.</p>{% else %}<p>Processamento encerrado. Confira o resultado de cada aplicativo.</p>{% endif %}
+{% if hidden %}<p class="notice">Alguns resultados estão ocultos porque sua permissão de publicação foi removida.</p>{% endif %}
+{% for item in items %}<article class="operation-result"><h2><a href="{% url 'app_detail' item.app_id %}">{{ item.app.name }}</a></h2><p><strong>{{ item.result_status }}</strong> · {{ item.result_message }}</p>{% if item.job_id %}<a class="btn btn-light" href="{% url 'job_detail' item.job_id %}">Acompanhar tarefa</a>{% endif %}</article>{% endfor %}
+<p class="form-help">As tarefas já concluídas não são revertidas se outro app falhar. Para cancelar uma espera, abra a tarefa correspondente. Uma parada que já encerrou o acesso continuará até confirmar a remoção da instância.</p>
+</section>
+{% endblock %}
