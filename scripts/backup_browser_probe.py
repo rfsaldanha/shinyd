@@ -2,16 +2,38 @@
 
 import hashlib
 import json
+import secrets
 import shutil
 import tempfile
 import time
+import uuid
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from installed_browser_probe import UNITS
+from probe_progress import progress
+
+
+def prepare_environment(admin, app_id):
+    """Create this test's own secret; an earlier scenario intentionally removed APP_TOKEN."""
+    app_id = str(uuid.UUID(app_id))
+    token = secrets.token_urlsafe(32)
+    values = admin(
+        "import json,hashlib\nfrom control.models import Application\n"
+        "from control.services import decrypt_environment,set_environment\n"
+        f"a=Application.objects.get(pk='{app_id}')\n"
+        "assert a.desired_state=='stopped' and a.active_publication_id is None\n"
+        f"set_environment(a.owner,a.pk,a.config_revision,'APP_TOKEN',{token!r},True)\n"
+        "a.refresh_from_db()\n"
+        "print('BACKUP='+json.dumps({'image':a.last_version.image_digest,"
+        "'fingerprint':'|'.join(hashlib.sha256(decrypt_environment(a.environment.get(name=n))"
+        ".encode()).hexdigest() for n in ['APP_TOKEN','APP_MESSAGE'])}))\n"
+    )
+    return json.loads(next(line[7:] for line in values.splitlines() if line.startswith("BACKUP=")))
 
 
 def probe(page, app_url, password, run, admin, check, before_backup, report):
+    progress("backup_start")
     panel = urlsplit(app_url)._replace(path="", query="", fragment="").geturl()
     app_id = app_url.rstrip("/").split("/")[-1]
     control = Path("/var/lib/shinyd-control")
@@ -71,17 +93,8 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
         data = Path("/var/lib/shinyd-data") / app_id / "files/fixture.txt"
         expected_data = data.read_bytes()
         expected_keys = {p.name: p.read_bytes() for p in (control / "keys").iterdir()}
-        values = admin(
-            "import json,hashlib\nfrom control.models import Application\n"
-            "from control.services import decrypt_environment\n"
-            f"a=Application.objects.get(pk='{app_id}')\n"
-            "print('BACKUP='+json.dumps({'image':a.last_version.image_digest,"
-            "'fingerprint':'|'.join(hashlib.sha256(decrypt_environment(a.environment.get(name=n))"
-            ".encode()).hexdigest() for n in ['APP_TOKEN','APP_MESSAGE'])}))\n"
-        )
-        expected = json.loads(
-            next(line[7:] for line in values.splitlines() if line.startswith("BACKUP="))
-        )
+        expected = prepare_environment(admin, app_id)
+        check("backup_current_secret_prepared_after_removal_test")
         run("systemctl", "stop", *units)
         # The earlier isolation probe deliberately created this unsafe symlink.
         link = data.parent / "escape"
@@ -99,6 +112,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             "backup_link_target_unchanged",
             (control / "keys/secrets.key").read_bytes() == expected_keys["secrets.key"],
         )
+        progress("backup_create")
         created = json.loads(run(*create, timeout=1800).stdout)
         check(
             "backup_encrypted_archive_created",
@@ -137,6 +151,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             ).returncode
             != 0,
         )
+        progress("backup_verify")
         verified = json.loads(
             run("shinyd-backup", "verify", str(output), "--identity", str(key), timeout=1800).stdout
         )
@@ -173,6 +188,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             "backup_published_image_absent_before_restore",
             run("podman", "image", "exists", expected["image"], check=False).returncode != 0,
         )
+        progress("backup_restore")
         restored = json.loads(
             run(
                 "shinyd-backup", "restore", str(output), "--identity", str(key), timeout=1800
@@ -207,6 +223,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             )
         finally:
             marker.unlink()
+        progress("backup_browser")
         run("systemctl", "start", "shinyd.target")
         for _ in range(40):
             try:
@@ -277,7 +294,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             }
         complete = True
     finally:
-        if complete:
+        if complete or not ((area / "backup.age").exists() or (area / "originals").exists()):
             shutil.rmtree(area)
         else:
             # Failure is inspectable; never destroy the original fixture after a failed restore.

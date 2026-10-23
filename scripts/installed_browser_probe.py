@@ -21,6 +21,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
+from probe_progress import progress
 
 STATE = Path("/var/lib/shinyd-control")
 CONFIG = Path("/etc/shinyd/control.json")
@@ -84,6 +85,7 @@ def require_empty_control(state, configuration_paths):
 def installed_probe(package, fixture, created, data_apps, before_backup=None):
     from playwright.sync_api import sync_playwright
 
+    progress("installed_start")
     report = {
         "passed": False,
         "checks": [],
@@ -498,6 +500,7 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
                 )
                 check("removed_secret_unset_after_apply")
                 stage = "persistent_data"
+                progress("persistent_data")
                 from persistent_browser_probe import probe as data_probe
 
                 app_origin, report["persistent_data"] = data_probe(

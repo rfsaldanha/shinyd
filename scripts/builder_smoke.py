@@ -18,6 +18,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from probe_progress import progress
 from runtime_smoke import API_RETRIES, api, command, require_crun
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +68,7 @@ def prepare_panel_python(directory, report):
 
 def prepare_environment(directory, reference):
     """Operator fixture preparation, never a recipe submitted by a publisher."""
+    progress("environments")
     pinned = json.loads((ROOT / "experiments/renv-package.json").read_text())
     package = directory / "renv.tar.gz"
     with urllib.request.urlopen(pinned["url"], timeout=45) as response:
@@ -190,6 +192,7 @@ def main():
     if os.geteuid() != 0 or not os.environ.get("SUDO_UID"):
         parser.error("Execute com sudo a partir de uma conta comum.")
     os.umask(0o077)
+    progress("builder_start")
     report = {
         "schema_version": 1,
         "observed_at": datetime.now(UTC).isoformat(),
@@ -660,6 +663,7 @@ def main():
                         diagnostic["diagnostic_start_error"] = retry.stderr[-3000:]
                     report["fixture_diagnostics"].append(diagnostic)
         finally:
+            progress("cleanup")
             cleanup_errors = []
             if panel_state and (panel_state / "activation-instances.json").exists():
                 for identity in json.loads((panel_state / "activation-instances.json").read_text()):

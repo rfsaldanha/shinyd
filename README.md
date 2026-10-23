@@ -111,3 +111,7 @@ A execução inicial é pelo operador Linux, com apps parados. Passaram 361 test
 Python e a página foi verificada no Chrome em 1280 px e 360 px.
 **A homologação instalada de F3-07 ainda está pendente.** O teste manual
 completo combinado continua dependendo dela e da instalação permanente de testes.
+O primeiro ensaio encontrou um erro de preparação do roteiro: um teste anterior
+havia removido o segredo que ele tentava conferir. A correção cria um segredo
+próprio para a restauração e mostra progresso no terminal. Passaram 365 testes
+Python; resultados e pendências estão no marco 35 de [STATUS.md](docs/STATUS.md).

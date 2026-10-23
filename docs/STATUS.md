@@ -1696,3 +1696,57 @@ Não há evidência de aprovação desse novo fluxo no CI neste marco. F3-07 est
 implementada e aguarda essa verificação. O momento combinado para teste
 manual completo ainda exige sua homologação e a instalação permanente de
 testes. Não foi declarado pronto para uso real ou para produção.
+
+## Marco 35 — correção da preparação do ensaio de backup
+
+O [relatório local](evidencias/backup-preparacao-local-falha.json), iniciado em
+`2026-10-23T10:47:57.401863+00:00`, terminou com `passed: false` após cerca
+de 22 minutos. Há 55 verificações aprovadas na lista principal e 126
+registradas na seção instalada; a verificação agregada `installed_https_probe`
+falhou. A limpeza terminou sem erro. Houve uma repetição de `ensure` após
+HTTP 429, com o mesmo ID `462eecb1-b33b-45b4-b6a8-4deb1e668b8b`.
+
+A falha ocorreu no programa enviado a `shinyd-admin`, antes da criação
+do backup. O cenário anterior remove `APP_TOKEN` de propósito e comprova
+`environment-unset` no R. A preparação do backup tentava buscar essa variável
+com `.get()`, embora ela já não existisse. Isso foi reproduzido com ORM e
+criptografia reais no teste de regressão. O roteiro agora cria seu próprio
+segredo sintético, somente depois de confirmar que o app está parado,
+preservando `APP_MESSAGE`, a versão publicada e os snapshots históricos.
+A partida após restauração deverá comprovar essa configuração atual.
+
+O [CI do commit d5ddf4a](https://github.com/rfsaldanha/shinyd/actions/runs/39841743751)
+também falhou no mesmo ponto, com os mesmos arquivos/linhas na pilha.
+Seu [relatório extraído dos logs](evidencias/backup-preparacao-ci-falha.json)
+foi preservado com a identificação da origem. Python, Go, agente e o teste
+isolado runtime passaram nessa execução; o job builder falhou.
+O timeout do runtime na execução anterior não se repetiu nessa rodada.
+
+O roteiro passa a mostrar etapas com horário no stderr: ambientes R, painel,
+persistência/recuperação, criação, verificação e restauração do backup,
+conferência no navegador e limpeza. O stdout continua reservado ao JSON final,
+portanto `tee var/backup-report.json` permanece compatível. Novas falhas antes
+de produzir uma cópia ou guardar originais removem os diretórios temporários
+de preparação; cópias e originais continuam preservados em falhas posteriores.
+O diretório antigo `/var/lib/shinyd-backup-probe-m0twvtlb`, registrado no
+relatório recebido, não foi alterado nesta rodada.
+
+Passaram **365 testes Python**, incluindo quatro verificações novas da
+preparação com segredo removido/presente, recusa de app em execução e
+separação de progresso e JSON. Ruff e formatação passaram. A mudança está
+nos roteiros e testes; não altera o produto, as migrações ou os pacotes.
+O `control8` instalado e o artefato usado têm SHA-256
+`125a334ad0ca8938fabb188937c072773b7218d6fcca791006efe6a10d75bd6e`.
+`age 1.1.1-1ubuntu0.24.04.3` está instalado, assim como `runtime5` e `builder2`.
+
+A consulta pós-ensaio confirmou serviços, sockets e timer da pilha inativos,
+com resultados `success`; a prévia na porta 8010 respondeu HTTP 200.
+A partição que contém `/var/lib` tinha aproximadamente 8,1 GB livres, com
+97% de ocupação. Esse espaço limitado **não causou a falha observada**,
+mas pode impedir a exportação/cópia na tentativa seguinte. Não houve limpeza
+de dados do host nem alteração de armazenamento para contornar os limites.
+
+O novo roteiro ainda exige uma homologação completa. A execução recebida
+não produziu backup nem demonstrou restauração. O marco combinado para
+teste manual completo continua pendente da homologação de F3-07 e da
+instalação permanente de testes.
