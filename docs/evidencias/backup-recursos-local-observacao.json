@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T16:00:52.601321+00:00",
+  "read_only": true,
+  "disk": {
+    "/var/lib/shinyd-builder": {
+      "observed_path": "/var/lib/shinyd-builder",
+      "available_bytes": 6669508608,
+      "minimum_bytes": 6442450944,
+      "headroom_bytes": 227057664
+    },
+    "/var/lib/containers": {
+      "observed_path": "/var/lib/containers",
+      "available_bytes": 6669508608,
+      "minimum_bytes": 6442450944,
+      "headroom_bytes": 227057664
+    },
+    "/var/lib/shinyd-backup": {
+      "observed_path": "/var/lib/shinyd-backup",
+      "available_bytes": 6669508608
+    },
+    "/tmp": {
+      "observed_path": "/tmp",
+      "available_bytes": 6669508608
+    }
+  },
+  "limitations": [
+    "Observação atual; não identifica retrospectivamente o recurso que recusou um build.",
+    "Os 6 GiB são a reserva mínima do builder, não o espaço total exigido pelo ensaio.",
+    "Não mede o pico de consumo nem garante admissão futura ou capacidade."
+  ],
+  "memory": {
+    "total_bytes": 66735198208,
+    "available_bytes": 47746555904,
+    "reserve_bytes": 10010279731,
+    "starting_bytes": 1073741824,
+    "headroom_bytes": 36662534349
+  },
+  "memory_pressure": {
+    "full_avg10": 0.0,
+    "maximum": 1.0
+  },
+  "workloads": {
+    "current_bytes": 618151936,
+    "maximum_bytes": 4294967296,
+    "starting_headroom_bytes": 2603073536
+  }
+}

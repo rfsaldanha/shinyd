@@ -8,6 +8,8 @@ import zipfile
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from probe_jobs import wait_job
+
 
 def verify_single_writer(admin, check, report, app_id, contender):
     """A busy executor is not evidence of the volume's single-writer protection."""
@@ -70,9 +72,7 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
     def activate(button="Ativar versão", success=True):
         page.get_by_label("Entendo o impacto do modo de troca", exact=False).check()
         page.get_by_role("button", name=button, exact=True).click()
-        page.get_by_role("heading", name="Concluído" if success else "Falhou", exact=True).wait_for(
-            timeout=240000
-        )
+        wait_job(page, timeout=240000, expected="succeeded" if success else "failed")
 
     def open_app(url):
         page.goto(url)
@@ -92,11 +92,11 @@ def probe(page, app_url, fixture, temporary, run, admin, check, created, data_ap
         page.get_by_role("link", name="Enviar ZIP", exact=True).click()
         page.get_by_label("Aplicativo em ZIP:", exact=True).set_input_files(str(path))
         page.get_by_role("button", name="Salvar", exact=True).click()
-        page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=90000)
+        wait_job(page, timeout=90000)
         page.get_by_role("link", name="Preparar versão", exact=True).click()
         page.get_by_label("Ambiente R aprovado:", exact=True).select_option("r-a")
         page.get_by_role("button", name="Salvar", exact=True).click()
-        page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=180000)
+        wait_job(page, timeout=180000)
         page.get_by_role("link", name="Ativar versão", exact=True).click()
         activate(success=success)
 

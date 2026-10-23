@@ -22,7 +22,9 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 from probe_cleanup import backup_interrupted
+from probe_jobs import JobOutcomeError, wait_job
 from probe_progress import progress
+from probe_resources import snapshot as resource_snapshot
 
 STATE = Path("/var/lib/shinyd-control")
 CONFIG = Path("/etc/shinyd/control.json")
@@ -276,17 +278,17 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
                 page.get_by_role("link", name="Enviar ZIP", exact=True).click()
                 page.get_by_label("Aplicativo em ZIP:", exact=True).set_input_files(str(fixture))
                 page.get_by_role("button", name="Salvar", exact=True).click()
-                page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=90000)
+                wait_job(page, timeout=90000)
                 check("browser_upload_and_inspection")
                 page.get_by_role("link", name="Preparar versão", exact=True).click()
                 page.get_by_label("Ambiente R aprovado:", exact=True).select_option("r-a")
                 page.get_by_role("button", name="Salvar", exact=True).click()
-                page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=180000)
+                wait_job(page, timeout=180000)
                 check("browser_prepare_real_image")
                 page.get_by_role("link", name="Ativar versão", exact=True).click()
                 page.get_by_label("Entendo o impacto do modo de troca", exact=False).check()
                 page.get_by_role("button", name="Ativar versão", exact=True).click()
-                page.get_by_role("heading", name="Concluído", exact=True).wait_for(timeout=180000)
+                wait_job(page, timeout=180000)
                 check("browser_activate_real_instance")
                 page.get_by_role("link", name="Voltar ao app", exact=True).click()
                 page.get_by_role("link", name="Abrir aplicativo", exact=True).click()
@@ -423,9 +425,7 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
                     panel_page.get_by_role(
                         "button", name="Aplicar configuração e reiniciar", exact=True
                     ).click()
-                    panel_page.get_by_role("heading", name="Concluído", exact=True).wait_for(
-                        timeout=180000
-                    )
+                    wait_job(panel_page, timeout=180000)
                     panel_page.get_by_role("link", name="Voltar ao app", exact=True).click()
                     panel_page.get_by_role("link", name="Abrir aplicativo", exact=True).click()
                     panel_page.get_by_role("button", name="Abrir aplicativo", exact=True).click()
@@ -577,6 +577,9 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
                 browser.close()
         report["passed"] = True
     except Exception as exc:
+        report["resources_at_failure"] = resource_snapshot()
+        if isinstance(exc, JobOutcomeError):
+            report["job_failure"] = {"expected": exc.expected, "observed": exc.observed}
         report["error"] = {
             "stage": stage,
             "type": type(exc).__name__,

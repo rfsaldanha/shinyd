@@ -20,6 +20,8 @@ from pathlib import Path
 
 from probe_cleanup import backup_interrupted, prepare_runtime_cleanup
 from probe_progress import progress
+from probe_resources import require_builder_disk
+from probe_resources import snapshot as resource_snapshot
 from runtime_smoke import API_RETRIES, api, command, require_crun
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -251,6 +253,8 @@ def main():
             )
             require_crun()
             record("crun_dependency_ready", True)
+            report["resources_before_preparation"] = resource_snapshot()
+            require_builder_disk(report["resources_before_preparation"])
             if args.install_runtime_package:
                 package = args.install_runtime_package.resolve(strict=True)
                 checksum = hashlib.sha256(package.read_bytes()).hexdigest()
@@ -643,6 +647,7 @@ def main():
                     outer_apps()
         except Exception as exc:
             report["error"] = str(exc)
+            report["resources_at_failure"] = resource_snapshot()
             # Only repository-owned fixtures, never uploads or app environments.
             report["fixture_diagnostics"] = []
             for instance in created:

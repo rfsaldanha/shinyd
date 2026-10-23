@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T16:00:50.328029+00:00",
+  "scope": "Espera de tarefas com Chrome real e HTML local; não executa containers nem homologa publicação.",
+  "checks": [
+    {
+      "name": "terminal_succeeded",
+      "passed": true
+    },
+    {
+      "name": "terminal_failed",
+      "passed": true
+    },
+    {
+      "name": "terminal_cancelled",
+      "passed": true
+    },
+    {
+      "name": "failure_does_not_wait_for_success_timeout",
+      "passed": true,
+      "elapsed_seconds": 0.0017
+    },
+    {
+      "name": "unrelated_heading_is_not_job_success",
+      "passed": true
+    }
+  ],
+  "browser": "156.0.8078.47",
+  "passed": true
+}

@@ -137,3 +137,9 @@ O marco 40 confirma a recuperação dos 55 caminhos e corrige a criação do bac
 com SQLite em modo WAL no `control10`. Passaram 418 testes Python, incluindo
 restauração de dados presentes apenas no WAL. A nova homologação instalada
 continua necessária; o comando está em [STATUS.md](docs/STATUS.md).
+O ensaio local do marco 41 foi interrompido antes do backup por uma recusa de
+recursos do builder. A observação posterior encontrou apenas cerca de 217 MiB
+acima da reserva mínima de disco. O roteiro passou a reconhecer tarefas que
+falharam sem esperar o prazo de sucesso e a registrar memória e disco. Antes
+de repetir o ensaio local, é necessário revisar o espaço disponível, conforme
+[STATUS.md](docs/STATUS.md). A suíte passou com 430 testes Python.

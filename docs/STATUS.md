@@ -2095,3 +2095,85 @@ sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
 **F3-07 continua com homologação instalada pendente.** O teste manual completo
 combinado depende dessa aprovação e da configuração de uma instalação
 permanente de testes; ainda não foi liberado.
+
+## Marco 41 — Recusa de recursos e diagnóstico da espera no navegador
+
+O ensaio local com `control10` foi executado em **23/10/2026, 15:45–15:54 UTC**.
+O checksum instalado corresponde ao pacote do marco 40. Foram aprovadas
+**54 verificações principais**; o agregado `installed_https_probe` falhou.
+O trecho instalado registrou **48 checks**, incluindo o inventário de limpeza,
+e parou durante a preparação de uma nova versão no teste de dados persistentes.
+O job já estava em estado `failed`, com a mensagem fixa do builder:
+“Build adiado: memória, disco ou controladores indisponíveis.”
+O navegador, porém, continuou esperando o título “Concluído” até o timeout.
+
+**Esta execução não chegou ao backup.** Ela não reprova nem homologa a correção
+de WAL. Não houve erro de limpeza registrado. O relatório original foi preservado
+em [`backup-recursos-local-falha.json`](evidencias/backup-recursos-local-falha.json).
+A observação separada de **16:00 UTC**, em
+[`backup-recursos-local-observacao.json`](evidencias/backup-recursos-local-observacao.json),
+encontrou:
+
+| Recurso | Medida observada depois do ensaio |
+| --- | ---: |
+| Disco disponível no builder, Podman, backup e `/tmp` | 6.669.508.608 bytes (aproximadamente 6,21 GiB) |
+| Reserva mínima de disco do builder | 6.442.450.944 bytes (6 GiB) |
+| Folga acima dessa reserva | 227.057.664 bytes (aproximadamente 217 MiB) |
+| RAM disponível no host | 47.746.555.904 bytes |
+| Pressão de memória `full avg10` | 0,0 |
+| Memória usada pelo grupo de workloads | 618.151.936 bytes, de 4.294.967.296 bytes |
+
+O espaço de disco é uma restrição concreta para a próxima tentativa. Essas
+medidas posteriores não identificam retrospectivamente qual recurso provocou
+a recusa. Os 6 GiB são a reserva que deve continuar livre durante o build;
+não representam o espaço total exigido para imagens, cópias e restauração.
+O pico completo desse ensaio ainda não foi medido. Nenhum limite foi reduzido
+e nenhuma imagem, quarentena ou dado do operador foi removido.
+
+O roteiro de publicação/ativação agora espera qualquer estado terminal do job
+na seção correta da página. Ao encontrar falha ou cancelamento inesperados,
+encerra a espera com os estados esperado/observado; não copia mensagens
+arbitrárias do navegador. Os cenários de falha esperada continuam exigindo
+essa falha. O diagnóstico registra recursos antes da preparação e logo após
+uma falha, com indicação explícita de medidas indisponíveis. A verificação
+inicial recusa espaço abaixo da reserva do builder antes de instalar pacotes
+ou preparar imagens. Passar essa verificação não garante espaço para todo o
+ensaio nem substitui o controle de admissão do produto.
+
+`scripts/probe_resources.py` também pode ser executado sem sudo para obter
+somente essa observação, sem iniciar serviços ou ler conteúdos de apps:
+
+```sh
+python3 scripts/probe_resources.py
+```
+
+Passaram **430 testes Python**, Ruff e formatação. Um experimento com Chrome
+real verificou conclusão, falha, cancelamento, atualização da seção do job e
+recusa de um título “Concluído” fora dessa seção. Uma falha já presente foi
+reconhecida em **0,0017 s**, sem esperar os 180 s configurados para sucesso.
+Essa medida é do HTML local do experimento, não da latência de publicação.
+Evidência: [`espera-tarefas-browser-local.json`](evidencias/espera-tarefas-browser-local.json).
+
+Não há mudança dos módulos do produto ou novo pacote: `control10` mantém o
+checksum do marco 40. No
+[workflow de `04d825c`](https://github.com/rfsaldanha/shinyd/actions/runs/39980895241),
+Go, Python, executor e pacote do agente passaram; o builder ainda estava em
+execução na consulta deste marco. Seu resultado não foi tratado como aprovação.
+
+Antes de repetir a homologação local, identifique onde o espaço da partição
+do sistema está sendo consumido. O comando abaixo somente mede tamanhos;
+requer a senha sudo para incluir os diretórios privados. Os resultados ficam
+em `var/`, fora do controle de versão:
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo du -xhd1 /var/lib /var/cache /var/log /home/raphaelsaldanha \
+  2>var/disco-erros.txt | sort -h | tee var/disco-uso.txt
+sudo podman system df | tee var/podman-disco.txt
+```
+
+O inventário permite decidir uma liberação de espaço ou mudança de armazenamento
+com base nos dados encontrados. Não execute uma limpeza geral de imagens:
+a quarentena do marco 40 ainda depende das imagens preservadas. **F3-07 e o
+teste manual completo continuam pendentes.**
