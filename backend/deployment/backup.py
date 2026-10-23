@@ -8,6 +8,7 @@ import json
 import os
 import platform
 import pwd
+import shutil
 import sqlite3
 import stat
 import subprocess
@@ -20,6 +21,7 @@ from cryptography import x509
 from cryptography.exceptions import InvalidTag, UnsupportedAlgorithm
 
 from deployment import backup_archive as archive
+from deployment import backup_images
 from deployment.backup_archive import BackupError
 from deployment.backup_state import inspect_snapshot, reset_access
 from deployment.config import caddyfile
@@ -62,12 +64,12 @@ class Layout:
         }
 
 
-def command(*args, timeout=120):
+def command(*args, timeout=120, temporary=None):
     result = subprocess.run(
         args,
         capture_output=True,
         timeout=timeout,
-        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8", "HOME": "/root"},
+        env={**backup_images.ENV, **({"TMPDIR": str(temporary)} if temporary else {})},
     )
     if result.returncode:
         raise BackupError("Comando de manutenção falhou; consulte os pré-requisitos do guia.")
@@ -111,7 +113,7 @@ def maintenance(layout):
         marker = layout.work / "maintenance"
         if marker.exists():
             raise BackupError("Manutenção anterior interrompida; consulte o comando resume.")
-        marker.write_text("shinyd-cold-backup-v1\n")
+        marker.write_text("shinyd-cold-backup-v2\n")
         try:
             yield
         finally:
@@ -213,23 +215,9 @@ def snapshot(layout, root, limit):
         metadata = json.loads(command("podman", "image", "inspect", image))[0]
         if "sha256:" + metadata["Id"].removeprefix("sha256:") != image:
             raise BackupError("Imagem local não corresponde ao ID publicado.")
-        if total + metadata["Size"] > limit:
-            raise BackupError("Imagens excedem o limite do backup.")
-        archive.space(root, 3 * metadata["Size"])
-        command(
-            "podman",
-            "save",
-            "--quiet",
-            "--format=oci-archive",
-            "--output",
-            str(root / "images" / (image[7:] + ".tar")),
-            image,
-            timeout=1800,
-        )
-        total += (root / "images" / (image[7:] + ".tar")).stat().st_size
-        if total > limit:
-            raise BackupError("Imagens excedem o limite do backup.")
-    return images
+    # Size sums repeat shared layers. Enforce limits on the actual exported stream.
+    expanded = backup_images.export(images, root, limit - total)
+    return images, expanded
 
 
 def empty_destination(layout):
@@ -386,14 +374,17 @@ def execute(args, layout):
                 ):
                     raise BackupError("Guarde o backup fora dos diretórios da instalação.")
                 root.mkdir(mode=0o700)
-                images = snapshot(layout, root, limit)
+                images, expanded = snapshot(layout, root, limit)
                 metadata = {
+                    "format": "shinyd-cold-backup-v2",
                     "id": str(uuid.uuid4()),
                     "created_at": datetime.now(UTC).isoformat(),
                     "compatibility": compatibility(),
                     "images": images,
+                    "image_uncompressed_bytes": expanded,
                 }
                 manifest = archive.pack(root, tar, metadata, limit)
+                shutil.rmtree(root)  # All content now belongs to the complete private TAR.
                 archive.space(args.file.parent, tar.stat().st_size + 1024**2)
                 # Encrypt beside destination, then link atomically without replacing a file.
                 with tempfile.TemporaryDirectory(
@@ -410,6 +401,7 @@ def execute(args, layout):
                 archive.space(work, 2 * args.file.stat().st_size)
                 archive.age(args.file, tar, identity=args.identity, limit=limit)
                 manifest = archive.unpack(tar, root, limit)
+                tar.unlink()  # Release authenticated transport before loading images.
                 if str(uuid.UUID(manifest["id"])) != manifest["id"]:
                     raise BackupError("Identificador do backup inválido.")
                 if args.operation == "restore" and manifest["compatibility"] != compatibility():
@@ -417,21 +409,23 @@ def execute(args, layout):
                         "Instale as mesmas versões de pacotes, sistema e arquitetura."
                     )
                 images = inspect_snapshot(root)
-                if images != manifest["images"] or {"images/" + v[7:] + ".tar" for v in images} != {
-                    n for n in manifest["files"] if n.startswith("images/")
-                }:
-                    raise BackupError("Inventário de imagens incompleto ou divergente.")
+                image_files = backup_images.validate(root, manifest, images, limit)
                 if args.operation == "restore":
                     reset_access(root, manifest["id"])
-                    for image in images:
+                    for name in image_files:
+                        # Podman may unpack image layers in TMPDIR. Keep them private,
+                        # budgeted and removable with this operation's staging area.
+                        archive.space(work, manifest.get("image_uncompressed_bytes", 0))
                         command(
                             "podman",
                             "load",
                             "--quiet",
                             "--input",
-                            str(root / "images" / (image[7:] + ".tar")),
+                            str(root / name),
                             timeout=1800,
+                            temporary=work,
                         )
+                    for image in images:
                         observed = json.loads(command("podman", "image", "inspect", image))[0]
                         if "sha256:" + observed["Id"].removeprefix("sha256:") != image:
                             raise BackupError("Imagem restaurada diverge do ID registrado.")

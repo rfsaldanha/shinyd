@@ -16,6 +16,10 @@ from probe_progress import progress
 BACKUP_ERRORS = {
     "Espaço insuficiente; mantenha ao menos 1 GiB livre além da operação.": "insufficient_space",
     "Imagens excedem o limite do backup.": "image_size_limit",
+    "Exportação das imagens excedeu o tempo permitido.": "image_export_timeout",
+    "Exportação das imagens falhou; confira Podman e espaço livre.": "image_export_failed",
+    "Arquivo comprimido de imagens inválido.": "image_archive_invalid",
+    "Arquivo comprimido de imagens incompleto.": "image_archive_incomplete",
     "Arquivo final excede o limite do backup.": "archive_size_limit",
     "Comando de manutenção falhou; consulte os pré-requisitos do guia.": (
         "maintenance_command_failed"

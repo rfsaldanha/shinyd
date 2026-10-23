@@ -1,6 +1,6 @@
 # Backup e restauração básicos — F3-07
 
-O pacote `control8` acrescenta `shinyd-backup create`, `verify`, `restore`
+O pacote `control9` acrescenta `shinyd-backup create`, `verify`, `restore`
 e `resume`. É um backup **com os apps e serviços parados**, operado com sudo.
 A página administrativa “Backup e restauração” mostra quantos apps, tarefas
 e rotas ainda precisam de atenção e o recibo da última restauração.
@@ -32,11 +32,15 @@ e o roteiro de preparação do host junto do inventário operacional.
 Arquivos adicionais fora dos locais documentados, bancos externos e volumes
 montados manualmente precisam de procedimentos próprios.
 
-As imagens são exportadas por ID com
-[`podman save --format=oci-archive`](https://docs.podman.io/en/latest/markdown/podman-save.1.html)
-e carregadas com [`podman load`](https://docs.podman.io/en/latest/markdown/podman-load.1.html).
-O ID é conferido após cada carga; não há download de imagem na restauração.
-Camadas compartilhadas podem ocupar espaço repetido no backup.
+As imagens são exportadas por ID em um único arquivo com
+[`podman save --multi-image-archive --format=docker-archive`](https://docs.podman.io/en/v4.9.3/markdown/podman-save.1.html).
+Esse modo evita repetir camadas compartilhadas. A saída é comprimida com gzip
+enquanto é recebida, sem manter uma cópia descomprimida adicional. A carga usa
+[`podman load`](https://docs.podman.io/en/v4.9.3/markdown/podman-load.1.html), que
+aceita o arquivo comprimido. Todos os IDs são conferidos após a carga; não há
+download de imagem na restauração. O formato interno novo é `shinyd-cold-backup-v2`.
+A leitura do inventário v1 continua disponível; restauração continua exigindo
+as versões exatas de pacotes registradas na cópia, inclusive `shinyd-control`.
 
 O arquivo usa [`age`](https://github.com/FiloSottile/age), dependência livre
 disponível no Ubuntu 24.04, com uma chave pública X25519 para cifrar e uma
@@ -52,7 +56,7 @@ para abrir uploads enviados por publicadores.
 
 ## Preparar uma cópia
 
-Instale `age` e `control8`. Escolha diretórios privados do operador, fora do
+Instale `age` e `control9`. Escolha diretórios privados do operador, fora do
 estado do shinyd. Exemplo para uma chave nova:
 
 ```sh
@@ -156,12 +160,19 @@ retome os demais e reabilite a recuperação automática desejada.
 ## Espaço, falhas e interrupções
 
 O padrão aceita até 100 mil entradas e 64 GiB para o TAR, ajustável com
-`--max-gib` entre 1 e 1024. O inventário tem limite de 16 MiB. Reserve espaço
-para a cópia privada, imagens exportadas, TAR e arquivo cifrado: o pico pode
-ultrapassar três vezes o conteúdo lógico. As verificações exigem ainda 1 GiB
-livre; concorrência externa pode consumir essa reserva, então isso não é
-uma quota de disco. A restauração também precisa de espaço no armazenamento
-do Podman. Não há compressão, cópia incremental ou deduplicação neste marco.
+`--max-gib` entre 1 e 1024. O limite também é aplicado ao fluxo descomprimido
+das imagens; o gzip não permite contorná-lo. O inventário tem limite de 16 MiB.
+Há prazo de 30 minutos para exportar imagens e verificações de tamanho e
+espaço durante a escrita. As verificações exigem ainda 1 GiB livre; concorrência
+externa pode consumir essa reserva, então isso não é uma quota de disco.
+
+Reserve espaço para os dados, o pacote comprimido de imagens, TAR e cópia
+cifrada. A cópia privada é liberada antes de cifrar; na restauração, o TAR
+decifrado é liberado antes de carregar imagens. O Podman pode precisar do
+tamanho descomprimido das camadas em temporários privados e de espaço adicional
+em seu armazenamento. Esse espaço temporário é conferido antes da carga.
+Não há razão fixa de compressão nem garantia de pico para todos os apps.
+Não há cópia incremental ou deduplicação entre backups distintos.
 
 Temporários em `/var/lib/shinyd-backup/work-*` são privados de root e removidos
 no encerramento normal, inclusive em erro. Podem conter segredos em claro:
@@ -206,7 +217,7 @@ set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control8_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control9_amd64.deb \
   | tee var/backup-report.json
 ```
 

@@ -61,6 +61,7 @@ def allowed(name, directory=False):
         )
     return not directory and (
         name in FIXED
+        or name == "images/bundle.tar.gz"
         or re.fullmatch(rf"control/sources/{UUID}\.zip", name) is not None
         or re.fullmatch(rf"builder/artifacts/{HASH}\.json", name) is not None
         or re.fullmatch(rf"runtime/{UUID}\.json", name) is not None
@@ -142,7 +143,7 @@ def inventory(root, limit=LIMIT):
 
 def pack(root, output, metadata, limit=LIMIT):
     files = inventory(root, limit)
-    manifest = {**metadata, "format": "shinyd-cold-backup-v1", "files": files}
+    manifest = {"format": "shinyd-cold-backup-v1", **metadata, "files": files}
     raw = json.dumps(manifest, sort_keys=True).encode()
     if len(raw) > MANIFEST_LIMIT:
         raise BackupError("Inventário do backup excede o limite.")
@@ -179,7 +180,7 @@ def unpack(source, root, limit=LIMIT):
         ):
             raise BackupError("Inventário ausente ou inválido.")
         manifest = strict_json(archive.extractfile(first).read(MANIFEST_LIMIT + 1))
-        if manifest.get("format") != "shinyd-cold-backup-v1":
+        if manifest.get("format") not in {"shinyd-cold-backup-v1", "shinyd-cold-backup-v2"}:
             raise BackupError("Formato de backup não suportado.")
         files = manifest.get("files")
         if not isinstance(files, dict) or not 1 <= len(files) <= ENTRIES:

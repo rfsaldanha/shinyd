@@ -1,4 +1,5 @@
 import argparse
+import gzip
 import hashlib
 import io
 import json
@@ -20,7 +21,7 @@ from django.utils import timezone
 from control.environment import snapshot
 from control.models import AppInstance, Job, Publication, RecoveryState, Version
 from control.services import set_environment
-from deployment import backup, backup_state
+from deployment import backup, backup_images, backup_state
 from deployment import backup_archive as archive
 from deployment.backup_archive import BackupError
 from tests.test_deployment import CONFIG, pem
@@ -454,15 +455,21 @@ def test_create_verify_restore_orchestration_with_real_age_and_sqlite(
     def podman(*args, **kwargs):
         if args[:3] == ("podman", "image", "inspect"):
             return json.dumps([{"Id": IMAGE[7:], "Size": 64}]).encode()
-        if args[:2] == ("podman", "save"):
-            Path(args[args.index("--output") + 1]).write_bytes(b"image transported unchanged")
-        elif args[:2] == ("podman", "load"):
-            loaded.append(Path(args[-1]).read_bytes())
+        if args[:2] == ("podman", "load"):
+            loaded.append(gzip.decompress(Path(args[-1]).read_bytes()))
         else:
             pytest.fail("Unexpected command")
         return b""
 
     monkeypatch.setattr(backup, "command", podman)
+
+    def export(images, root, limit):
+        assert images == [IMAGE]
+        raw = b"image transported unchanged"
+        (root / backup_images.BUNDLE).write_bytes(gzip.compress(raw))
+        return len(raw)
+
+    monkeypatch.setattr(backup_images, "export", export)
     result = backup.execute(
         argparse.Namespace(operation="create", file=output, recipient=public, max_gib=1),
         destination,

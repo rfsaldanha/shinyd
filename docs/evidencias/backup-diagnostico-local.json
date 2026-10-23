@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "read_only": true,
+  "observed_at": "2026-10-23T12:04:07.216904+00:00",
+  "source_observed_at": "2026-10-23T11:22:25.893941+00:00",
+  "limitations": [
+    "A mensagem da falha anterior não foi preservada pelo roteiro antigo.",
+    "A estimativa usa tamanhos descomprimidos; não mede o pico real.",
+    "Nenhum serviço, container, imagem ou arquivo é removido ou iniciado."
+  ],
+  "services": [
+    "Id=shinyd.target",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-maintenance.timer",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-panel.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-auth.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-worker.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-gateway.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-ingress.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-maintenance.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-runtime.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-builder.service",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-panel.socket",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-auth.socket",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-gateway.socket",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-runtime.socket",
+    "ActiveState=inactive",
+    "",
+    "Id=shinyd-builder.socket",
+    "ActiveState=inactive"
+  ],
+  "managed_container_count": 0,
+  "backup_interlocks": {
+    "maintenance": false,
+    "restore-incomplete": false
+  },
+  "control_config_present": false,
+  "control_database_present": false,
+  "policies": {
+    "runtime": {
+      "present": true,
+      "sha256": "4be093b8bb9e81978b7858a98bb761a08940a6104637e67345d5579183a88983",
+      "image_count": 2
+    },
+    "builder": {
+      "present": true,
+      "sha256": "8b317354dc45d8fc36c44ca3d8295c9249b858ba0e418d3bf1708dfe8ad47292",
+      "image_count": 2
+    }
+  },
+  "runtime_records": [
+    {
+      "id": "0dbe287b-889d-475c-94cd-69572eda2a3c",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "131393f0-f9de-47e8-a6f9-5841a4f861fc",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "138511d5-5e5c-4ec5-9259-6682619217b0",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "16a05ea3-156c-4239-b150-fbe4d6a7aaa8",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "19b5f055-0009-4cbf-b7cf-fce355a813df",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "1a49e59c-c84a-47ee-9f85-e681220becce",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "1b8ec19e-4cb8-422c-80ae-95125e3dd183",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "1c982f44-a0ae-4e21-bffb-4cda8e8500d5",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "1dc84b1f-0fef-4839-ad26-0da8eeac1182",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "1e4f7fa3-eb67-531a-9099-851a93851897",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "20f8f1f2-16b4-5073-858f-870f3343dd8f",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "21d407af-242b-541f-92eb-22315d5f7a59",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "227fbc6c-d88f-4470-bfd5-9c036006143f",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "2c7e13f8-01aa-4a24-838b-46d44ba7bf1a",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "3203f737-cd69-4804-b514-717d7431626d",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "3e249cdd-cb30-5b83-ae45-76ec79c22ad2",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "437718d5-d9b3-4554-9722-ee0e5d6688ab",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "48c5fe7d-01be-4165-b09e-85d1060430cc",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "48deb8f8-5b6e-47bc-9d42-a95ce9f5f3d6",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "499acdc3-21f8-4dd5-8973-71ef40c69511",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "630797eb-ab75-53f2-a269-cfdaa3e7e38a",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "6ed1e949-3c99-48f9-89b6-f0d76e20b00c",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "75fc39a2-0948-5d76-b4e2-c5ced38e03b7",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "77a56e8a-340c-5085-8954-5e07923c6e54",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "79ae2ebe-0614-4b30-805a-b8ac59818e1c",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "809985a2-533d-5782-ac8d-2cc80a49e884",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "8eeeda39-1fe8-5266-b8cf-01ca63bc6a08",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "9ac0b209-be39-4604-bc8d-bd80f33da350",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "9cf8d5e9-d59b-5e23-829a-703f95d864a8",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "a66d5dfb-910e-48c9-bb66-dc05bc6868b7",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "a7d9dd07-1408-5976-88e0-bb5c69283e26",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "aeada8dd-414e-4935-8ce8-1fbe0d220fe0",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "b21c17b0-793a-4e9e-bf1a-2aca01c9499f",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "b380d7e5-b4e0-5873-9fed-ab4c128a39f4",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "c4918029-52ce-43d2-a7fc-f9b7cad508c9",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "cadbf7db-5c3c-5fb6-9f7c-354d0fcaea23",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "cd47059e-9a10-54cc-bf96-425eff00f973",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "d1adbaed-9601-4c13-83d6-cd66ee31348d",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "d57e5367-8d65-5891-873f-14ab7d35211a",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "d8ae13f3-6163-4c78-9cda-5549408eaf44",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "ecfa07c8-774d-5a2c-93c5-c96cf873205e",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "f84b1ce4-0512-58a3-89f7-89ea70c7168e",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "desired": "removed",
+      "in_failed_report": true
+    },
+    {
+      "id": "f8ce7679-5ed2-5a5c-b4cb-60be72d70f25",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "desired": "removed",
+      "in_failed_report": true
+    }
+  ],
+  "artifacts": [
+    {
+      "cache_key": "18e7f164436b2191d936a5200895a027e5405c4d630f620676436f27802462fa",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "32aec1778ccd6e583f6bd6e0e48f1dca1f932753e5c7dd3070fb77e6a65af503",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "41133ac5e3e4152f0dfdad93c65ca7ab9b40745193bc8cfe2c08ccaac6113409",
+      "app_id": "b143c7a6-fe13-4125-a9ee-3fc069bdb69f",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "47f5367ffd940f30013253ad8bb5708182a493111342866279358fce0584d747",
+      "app_id": "86432e4d-a9cf-4223-83b3-5b6b58fbe3b5",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "5bdaf59c11cc42e847b83f7bcd8ed7779488d3f85098cca29ccbbd9245e7abaa",
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "8edcf269ef24fe3f70ae45ba47a3eaefeb92f4f1d92b13354aa0d3a6e05ec77a",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "a36b16e1f58b27c71eec55a01a67a2e6003a2bf374eb5eea6e488cb7ff285cd8",
+      "app_id": "ae2644c2-787f-4c3e-b79a-be664836bcf4",
+      "in_failed_report": true
+    },
+    {
+      "cache_key": "eda8e56a0cd6942a62e569270051b877118adb5582b6d228021b434f59b4900f",
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "in_failed_report": true
+    }
+  ],
+  "images": {
+    "count": 10,
+    "unavailable": [],
+    "uncompressed_bytes": 17459486325,
+    "largest_uncompressed_bytes": 1762697373
+  },
+  "data": [
+    {
+      "app_id": "2942342e-06da-405e-b444-f10c8185ac27",
+      "in_failed_report": true,
+      "bytes": 44,
+      "entries": 2,
+      "unsafe_entries": 0
+    },
+    {
+      "app_id": "d6576528-8227-4a0a-9774-e84338792ce9",
+      "in_failed_report": true,
+      "bytes": 16,
+      "entries": 2,
+      "unsafe_entries": 0
+    }
+  ],
+  "builder_pending_record": false,
+  "workload_limits": [
+    "MemoryHigh=3865470566",
+    "MemoryMax=4294967296",
+    "MemorySwapMax=0"
+  ],
+  "disk": {
+    "free_bytes": 7911874560,
+    "estimated_peak_bytes": 53452200979,
+    "estimate_complete": false,
+    "below_conservative_estimate": true
+  },
+  "source_sha256": "e7758e8def444b397c1aa8bf5255396c6d803a0d26624488ca153a762b62b3bd"
+}

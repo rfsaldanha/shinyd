@@ -1816,3 +1816,96 @@ Ruff e formatação passaram. Não há alteração do produto ou dos pacotes;
 o artefato `control8` continua com o checksum registrado no marco anterior.
 O diagnóstico instalado requer sudo, que ainda exige senha nesta sessão.
 F3-07 e a liberação do teste manual completo continuam pendentes.
+
+## Marco 37 — Menor consumo de disco no backup e recuperação do ensaio
+
+O diagnóstico executado pelo operador em **23/10/2026, 12:04 UTC** está em
+[`backup-diagnostico-local.json`](evidencias/backup-diagnostico-local.json).
+Todos os 15 serviços/acionadores consultados estavam inativos, sem containers
+gerenciados, banco/configuração do painel ou marcadores de backup interrompido.
+Restavam **43 registros de instâncias retiradas, 8 artefatos, 2 diretórios de
+dados e as 2 políticas do ensaio**, todos associados ao relatório da falha.
+Os arquivos de dados somavam 60 bytes. Nada foi removido pelo diagnóstico.
+
+Havia **7.911.874.560 bytes livres (aproximadamente 7,4 GiB)** em `/var/lib`.
+As dez imagens referenciadas somavam 17.459.486.325 bytes descomprimidos,
+incluindo camadas repetidas. A estimativa conservadora do transporte antigo
+era de 53.452.200.979 bytes; não mede o pico real e está incompleta porque o
+banco já havia sido retirado pela limpeza. A mensagem original da falha local
+continua indisponível; o diagnóstico comprova a restrição de espaço, não
+recupera uma causa que o roteiro anterior deixou de registrar.
+
+`control9` passa a exportar as imagens juntas por ID com `podman save
+--multi-image-archive --format=docker-archive`, comprimindo a saída durante
+a leitura. Camadas compartilhadas entram uma vez. O fluxo tem limite de
+bytes descomprimidos, prazo, reserva de disco e tratamento de erros sem
+reproduzir stderr. A cópia privada é liberada antes de cifrar e o TAR
+decifrado antes de carregar imagens. Os temporários do Podman ficam na área
+privada da operação. A leitura valida a expansão gzip e todos os IDs são
+conferidos depois da carga. O formato novo é `shinyd-cold-backup-v2`; o leitor
+mantém v1 e a restauração continua exigindo as versões exatas registradas.
+Não há nova migração de banco nem mudança dos pacotes do executor/builder.
+
+Experimento real com Podman **4.9.3 rootless**, usando três imagens locais e
+armazenamento **vfs separado, inicialmente vazio** para a carga:
+
+| Medida | Resultado observado |
+| --- | ---: |
+| Soma dos tamanhos individuais | 5.053.058.198 bytes |
+| Arquivo conjunto sem compressão | 3.287.293.952 bytes |
+| Arquivo conjunto comprimido | 1.222.312.301 bytes |
+| Exportação comprimida | 40,61 s |
+| Carga no armazenamento separado | 98,81 s |
+| IDs conferidos e preservados | 3 de 3 |
+
+A evidência é
+[`backup-imagens-comprimidas-local.json`](evidencias/backup-imagens-comprimidas-local.json).
+As imagens desse experimento são distintas das dez imagens rootful do ensaio
+interrompido. Não se mediu pico de disco, carga de usuários ou backup instalado
+completo; os números não são uma previsão para outro servidor.
+
+A suíte completa passou com **395 testes Python**. Depois foram acrescentados
+dois testes do marcador da quarentena; os **11 testes de recuperação da
+fixture** passaram. Ruff e formatação passaram. Os cenários novos cobrem
+processo com erro, timeout, limite de expansão, falta de disco, gzip truncado,
+inventário divergente, manutenção interrompida, mudança de política, arquivos
+desconhecidos e reversão das movimentações após falha de escrita.
+
+Pacote construído, ainda **não instalado/homologado** neste marco:
+
+* `shinyd-control_0.1.0~control9_amd64.deb`
+* SHA-256: `104e01066f5acbc34b002910bee4a62754a2c55aaccbb47e2f93627dd8e2e8e4`
+
+### Recuperar os resíduos identificados antes do próximo ensaio
+
+`scripts/backup_fixture_recover.py` confere o hash do relatório, repete o
+inventário, exige serviços/builds parados, ausência de containers, painel
+vazio e nenhum marcador anterior. Recusa arquivos desconhecidos ou estado
+diferente do diagnóstico. Com `--apply`, trava os componentes, bloqueia
+inicializações e move somente os **55 caminhos identificados** para
+`/var/lib/shinyd-probe-quarantine-*/originals`, com recibo privado e sem apagar
+imagens. A operação usa renomeação no mesmo sistema de arquivos; não copia
+os vários gigabytes das imagens. Os limites de memória observados ficam
+preservados, pois o relatório antigo não registrou os valores anteriores.
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo python3 scripts/backup_fixture_recover.py \
+  --report var/backup-report.json \
+  --diagnostic var/backup-diagnostic.json --apply \
+  | tee var/backup-recovery.json
+```
+
+O comando sem `--apply` apenas confere e mostra a quantidade de caminhos.
+Após sucesso, guarde a quarentena até a homologação: `receipt.json` registra
+os caminhos originais relativos a `/` e os hashes dos relatórios usados.
+Uma reversão manual deve manter serviços parados e exigir que cada destino
+original esteja ausente antes de mover o correspondente arquivo de volta.
+Não mescle essa fixture antiga com outra instalação. Falha normal tenta
+reverter as movimentações já realizadas; interrupção abrupta ou estado parcial
+preserva o marcador de manutenção e exige conferência do recibo pelo operador.
+
+Essa operação ainda requer a senha sudo nesta sessão. **F3-07 e o teste manual
+completo continuam pendentes** da recuperação do namespace, ensaio instalado
+com `control9` e configuração de uma instalação permanente de testes.

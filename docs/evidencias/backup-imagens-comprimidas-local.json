@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T12:23:38.953341+00:00",
+  "scope": "Transporte de três imagens locais com Podman rootless; não homologa backup/restauração instalada do shinyd.",
+  "passed": true,
+  "environment": {
+    "podman": "podman version 4.9.3",
+    "architecture": "x86_64",
+    "python": "3.12.3",
+    "load_storage_driver": "vfs",
+    "isolated_storage_initially_empty": true
+  },
+  "image_ids": [
+    "a3bee747d4f789f24f4d460c4980f5b071eda030d86b58a2dc31a027de3288ad",
+    "87996366085dadf47adb6da64275a301cf1f43399a616c1643dd59ff91743023",
+    "ac830db34d150bcd24a0cb1622891b7008b4f51e4e32c6f01db9d20d27a64721"
+  ],
+  "sum_image_sizes_bytes": 5053058198,
+  "export": {
+    "uncompressed_bytes": 3287293952,
+    "compressed_bytes": 1222312301,
+    "elapsed_seconds": 40.61099515101523
+  },
+  "load": {
+    "operation": "isolated_rootless_load",
+    "returncode": 0,
+    "elapsed_seconds": 98.80753188498784,
+    "images_checked": 3,
+    "ids_preserved": true
+  },
+  "compressed_sha256": "80f1467bbb29b175b0e63d0bf9724cf64488319098a1453570081a046ad4f537",
+  "limitations": [
+    "Imagens distintas das dez imagens rootful do ensaio interrompido.",
+    "Não mede pico de disco, capacidade ou latência de apps.",
+    "Não testa o backup age completo instalado nem reboot."
+  ]
+}

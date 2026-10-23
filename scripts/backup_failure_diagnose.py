@@ -126,7 +126,9 @@ def collect(report, *, root=Path("/"), run=command):
     value["services"] = run("systemctl", "show", *UNITS, "--property=Id,ActiveState").splitlines()
     containers = json.loads(run("podman", "ps", "--all", "--format=json"))
     value["managed_container_count"] = sum(
-        bool((r.get("Labels") or {}).get("org.shinyd.managed")) for r in containers
+        bool((r.get("Labels") or {}).get("org.shinyd.managed"))
+        or any(n.startswith("shinyd-") for n in r.get("Names", []))
+        for r in containers
     )
     value["backup_interlocks"] = {
         n: (lib / "shinyd-backup" / n).exists() or (lib / "shinyd-backup" / n).is_symlink()

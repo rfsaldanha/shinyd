@@ -106,7 +106,7 @@ Evidências e limites estão em [STATUS.md](docs/STATUS.md).
 
 F3-07 implementa [backup criptografado e restauração em vazio](docs/BACKUP_RESTAURACAO.md),
 com preparação visual, preservação de código/imagens/dados/segredos e invalidação
-de sessões antigas. Requer `control8` e `age`, sem nova migração de banco.
+de sessões antigas. Requer `control9` e `age`, sem nova migração de banco.
 A execução inicial é pelo operador Linux, com apps parados. Passaram 361 testes
 Python e a página foi verificada no Chrome em 1280 px e 360 px.
 **A homologação instalada de F3-07 ainda está pendente.** O teste manual
@@ -118,4 +118,9 @@ Python; resultados e pendências estão no marco 35 de [STATUS.md](docs/STATUS.m
 A tentativa seguinte avançou até a criação do backup, mas falhou e deixou
 a limpeza incompleta. O marco 36 registra a correção da limpeza, 374 testes
 Python aprovados e um diagnóstico somente de leitura. O próximo passo é
-conferir esse diagnóstico antes de uma nova homologação completa.
+recuperar o namespace de teste antes de uma nova homologação completa.
+O diagnóstico mostrou 7,4 GiB livres e repetição de camadas no transporte das
+imagens. O marco 37 reduz esse consumo com exportação conjunta comprimida
+(`control9`) e acrescenta quarentena reversível dos resíduos identificados.
+Um experimento local exportou e carregou três imagens em armazenamento
+separado, preservando seus IDs; isso ainda não homologa F3-07.
