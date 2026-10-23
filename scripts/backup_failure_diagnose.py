@@ -106,6 +106,59 @@ def reported_instances(report):
     return result
 
 
+def namespace_entries(path, *, jobs=False):
+    """Bounded metadata only: do not publish unknown names or read file contents."""
+    if not path.exists() and not path.is_symlink():
+        return {"present": False}
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode):
+        return {"present": True, "directory": False, "symlink": stat.S_ISLNK(info.st_mode)}
+    known = {
+        "keys",
+        "sources",
+        "staging",
+        "backups",
+        ".lock",
+        "metadata.sqlite3",
+        "metadata.sqlite3-wal",
+        "metadata.sqlite3-shm",
+        "restore.json",
+        "package-test-sentinel",
+    }
+    entries = []
+    for child in sorted(path.iterdir()):
+        if len(entries) >= 1000:
+            raise ValueError("namespace_entry_limit")
+        metadata = child.lstat()
+        kind = (
+            "directory"
+            if stat.S_ISDIR(metadata.st_mode)
+            else "file"
+            if stat.S_ISREG(metadata.st_mode)
+            else "symlink"
+            if stat.S_ISLNK(metadata.st_mode)
+            else "special"
+        )
+        name = child.name if child.name in known and not jobs else "unrecognized"
+        if jobs:
+            try:
+                name = identity(child.name)
+            except ValueError:
+                pass
+        entries.append(
+            {
+                "name": name,
+                "kind": kind,
+                "bytes": metadata.st_size,
+                "uid": metadata.st_uid,
+                "gid": metadata.st_gid,
+                "mode": oct(stat.S_IMODE(metadata.st_mode)),
+                "links": metadata.st_nlink,
+            }
+        )
+    return {"present": True, "directory": True, "entries": entries}
+
+
 def collect(report, *, root=Path("/"), run=command):
     expected = reported_instances(report)
     if report.get("passed") is not False or not expected:
@@ -136,6 +189,10 @@ def collect(report, *, root=Path("/"), run=command):
     }
     value["control_config_present"] = (root / "etc/shinyd/control.json").exists()
     value["control_database_present"] = (lib / "shinyd-control/metadata.sqlite3").exists()
+    value["remaining_namespaces"] = {
+        "control": namespace_entries(lib / "shinyd-control"),
+        "builder_jobs": namespace_entries(lib / "shinyd-builder/jobs", jobs=True),
+    }
     images, apps = set(), set()
     value["policies"] = {}
     for kind in ("runtime", "builder"):
@@ -235,11 +292,37 @@ def collect(report, *, root=Path("/"), run=command):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument("--report", type=Path)
+    parser.add_argument(
+        "--namespaces-only",
+        action="store_true",
+        help="Only inspect remaining control/job entry metadata.",
+    )
     args = parser.parse_args()
     if os.geteuid() != 0:
         parser.error("Execute com sudo para ler apenas os metadados privados do ensaio.")
+    if not args.namespaces_only and args.report is None:
+        parser.error("Informe --report ou --namespaces-only.")
     try:
+        if args.namespaces_only:
+            print(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "read_only": True,
+                        "observed_at": datetime.now(UTC).isoformat(),
+                        "remaining_namespaces": {
+                            "control": namespace_entries(Path("/var/lib/shinyd-control")),
+                            "builder_jobs": namespace_entries(
+                                Path("/var/lib/shinyd-builder/jobs"), jobs=True
+                            ),
+                        },
+                    },
+                    indent=2,
+                    ensure_ascii=False,
+                )
+            )
+            return 0
         report, checksum = read_json(args.report, operator_owned=False)
         result = collect(report)
         result["source_sha256"] = checksum

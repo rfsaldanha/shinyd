@@ -1909,3 +1909,62 @@ preserva o marcador de manutenção e exige conferência do recibo pelo operador
 Essa operação ainda requer a senha sudo nesta sessão. **F3-07 e o teste manual
 completo continuam pendentes** da recuperação do namespace, ensaio instalado
 com `control9` e configuração de uma instalação permanente de testes.
+
+## Marco 38 — Diagnóstico das recusas e preservação do estado local
+
+O comando de recuperação foi executado em **23/10/2026, 13:46 UTC** e recusou
+a operação com `remaining_control_or_jobs`. A evidência está em
+[`backup-quarentena-local-recusa.json`](evidencias/backup-quarentena-local-recusa.json).
+Essa recusa ocorre antes de criar a quarentena ou mover qualquer dado:
+o painel ou o diretório de tarefas ainda contém entradas. O relatório antigo
+não informava quais eram; sua identidade ainda precisa ser conferida.
+
+Também foram conferidos os dois workflows completos:
+
+| Commit / workflow | Resultado |
+| --- | --- |
+| `88ff5ab` / [39950504425](https://github.com/rfsaldanha/shinyd/actions/runs/39950504425) | Go, Python, executor e pacote do agente passaram; builder falhou em `create` |
+| `82c3530` / [39953473415](https://github.com/rfsaldanha/shinyd/actions/runs/39953473415) | Go, Python, executor e pacote do agente passaram; builder falhou em `create` |
+
+Em ambos, passaram **53 verificações principais** e foram registrados
+**130 checks do ensaio instalado**, sem erro de limpeza. O agregado
+`installed_https_probe` falhou. A correção que reabre o socket durante a
+limpeza foi exercitada; a criação do backup ainda retornou
+`unknown_failure`. Evidências:
+[`backup-limpeza-ci-falha.json`](evidencias/backup-limpeza-ci-falha.json) e
+[`backup-compressao-ci-falha.json`](evidencias/backup-compressao-ci-falha.json).
+O experimento de compressão do marco anterior não identifica a causa dessas
+recusas. Os resultados antigos não permitem recuperá-la retrospectivamente.
+
+Foi corrigida a cobertura do diagnóstico do roteiro: além dos códigos já
+conhecidos, ele aceita uma mensagem apenas quando ela corresponde exatamente
+a um erro literal presente no código-fonte confiável de backup do repositório.
+Nesse caso registra a mensagem e os locais em que ela é definida no código;
+isso não representa uma pilha de execução observada. Saída desconhecida
+continua omitida. Não interpreta conteúdo dos apps nem imprime stderr arbitrário.
+Os cenários negativos passam a exigir a recusa específica esperada para
+serviços ativos, links, chave incorreta, truncamento e destino ocupado.
+Uma falha diferente já não conta como prova de que a proteção foi exercitada.
+
+O diagnóstico de resíduos passou a informar tipos, tamanhos, donos e modos
+das entradas do painel e das tarefas, sem ler seu conteúdo. Publica apenas
+nomes fixos da plataforma e UUIDs válidos de tarefas; nomes desconhecidos
+ficam como `unrecognized`. A recuperação mantém as mesmas restrições e passa
+a incluir esses detalhes quando encontra a recusa observada.
+
+Para obter somente esses metadados, sem exportar imagens nem repetir o
+ensaio completo:
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo python3 scripts/backup_failure_diagnose.py --namespaces-only \
+  | tee var/backup-namespaces.json
+```
+
+Não há alteração do produto nem novo pacote: `control9` continua com o
+checksum do marco 37. O roteiro e os testes de diagnóstico foram atualizados;
+passaram **403 testes Python**, Ruff e formatação.
+O CI voltará a executar a homologação com identificação mais completa das
+recusas. A operação local ainda depende da senha sudo do operador.
+**F3-07 e o teste manual completo continuam pendentes.**

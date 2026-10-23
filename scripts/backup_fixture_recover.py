@@ -210,15 +210,22 @@ def main():
                 result.update(quarantine=str(area), **receipt)
             print(json.dumps(result, indent=2))
     except Exception as exc:
-        print(
-            json.dumps(
-                {
-                    "passed": False,
-                    "recovery_error": type(exc).__name__,
-                    "reason": str(exc) if str(exc) in SAFE_ERRORS else "recovery_failed",
+        result = {
+            "passed": False,
+            "recovery_error": type(exc).__name__,
+            "reason": str(exc) if str(exc) in SAFE_ERRORS else "recovery_failed",
+        }
+        if result["reason"] == "remaining_control_or_jobs":
+            try:
+                result["remaining_namespaces"] = {
+                    "control": diagnose.namespace_entries(Path("/var/lib/shinyd-control")),
+                    "builder_jobs": diagnose.namespace_entries(
+                        Path("/var/lib/shinyd-builder/jobs"), jobs=True
+                    ),
                 }
-            )
-        )
+            except Exception:
+                result["namespace_details_unavailable"] = True
+        print(json.dumps(result, indent=2))
         return 1
     return 0
 

@@ -124,3 +124,8 @@ imagens. O marco 37 reduz esse consumo com exportação conjunta comprimida
 (`control9`) e acrescenta quarentena reversível dos resíduos identificados.
 Um experimento local exportou e carregou três imagens em armazenamento
 separado, preservando seus IDs; isso ainda não homologa F3-07.
+O marco 38 registra a recusa da quarentena por conteúdo remanescente no
+painel ou nas tarefas e duas falhas do CI ainda sem motivo identificado.
+O roteiro agora identifica todas as mensagens literais de recusa do backup
+e exige o motivo esperado nos testes negativos. O próximo diagnóstico local
+é curto, somente de leitura, e está em [STATUS.md](docs/STATUS.md).

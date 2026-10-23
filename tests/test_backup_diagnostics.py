@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import backup_failure_diagnose as diagnose
 import probe_cleanup
 import pytest
-from backup_browser_probe import backup_command
+from backup_browser_probe import backup_command, failure_detail, platform_errors, refused_command
 
 
 @pytest.mark.parametrize("marker", [None, "maintenance", "restore-incomplete", "dangling"])
@@ -73,9 +73,56 @@ def test_backup_reports_only_allowlisted_errors(stderr, reason):
 
     with pytest.raises(RuntimeError, match="backup_command_failed:" + reason):
         backup_command(run, report, "shinyd-backup", "create", "private-path")
-    assert report == {"backup_failure": {"operation": "create", "exit_code": 1, "reason": reason}}
+    detail = report["backup_failure"]
+    assert {k: detail[k] for k in ("operation", "exit_code", "reason")} == {
+        "operation": "create",
+        "exit_code": 1,
+        "reason": reason,
+    }
+    if reason == "unknown_failure":
+        assert "platform_error" not in detail
+    else:
+        assert detail["platform_error"]["message"] == stderr.strip()
     assert "private" not in repr(report)
     assert calls[0][1] == {"timeout": 1800, "check": False}
+
+
+def test_all_literal_backup_errors_are_identified_without_exposing_dynamic_output():
+    errors = platform_errors()
+    for message, definitions in errors.items():
+        detail = failure_detail(SimpleNamespace(returncode=1, stderr=message + "\n"), "create")
+        assert detail["reason"] != "unknown_failure"
+        assert detail["platform_error"] == {"definitions": definitions, "message": message}
+        private = message + "\nPRIVATE_TOKEN"
+        detail = failure_detail(SimpleNamespace(returncode=1, stderr=private), "create")
+        assert detail["reason"] == "unknown_failure" and "platform_error" not in detail
+        assert "PRIVATE_TOKEN" not in json.dumps(detail)
+    assert {v["module"] for locations in errors.values() for v in locations} == {
+        "backup.py",
+        "backup_archive.py",
+        "backup_images.py",
+        "backup_state.py",
+    }
+
+
+@pytest.mark.parametrize(
+    "code,message,expected",
+    [
+        (1, "Links e arquivos especiais não são aceitos no backup.", True),
+        (1, "Diretório inseguro para manutenção privilegiada.", False),
+        (1, "PRIVATE_TOKEN", False),
+        (0, "", False),
+    ],
+)
+def test_negative_backup_check_requires_the_intended_refusal(code, message, expected):
+    report = {}
+
+    def run(*args, **kwargs):
+        return SimpleNamespace(returncode=code, stderr=message, stdout="PRIVATE_TOKEN")
+
+    assert refused_command(run, report, "unsafe_entry", "shinyd-backup", "create") is expected
+    assert ("backup_failure" in report) is not expected
+    assert "PRIVATE_TOKEN" not in json.dumps(report)
 
 
 def test_read_only_diagnostic_keeps_data_and_excludes_secrets(tmp_path):
@@ -150,3 +197,28 @@ def test_diagnostic_rejects_links_and_nonregular_metadata(tmp_path):
     os.mkfifo(fifo)
     with pytest.raises(ValueError, match="unsafe_metadata"):
         diagnose.read_json(fifo)
+
+
+def test_namespace_diagnostic_lists_only_fixed_names_and_metadata(tmp_path):
+    secret = tmp_path / "PRIVATE_FILENAME_TOKEN"
+    secret.write_text("PRIVATE_CONTENT_TOKEN")
+    (tmp_path / "package-test-sentinel").touch()
+    (tmp_path / "keys").mkdir()
+    (tmp_path / "sources").symlink_to(tmp_path / "keys")
+    result = diagnose.namespace_entries(tmp_path)
+    assert {row["name"] for row in result["entries"]} == {
+        "unrecognized",
+        "package-test-sentinel",
+        "keys",
+        "sources",
+    }
+    assert next(r for r in result["entries"] if r["name"] == "sources")["kind"] == "symlink"
+    assert "PRIVATE" not in json.dumps(result)
+    assert secret.read_text() == "PRIVATE_CONTENT_TOKEN"
+    assert diagnose.namespace_entries(tmp_path / "sources")["directory"] is False
+    assert diagnose.namespace_entries(tmp_path / "absent") == {"present": False}
+    jobs = tmp_path / "jobs"
+    jobs.mkdir()
+    identity = str(uuid.uuid4())
+    (jobs / identity).mkdir()
+    assert diagnose.namespace_entries(jobs, jobs=True)["entries"][0]["name"] == identity

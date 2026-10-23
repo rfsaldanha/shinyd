@@ -1,5 +1,6 @@
 """Cold recovery of the disposable installed fixture; never run on an occupied installation."""
 
+import ast
 import hashlib
 import json
 import secrets
@@ -20,6 +21,9 @@ BACKUP_ERRORS = {
     "Exportação das imagens falhou; confira Podman e espaço livre.": "image_export_failed",
     "Arquivo comprimido de imagens inválido.": "image_archive_invalid",
     "Arquivo comprimido de imagens incompleto.": "image_archive_incomplete",
+    "Criptografia falhou: confira a chave, integridade e espaço livre.": "cryptography_failed",
+    "Restaure somente em instalação vazia; configurações já existem.": "destination_occupied",
+    "Restaure somente em instalação vazia; dados já existem.": "destination_occupied",
     "Arquivo final excede o limite do backup.": "archive_size_limit",
     "Comando de manutenção falhou; consulte os pré-requisitos do guia.": (
         "maintenance_command_failed"
@@ -33,17 +37,62 @@ BACKUP_ERRORS = {
 }
 
 
+def platform_errors():
+    """Only literal errors in our own backup sources may enter a public report."""
+    directory = Path(__file__).resolve().parents[1] / "backend/deployment"
+    result = {}
+    for path in sorted(directory.glob("backup*.py")):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if (
+                isinstance(node, ast.Raise)
+                and isinstance(node.exc, ast.Call)
+                and isinstance(node.exc.func, ast.Name)
+                and node.exc.func.id in {"BackupError", "SystemExit"}
+                and len(node.exc.args) == 1
+                and isinstance(node.exc.args[0], ast.Constant)
+                and isinstance(node.exc.args[0].value, str)
+            ):
+                result.setdefault(node.exc.args[0].value, []).append(
+                    {
+                        "module": path.name,
+                        "line": node.lineno,
+                    }
+                )
+    return result
+
+
+def failure_detail(result, operation):
+    message = result.stderr.strip()
+    detail = {
+        "operation": operation,
+        "exit_code": result.returncode,
+        "reason": BACKUP_ERRORS.get(message, "unknown_failure"),
+    }
+    definitions = platform_errors().get(message)
+    if definitions:
+        if detail["reason"] == "unknown_failure":
+            detail["reason"] = "platform_refusal"
+        # A literal may be raised in several places; these are definitions, not a stack trace.
+        detail["platform_error"] = {"definitions": definitions, "message": message}
+    return detail
+
+
 def backup_command(run, report, *args, timeout=1800):
     result = run(*args, timeout=timeout, check=False)
     if result.returncode:
         # Only literal platform errors cross this boundary. Never copy raw stderr.
-        report["backup_failure"] = {
-            "operation": args[1],
-            "exit_code": result.returncode,
-            "reason": BACKUP_ERRORS.get(result.stderr.strip(), "unknown_failure"),
-        }
+        report["backup_failure"] = failure_detail(result, args[1])
         raise RuntimeError("backup_command_failed:" + report["backup_failure"]["reason"])
     return json.loads(result.stdout)
+
+
+def refused_command(run, report, expected, *args, timeout=180):
+    result = run(*args, timeout=timeout, check=False)
+    detail = failure_detail(result, args[1])
+    if result.returncode and detail["reason"] == expected:
+        return True
+    report["backup_failure"] = {**detail, "expected_reason": expected}
+    return False
 
 
 def prepare_environment(admin, app_id):
@@ -97,7 +146,10 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
         run("age-keygen", "-o", str(wrong_key))
         public = run("age-keygen", "-y", str(key)).stdout.strip()
         create = ["shinyd-backup", "create", str(output), "--recipient", public]
-        check("backup_running_services_refused", run(*create, check=False).returncode != 0)
+        check(
+            "backup_running_services_refused",
+            refused_command(run, report, "services_active", *create),
+        )
         page.goto(panel + "/server/backups/")
         page.get_by_role("heading", name="Backup e restauração", exact=True).wait_for()
         page.set_viewport_size({"width": 360, "height": 800})
@@ -137,7 +189,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
         )
         check(
             "backup_unsafe_link_refused",
-            run(*create, check=False, timeout=180).returncode != 0 and not output.exists(),
+            refused_command(run, report, "unsafe_entry", *create) and not output.exists(),
         )
         link.unlink()  # Only the exact disposable symlink checked above; never follow it.
         check(
@@ -156,32 +208,34 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             check("backup_age_format", source.read(22).startswith(b"age-encryption.org/v1"))
         check(
             "backup_wrong_identity_refused",
-            run(
+            refused_command(
+                run,
+                report,
+                "cryptography_failed",
                 "shinyd-backup",
                 "verify",
                 str(output),
                 "--identity",
                 str(wrong_key),
-                check=False,
                 timeout=180,
-            ).returncode
-            != 0,
+            ),
         )
         truncated = area / "truncated.age"
         with output.open("rb") as source:
             truncated.write_bytes(source.read(1024 * 1024))
         check(
             "backup_truncation_refused",
-            run(
+            refused_command(
+                run,
+                report,
+                "cryptography_failed",
                 "shinyd-backup",
                 "verify",
                 str(truncated),
                 "--identity",
                 str(key),
-                check=False,
                 timeout=180,
-            ).returncode
-            != 0,
+            ),
         )
         progress("backup_verify")
         verified = backup_command(
@@ -190,16 +244,17 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
         check("backup_full_verification", verified["backup_id"] == created["backup_id"])
         check(
             "backup_occupied_restore_refused",
-            run(
+            refused_command(
+                run,
+                report,
+                "destination_occupied",
                 "shinyd-backup",
                 "restore",
                 str(output),
                 "--identity",
                 str(key),
-                check=False,
                 timeout=180,
-            ).returncode
-            != 0
+            )
             and data.read_bytes() == expected_data,
         )
         # Preserve the original fixture until the restored browser check passes.

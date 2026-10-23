@@ -1,0 +1,1148 @@
+{
+  "source": {
+    "run_id": 39950504425,
+    "job_id": 120403513990,
+    "commit": "88ff5ab",
+    "run_url": "https://github.com/rfsaldanha/shinyd/actions/runs/39950504425"
+  },
+  "report": {
+    "schema_version": 1,
+    "observed_at": "2026-10-23T12:05:47.446788+00:00",
+    "scope": "Builder offline ZIP/renv, imagens imutáveis e integração com executor",
+    "production_ready": false,
+    "tests": [
+      {
+        "name": "empty_test_installation",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "empty_data_test_namespace",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "crun_dependency_ready",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_runtime_installed",
+        "passed": true,
+        "detail": "0.1.0~runtime5"
+      },
+      {
+        "name": "package_checksum",
+        "passed": true,
+        "detail": "01f9b094bc0a4767452fceca07a664473fe1fdb171f585656205d546423e1ce3"
+      },
+      {
+        "name": "package_identity",
+        "passed": true,
+        "detail": "shinyd-builder 0.1.0~builder2"
+      },
+      {
+        "name": "build_0_prepared",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_0_isolation",
+        "passed": true,
+        "detail": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        }
+      },
+      {
+        "name": "build_0_cache",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_1_prepared",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "build_1_isolation",
+        "passed": true,
+        "detail": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        }
+      },
+      {
+        "name": "build_1_cache",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "different_r_and_packages",
+        "passed": true,
+        "detail": [
+          {
+            "r": "4.4.3",
+            "shiny": "1.10.0",
+            "image": "sha256:2ef48b9c64c97ef1a799977e985b6504e4a1529e56dd5d966558dfa7a9ce4aff"
+          },
+          {
+            "r": "4.5.2",
+            "shiny": "1.13.0",
+            "image": "sha256:edf65e88cb52ec63c26502c943180f2776d7e5b387974671c3015f431a8e6d27"
+          }
+        ]
+      },
+      {
+        "name": "artifact_0_ready",
+        "passed": true,
+        "detail": {
+          "id": "33c66c89-e31a-435b-af27-ab5c21655e55",
+          "app_id": "33c66c89-e31a-435b-af27-ab5c21655e55",
+          "recipe": "built-0",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/33c66c89-e31a-435b-af27-ab5c21655e55.sock"
+        }
+      },
+      {
+        "name": "artifact_1_ready",
+        "passed": true,
+        "detail": {
+          "id": "2a0cb131-be16-4383-8e0f-857f369b34f0",
+          "app_id": "2a0cb131-be16-4383-8e0f-857f369b34f0",
+          "recipe": "built-1",
+          "priority": "normal",
+          "desired": "running",
+          "state": "ready",
+          "target": "unix:/run/shinyd-runtime/apps/2a0cb131-be16-4383-8e0f-857f369b34f0.sock"
+        }
+      },
+      {
+        "name": "browser_reactivity_upload_download",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "concurrent_build_refused",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "source_checksum_mismatch",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "unprivileged_builder_refused",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "maintenance_weight_and_memory",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "recover_recorded_orphan",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "invalid_zip",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "archive",
+          "message": "ZIP inválido, inseguro ou fora dos limites permitidos."
+        }
+      },
+      {
+        "name": "wrong_r",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "r_unavailable",
+          "message": "A versão exata do R não corresponde ao ambiente selecionado."
+        }
+      },
+      {
+        "name": "missing_package",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "package_unavailable",
+          "message": "Há pacote ou versão ausente no ambiente offline aprovado."
+        }
+      },
+      {
+        "name": "restore_failure",
+        "passed": true,
+        "detail": {
+          "passed": false,
+          "error": "restore",
+          "message": "Falha na restauração offline. Verifique o lockfile e o ambiente aprovado."
+        }
+      },
+      {
+        "name": "failure_preserves_artifacts_and_apps",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "failure_preserves_r_processes",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "no_pending_build",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "empty_api_jobs",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "api_submission_from_control_identity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_upload_prepare",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "worker_reconciles_after_api_restart",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "fresh_artifact",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_cancel_confirmed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_object_permissions",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "no_secret_in_build_or_page",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "panel_activation_probe",
+        "passed": true,
+        "detail": {
+          "passed": true,
+          "checks": [
+            "panel_activation_ready",
+            "activation_with_encrypted_environment",
+            "activation_private_route_denied",
+            "activation_authenticated_route",
+            "activation_public_route",
+            "activation_other_user_denied",
+            "activation_cross_app_artifact_denied",
+            "activation_failed_start_preserves_previous",
+            "activation_failure_has_safe_message",
+            "activation_cancel_confirmed",
+            "activation_late_launch_denied",
+            "activation_switch_and_retirement",
+            "activation_old_host_revoked"
+          ],
+          "instances": [
+            "594c366c-8434-4354-ae5e-61ed3aa4705b",
+            "86ca162b-aca7-48fb-9075-de0e467bf8b5",
+            "2c0d85cc-d373-45c7-b692-96674155b298",
+            "b13ba1df-7ac5-4e7c-8334-acee1af40baa"
+          ],
+          "active_instance": "b13ba1df-7ac5-4e7c-8334-acee1af40baa",
+          "busy_retries": []
+        }
+      },
+      {
+        "name": "panel_activation_ready",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_with_encrypted_environment",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_private_route_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_authenticated_route",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_public_route",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_other_user_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_cross_app_artifact_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_failed_start_preserves_previous",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_failure_has_safe_message",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_cancel_confirmed",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_late_launch_denied",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_switch_and_retirement",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activation_old_host_revoked",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "activated_app_browser_reactivity",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "release_second_fixture_before_configuration_rotation",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "other_apps_reactive_and_without_installed_secrets",
+        "passed": true,
+        "detail": null
+      },
+      {
+        "name": "installed_https_probe",
+        "passed": false,
+        "detail": {
+          "passed": false,
+          "checks": [
+            "installed_empty_control",
+            "control_package_checksum",
+            "control_package_identity",
+            "installed_units_verified",
+            "configuration_preserves_keys",
+            "configuration_private_backup",
+            "installed_service_panel",
+            "installed_service_auth",
+            "installed_service_worker",
+            "installed_service_gateway",
+            "installed_service_ingress",
+            "configuration_refuses_running_services",
+            "private_socket_panel",
+            "private_socket_auth",
+            "private_socket_gateway",
+            "unprivileged_panel_socket_denied",
+            "tls_hostname_and_certificate",
+            "https_login_and_static_assets",
+            "internal_api_not_exposed",
+            "secret_not_rendered_after_save",
+            "browser_upload_and_inspection",
+            "browser_prepare_real_image",
+            "browser_activate_real_instance",
+            "r_receives_secret_and_multiline_utf8",
+            "other_app_present_for_configuration_test",
+            "production_cookie_boundary",
+            "secure_cookie___Host-shinyd_session",
+            "secure_cookie___Host-shinyd_app",
+            "https_shiny_affinity_upload_download",
+            "https_private_direct_url_denied",
+            "https_private_websocket_denied",
+            "panel_restart_does_not_restart_data_services",
+            "panel_worker_restart_preserves_shiny",
+            "saved_secret_waits_for_explicit_apply",
+            "secret_rotated_without_zip",
+            "previous_config_route_revoked",
+            "single_source_version_after_rotation",
+            "secrets_absent_from_container_metadata_and_logs",
+            "secrets_absent_from_sqlite_plaintext",
+            "other_apps_keep_processes_during_secret_rotation",
+            "removed_secret_unset_after_apply",
+            "data_enabled_through_browser",
+            "data_mapped_write_and_private_parent",
+            "data_cannot_reach_control_or_host_parent",
+            "data_second_writer_denied",
+            "data_failed_probe_preserves_live_volume_and_process",
+            "data_failed_probe_keeps_previous_route",
+            "data_survives_new_code_publication",
+            "data_temporary_files_discarded_and_symlink_not_followed",
+            "data_control_key_unchanged",
+            "data_previous_container_removed",
+            "data_survives_configuration_restart",
+            "data_distinct_user_mappings",
+            "data_two_apps_isolated",
+            "rollback_source_has_older_code_and_configuration",
+            "rollback_history_mobile",
+            "rollback_stale_confirmation_denied",
+            "rollback_reuses_image_without_upload_or_build",
+            "rollback_new_publication_auditable",
+            "rollback_keeps_data_and_pending_configuration",
+            "rollback_removed_secret_not_restored",
+            "rollback_previous_writer_removed",
+            "rollback_previous_route_revoked",
+            "rollback_preserves_other_app_session",
+            "rollback_history_records_source",
+            "drain_existing_shiny_session_keeps_identity_and_reactivity",
+            "drain_new_authorized_websocket_denied",
+            "drain_existing_session_upload_download",
+            "drain_cancel_reopens_previous",
+            "drain_worker_restart_preserves_session_and_wait",
+            "drain_switch_after_last_connection_preserves_data",
+            "drain_previous_writer_removed",
+            "drain_preserves_other_app_session",
+            "drain_telemetry_mobile",
+            "lifecycle_results_completed_0",
+            "lifecycle_restart_new_instance_preserves_data",
+            "lifecycle_old_route_closed",
+            "lifecycle_individual_restart_preserves_other_session",
+            "lifecycle_results_completed_1",
+            "lifecycle_drained_stop_survives_worker_restart",
+            "lifecycle_stopped_app_not_opened_on_visit",
+            "lifecycle_individual_stop_preserves_other_session",
+            "lifecycle_results_completed_2",
+            "lifecycle_start_running_app_is_noop",
+            "lifecycle_start_restores_version_data_and_current_configuration",
+            "lifecycle_results_completed_3",
+            "lifecycle_batch_restart_replaces_both_instances",
+            "lifecycle_batch_restart_preserves_data",
+            "lifecycle_results_completed_4",
+            "lifecycle_stop_all_removes_both_instances",
+            "lifecycle_results_completed_5",
+            "lifecycle_results_mobile_no_overflow",
+            "recovery_enabled_through_browser",
+            "recovery_backoff_1",
+            "recovery_new_process_and_data_1",
+            "recovery_old_writer_removed_1",
+            "recovery_old_route_revoked_1",
+            "recovery_preserves_other_session_1",
+            "recovery_backoff_2",
+            "recovery_worker_restart_keeps_counter",
+            "recovery_new_process_and_data_2",
+            "recovery_old_writer_removed_2",
+            "recovery_old_route_revoked_2",
+            "recovery_preserves_other_session_2",
+            "recovery_backoff_3",
+            "recovery_new_process_and_data_3",
+            "recovery_old_writer_removed_3",
+            "recovery_old_route_revoked_3",
+            "recovery_preserves_other_session_3",
+            "recovery_circuit_opens_after_three",
+            "recovery_open_circuit_survives_worker_restart",
+            "recovery_circuit_visible_and_no_open_link",
+            "recovery_mobile_no_overflow",
+            "recovery_manual_restart_preserves_data",
+            "data_container_removal_preserves_files",
+            "data_other_app_preserved_after_removal",
+            "other_apps_keep_processes_during_data_publications",
+            "https_public_direct_url",
+            "https_public_websocket",
+            "installed_panel_mobile",
+            "browser_no_javascript_errors",
+            "credentials_absent_from_service_logs",
+            "backup_running_services_refused",
+            "backup_readiness_mobile",
+            "backup_stop_all_through_browser",
+            "backup_current_secret_prepared_after_removal_test",
+            "backup_unsafe_link_fixture_present",
+            "backup_unsafe_link_refused",
+            "backup_link_target_unchanged",
+            "installed_cleanup_instances_recorded"
+          ],
+          "limitations": [
+            "Certificado de teste fixado por SPKI no Chrome; não testa emissão ACME ou DNS público.",
+            "Serviços instalados e reiniciados; não reinicia a máquina nem mede capacidade."
+          ],
+          "package_sha256": "d68b7e934b1c472c9e9e6d4301b840a4c4a108ce3f77ecf0efefec7d54b7f03c",
+          "service_restart": {
+            "before": {
+              "auth": "11694",
+              "gateway": "11695",
+              "ingress": "11696"
+            },
+            "after": {
+              "auth": "11694",
+              "gateway": "11695",
+              "ingress": "11696"
+            }
+          },
+          "previous_config_http_status": 404,
+          "data_second_writer_outcomes": [
+            "data_in_use"
+          ],
+          "persistent_data": {
+            "filesystem": "ext4",
+            "crun": "crun version 1.14.1",
+            "uid_maps": [
+              "0     327680      65536",
+              "0     393216      65536"
+            ]
+          },
+          "backup_failure": {
+            "operation": "create",
+            "exit_code": 1,
+            "reason": "unknown_failure"
+          },
+          "error": {
+            "stage": "backup_restore",
+            "type": "RuntimeError",
+            "frames": [
+              {
+                "file": "installed_browser_probe.py",
+                "line": 574
+              },
+              {
+                "file": "backup_browser_probe.py",
+                "line": 144
+              },
+              {
+                "file": "backup_browser_probe.py",
+                "line": 41
+              }
+            ]
+          },
+          "services": [
+            "Id=shinyd.target",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "Id=shinyd-maintenance.timer",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-maintenance.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-ingress.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-gateway.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-worker.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-auth.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "ExecMainStatus=0",
+            "Id=shinyd-panel.service",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "Id=shinyd-gateway.socket",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "Id=shinyd-auth.socket",
+            "ActiveState=inactive",
+            "",
+            "Result=success",
+            "Id=shinyd-panel.socket",
+            "ActiveState=inactive"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "kernel": "6.17.0-1022-azure",
+      "architecture": "x86_64",
+      "logical_cpus": 4,
+      "memory_bytes": 16766410752,
+      "profile": "Dois apps, builds offline e operações reativas; sem teste de capacidade.",
+      "podman": "4.9.3"
+    },
+    "limitations": [
+      "Não baixa pacotes externos; ativação só é testada com --activation.",
+      "Não homologa reboot, capacidade, QoS sob carga ou quotas de disco."
+    ],
+    "panel_setup": {
+      "stage": "dependencies",
+      "passed": true
+    },
+    "artifacts": [
+      {
+        "schema_version": 1,
+        "recipe_version": 1,
+        "created_at": "2026-10-23T12:07:16.481127+00:00",
+        "app_id": "33c66c89-e31a-435b-af27-ab5c21655e55",
+        "cache_key": "8f5858fc53d450983e9dba9e919122980109f43480eb5e2c4fcddbc941fe85e3",
+        "source_hash": "0625db356d02608e92c7c2d2083aedacf9c7dc5b883cf52b16de709672580eff",
+        "entrypoint": "project",
+        "base_image": "sha256:d9af824d556fa9fbcbf2b27ec1e7562c8dd4e79a54afc1bc500f0de5d2ac57a4",
+        "image": "sha256:2ef48b9c64c97ef1a799977e985b6504e4a1529e56dd5d966558dfa7a9ce4aff",
+        "r_version": "4.4.3",
+        "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
+        "packages": {
+          "R6": "2.6.1",
+          "Rcpp": "1.0.14",
+          "base64enc": "0.1-3",
+          "bslib": "0.9.0",
+          "cachem": "1.1.0",
+          "cli": "3.6.4",
+          "commonmark": "1.9.5",
+          "crayon": "1.5.3",
+          "digest": "0.6.37",
+          "docopt": "0.7.2",
+          "evaluate": "1.0.3",
+          "fastmap": "1.2.0",
+          "fontawesome": "0.5.3",
+          "fs": "1.6.5",
+          "glue": "1.8.0",
+          "highr": "0.11",
+          "htmltools": "0.5.8.1",
+          "httpuv": "1.6.15",
+          "jquerylib": "0.1.4",
+          "jsonlite": "2.0.0",
+          "knitr": "1.50",
+          "later": "1.4.2",
+          "lifecycle": "1.0.4",
+          "littler": "0.3.21",
+          "magrittr": "2.0.3",
+          "memoise": "2.0.1",
+          "mime": "0.13",
+          "promises": "1.3.2",
+          "rappdirs": "0.3.3",
+          "renv": "1.1.5",
+          "rlang": "1.1.5",
+          "rmarkdown": "2.29",
+          "sass": "0.4.9",
+          "shiny": "1.10.0",
+          "sourcetools": "0.1.7-1",
+          "tinytex": "0.56",
+          "withr": "3.0.2",
+          "xfun": "0.52",
+          "xtable": "1.8-4",
+          "yaml": "2.3.10"
+        },
+        "protection": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        },
+        "cache_hit": false
+      },
+      {
+        "schema_version": 1,
+        "recipe_version": 1,
+        "created_at": "2026-10-23T12:07:30.764391+00:00",
+        "app_id": "2a0cb131-be16-4383-8e0f-857f369b34f0",
+        "cache_key": "891cebe6761ceb1ee39f93f1cef70fd441e9245b402850832c7ab8ddc27b7efe",
+        "source_hash": "5cccd39d78d9cb814af0eda4e1644e86556d64feaeb960eceb711ee7ce2e7ff3",
+        "entrypoint": "project",
+        "base_image": "sha256:f7a9d5945d603da1a1a8172aecd369112aa21d49647451039cade9d96129cc34",
+        "image": "sha256:edf65e88cb52ec63c26502c943180f2776d7e5b387974671c3015f431a8e6d27",
+        "r_version": "4.5.2",
+        "lock_hash": "b8f2a7373b8320fab390ee9c4df52cfd0e8eb8db71b38cd4bdcddf944cd25fa9",
+        "packages": {
+          "R6": "2.6.1",
+          "Rcpp": "1.1.1",
+          "base64enc": "0.1-6",
+          "bslib": "0.10.0",
+          "cachem": "1.1.0",
+          "cli": "3.6.5",
+          "commonmark": "2.0.0",
+          "digest": "0.6.39",
+          "docopt": "0.7.2",
+          "evaluate": "1.0.5",
+          "fastmap": "1.2.0",
+          "fontawesome": "0.5.3",
+          "fs": "1.6.7",
+          "glue": "1.8.0",
+          "highr": "0.12",
+          "htmltools": "0.5.9",
+          "httpuv": "1.6.16",
+          "jquerylib": "0.1.4",
+          "jsonlite": "2.0.0",
+          "knitr": "1.51",
+          "later": "1.4.8",
+          "lifecycle": "1.0.5",
+          "littler": "0.3.22",
+          "magrittr": "2.0.4",
+          "memoise": "2.0.1",
+          "mime": "0.13",
+          "otel": "0.2.0",
+          "promises": "1.5.0",
+          "rappdirs": "0.3.4",
+          "renv": "1.1.5",
+          "rlang": "1.1.7",
+          "rmarkdown": "2.30",
+          "sass": "0.4.10",
+          "shiny": "1.13.0",
+          "sourcetools": "0.1.7-1",
+          "tinytex": "0.58",
+          "withr": "3.0.2",
+          "xfun": "0.56",
+          "xtable": "1.8-8",
+          "yaml": "2.3.12"
+        },
+        "protection": {
+          "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+          "mapped_uid": true,
+          "network": "none",
+          "maintenance": true
+        },
+        "cache_hit": false
+      }
+    ],
+    "panel_artifact": {
+      "app_id": "bc73822e-7581-4f10-bf73-d76053f78af4",
+      "base_image": "sha256:d9af824d556fa9fbcbf2b27ec1e7562c8dd4e79a54afc1bc500f0de5d2ac57a4",
+      "cache_hit": false,
+      "cache_key": "64c5302c46c4639abaafda772d1c4011c5d362e7ebe48d89be987f6a7fcce456",
+      "created_at": "2026-10-23T12:08:29.175797+00:00",
+      "entrypoint": "project",
+      "image": "sha256:18a28011b88dbd80088d2df7fc19589aa3f9c5dd25a3a29e06c2fb35696ef272",
+      "lock_hash": "d25a90f4a2d65cb456b41e900ee4b4fa655e68807f2798d87bef5e686be3998a",
+      "packages": {
+        "R6": "2.6.1",
+        "Rcpp": "1.0.14",
+        "base64enc": "0.1-3",
+        "bslib": "0.9.0",
+        "cachem": "1.1.0",
+        "cli": "3.6.4",
+        "commonmark": "1.9.5",
+        "crayon": "1.5.3",
+        "digest": "0.6.37",
+        "docopt": "0.7.2",
+        "evaluate": "1.0.3",
+        "fastmap": "1.2.0",
+        "fontawesome": "0.5.3",
+        "fs": "1.6.5",
+        "glue": "1.8.0",
+        "highr": "0.11",
+        "htmltools": "0.5.8.1",
+        "httpuv": "1.6.15",
+        "jquerylib": "0.1.4",
+        "jsonlite": "2.0.0",
+        "knitr": "1.50",
+        "later": "1.4.2",
+        "lifecycle": "1.0.4",
+        "littler": "0.3.21",
+        "magrittr": "2.0.3",
+        "memoise": "2.0.1",
+        "mime": "0.13",
+        "promises": "1.3.2",
+        "rappdirs": "0.3.3",
+        "renv": "1.1.5",
+        "rlang": "1.1.5",
+        "rmarkdown": "2.29",
+        "sass": "0.4.9",
+        "shiny": "1.10.0",
+        "sourcetools": "0.1.7-1",
+        "tinytex": "0.56",
+        "withr": "3.0.2",
+        "xfun": "0.52",
+        "xtable": "1.8-4",
+        "yaml": "2.3.10"
+      },
+      "protection": {
+        "apparmor": "containers-default-0.57.4-apparmor1//&crun (mixed)",
+        "maintenance": true,
+        "mapped_uid": true,
+        "network": "none"
+      },
+      "r_version": "4.4.3",
+      "recipe_version": 1,
+      "schema_version": 1,
+      "source_hash": "0625db356d02608e92c7c2d2083aedacf9c7dc5b883cf52b16de709672580eff"
+    },
+    "activation": {
+      "passed": true,
+      "checks": [
+        "panel_activation_ready",
+        "activation_with_encrypted_environment",
+        "activation_private_route_denied",
+        "activation_authenticated_route",
+        "activation_public_route",
+        "activation_other_user_denied",
+        "activation_cross_app_artifact_denied",
+        "activation_failed_start_preserves_previous",
+        "activation_failure_has_safe_message",
+        "activation_cancel_confirmed",
+        "activation_late_launch_denied",
+        "activation_switch_and_retirement",
+        "activation_old_host_revoked"
+      ],
+      "instances": [
+        "594c366c-8434-4354-ae5e-61ed3aa4705b",
+        "86ca162b-aca7-48fb-9075-de0e467bf8b5",
+        "2c0d85cc-d373-45c7-b692-96674155b298",
+        "b13ba1df-7ac5-4e7c-8334-acee1af40baa"
+      ],
+      "active_instance": "b13ba1df-7ac5-4e7c-8334-acee1af40baa",
+      "busy_retries": []
+    },
+    "installed": {
+      "passed": false,
+      "checks": [
+        "installed_empty_control",
+        "control_package_checksum",
+        "control_package_identity",
+        "installed_units_verified",
+        "configuration_preserves_keys",
+        "configuration_private_backup",
+        "installed_service_panel",
+        "installed_service_auth",
+        "installed_service_worker",
+        "installed_service_gateway",
+        "installed_service_ingress",
+        "configuration_refuses_running_services",
+        "private_socket_panel",
+        "private_socket_auth",
+        "private_socket_gateway",
+        "unprivileged_panel_socket_denied",
+        "tls_hostname_and_certificate",
+        "https_login_and_static_assets",
+        "internal_api_not_exposed",
+        "secret_not_rendered_after_save",
+        "browser_upload_and_inspection",
+        "browser_prepare_real_image",
+        "browser_activate_real_instance",
+        "r_receives_secret_and_multiline_utf8",
+        "other_app_present_for_configuration_test",
+        "production_cookie_boundary",
+        "secure_cookie___Host-shinyd_session",
+        "secure_cookie___Host-shinyd_app",
+        "https_shiny_affinity_upload_download",
+        "https_private_direct_url_denied",
+        "https_private_websocket_denied",
+        "panel_restart_does_not_restart_data_services",
+        "panel_worker_restart_preserves_shiny",
+        "saved_secret_waits_for_explicit_apply",
+        "secret_rotated_without_zip",
+        "previous_config_route_revoked",
+        "single_source_version_after_rotation",
+        "secrets_absent_from_container_metadata_and_logs",
+        "secrets_absent_from_sqlite_plaintext",
+        "other_apps_keep_processes_during_secret_rotation",
+        "removed_secret_unset_after_apply",
+        "data_enabled_through_browser",
+        "data_mapped_write_and_private_parent",
+        "data_cannot_reach_control_or_host_parent",
+        "data_second_writer_denied",
+        "data_failed_probe_preserves_live_volume_and_process",
+        "data_failed_probe_keeps_previous_route",
+        "data_survives_new_code_publication",
+        "data_temporary_files_discarded_and_symlink_not_followed",
+        "data_control_key_unchanged",
+        "data_previous_container_removed",
+        "data_survives_configuration_restart",
+        "data_distinct_user_mappings",
+        "data_two_apps_isolated",
+        "rollback_source_has_older_code_and_configuration",
+        "rollback_history_mobile",
+        "rollback_stale_confirmation_denied",
+        "rollback_reuses_image_without_upload_or_build",
+        "rollback_new_publication_auditable",
+        "rollback_keeps_data_and_pending_configuration",
+        "rollback_removed_secret_not_restored",
+        "rollback_previous_writer_removed",
+        "rollback_previous_route_revoked",
+        "rollback_preserves_other_app_session",
+        "rollback_history_records_source",
+        "drain_existing_shiny_session_keeps_identity_and_reactivity",
+        "drain_new_authorized_websocket_denied",
+        "drain_existing_session_upload_download",
+        "drain_cancel_reopens_previous",
+        "drain_worker_restart_preserves_session_and_wait",
+        "drain_switch_after_last_connection_preserves_data",
+        "drain_previous_writer_removed",
+        "drain_preserves_other_app_session",
+        "drain_telemetry_mobile",
+        "lifecycle_results_completed_0",
+        "lifecycle_restart_new_instance_preserves_data",
+        "lifecycle_old_route_closed",
+        "lifecycle_individual_restart_preserves_other_session",
+        "lifecycle_results_completed_1",
+        "lifecycle_drained_stop_survives_worker_restart",
+        "lifecycle_stopped_app_not_opened_on_visit",
+        "lifecycle_individual_stop_preserves_other_session",
+        "lifecycle_results_completed_2",
+        "lifecycle_start_running_app_is_noop",
+        "lifecycle_start_restores_version_data_and_current_configuration",
+        "lifecycle_results_completed_3",
+        "lifecycle_batch_restart_replaces_both_instances",
+        "lifecycle_batch_restart_preserves_data",
+        "lifecycle_results_completed_4",
+        "lifecycle_stop_all_removes_both_instances",
+        "lifecycle_results_completed_5",
+        "lifecycle_results_mobile_no_overflow",
+        "recovery_enabled_through_browser",
+        "recovery_backoff_1",
+        "recovery_new_process_and_data_1",
+        "recovery_old_writer_removed_1",
+        "recovery_old_route_revoked_1",
+        "recovery_preserves_other_session_1",
+        "recovery_backoff_2",
+        "recovery_worker_restart_keeps_counter",
+        "recovery_new_process_and_data_2",
+        "recovery_old_writer_removed_2",
+        "recovery_old_route_revoked_2",
+        "recovery_preserves_other_session_2",
+        "recovery_backoff_3",
+        "recovery_new_process_and_data_3",
+        "recovery_old_writer_removed_3",
+        "recovery_old_route_revoked_3",
+        "recovery_preserves_other_session_3",
+        "recovery_circuit_opens_after_three",
+        "recovery_open_circuit_survives_worker_restart",
+        "recovery_circuit_visible_and_no_open_link",
+        "recovery_mobile_no_overflow",
+        "recovery_manual_restart_preserves_data",
+        "data_container_removal_preserves_files",
+        "data_other_app_preserved_after_removal",
+        "other_apps_keep_processes_during_data_publications",
+        "https_public_direct_url",
+        "https_public_websocket",
+        "installed_panel_mobile",
+        "browser_no_javascript_errors",
+        "credentials_absent_from_service_logs",
+        "backup_running_services_refused",
+        "backup_readiness_mobile",
+        "backup_stop_all_through_browser",
+        "backup_current_secret_prepared_after_removal_test",
+        "backup_unsafe_link_fixture_present",
+        "backup_unsafe_link_refused",
+        "backup_link_target_unchanged",
+        "installed_cleanup_instances_recorded"
+      ],
+      "limitations": [
+        "Certificado de teste fixado por SPKI no Chrome; não testa emissão ACME ou DNS público.",
+        "Serviços instalados e reiniciados; não reinicia a máquina nem mede capacidade."
+      ],
+      "package_sha256": "d68b7e934b1c472c9e9e6d4301b840a4c4a108ce3f77ecf0efefec7d54b7f03c",
+      "service_restart": {
+        "before": {
+          "auth": "11694",
+          "gateway": "11695",
+          "ingress": "11696"
+        },
+        "after": {
+          "auth": "11694",
+          "gateway": "11695",
+          "ingress": "11696"
+        }
+      },
+      "previous_config_http_status": 404,
+      "data_second_writer_outcomes": [
+        "data_in_use"
+      ],
+      "persistent_data": {
+        "filesystem": "ext4",
+        "crun": "crun version 1.14.1",
+        "uid_maps": [
+          "0     327680      65536",
+          "0     393216      65536"
+        ]
+      },
+      "backup_failure": {
+        "operation": "create",
+        "exit_code": 1,
+        "reason": "unknown_failure"
+      },
+      "error": {
+        "stage": "backup_restore",
+        "type": "RuntimeError",
+        "frames": [
+          {
+            "file": "installed_browser_probe.py",
+            "line": 574
+          },
+          {
+            "file": "backup_browser_probe.py",
+            "line": 144
+          },
+          {
+            "file": "backup_browser_probe.py",
+            "line": 41
+          }
+        ]
+      },
+      "services": [
+        "Id=shinyd.target",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "Id=shinyd-maintenance.timer",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-maintenance.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-ingress.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-gateway.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-worker.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-auth.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "ExecMainStatus=0",
+        "Id=shinyd-panel.service",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "Id=shinyd-gateway.socket",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "Id=shinyd-auth.socket",
+        "ActiveState=inactive",
+        "",
+        "Result=success",
+        "Id=shinyd-panel.socket",
+        "ActiveState=inactive"
+      ]
+    },
+    "error": "Verificação falhou: installed_https_probe",
+    "fixture_diagnostics": [],
+    "cleanup_inventory": {
+      "instances": [
+        "057fe2a0-69aa-52fd-8b8d-b31cd1a194b8",
+        "07d0d66d-c1c1-56db-b561-e8d5e0319300",
+        "0c96a446-185a-5ba8-803e-894ac9e0a40c",
+        "17784955-5076-45f4-bc8a-5509ba9a44a3",
+        "189d9062-27cb-5eea-a447-a35da4fcdb7f",
+        "2a0cb131-be16-4383-8e0f-857f369b34f0",
+        "2c0d85cc-d373-45c7-b692-96674155b298",
+        "2c1511b1-feeb-5891-96d2-3cdd8947e4a6",
+        "30476dac-4c8c-4add-ba9d-225f14d77851",
+        "32b7674b-ac7e-4df9-a2cc-797d53252535",
+        "33c66c89-e31a-435b-af27-ab5c21655e55",
+        "3a324b68-2efc-4076-83fe-3803bd9f860b",
+        "448dc38e-53e7-4c68-989e-204963857458",
+        "578266dd-44ef-5a92-8a28-0b3802a40836",
+        "594c366c-8434-4354-ae5e-61ed3aa4705b",
+        "5ef5860d-1290-435f-b7ae-376292f34e7d",
+        "685d00dd-fd42-4f2e-97d8-89104db4e0bd",
+        "6a0e4e12-d120-558e-ad9b-7b5b74d68bea",
+        "6a589339-93bd-4508-bf58-0cb1d66d64b8",
+        "6a6b270c-68d5-40a6-b02f-1e3afed1eb7a",
+        "739ed1c0-0cd0-40f9-82fd-608ef8fc15ce",
+        "777779a0-45df-4066-96c8-98ad7b3501ad",
+        "7d022616-76aa-43c1-a59c-a1a534424572",
+        "7fa0bfe7-58ae-5140-907f-80e1d6685aca",
+        "86ca162b-aca7-48fb-9075-de0e467bf8b5",
+        "8c98ae9b-1013-5e09-a7ef-eac20157e498",
+        "a12c96e1-d3ff-473b-97a3-f9f88c3fe447",
+        "a9c44892-59df-5f23-ba20-4282ad5b86aa",
+        "ac7cadc9-116a-4dd8-a262-9cccd595d2de",
+        "b13ba1df-7ac5-4e7c-8334-acee1af40baa",
+        "b4465285-0f20-5c65-87a7-d848c30359ef",
+        "b8bc1f07-440e-4180-94b5-9f3f62f0ec29",
+        "bc24e7c3-6415-4c98-8cce-c3a0056150c6",
+        "c107b9de-af26-5957-92b0-80b472e44a4c",
+        "c394e04b-eb97-4f5f-a43b-5f227d171934",
+        "cce071d3-dd86-5d7d-a74a-fe80c762194d",
+        "d3553c2a-3f54-51b1-9f37-7fbdb6a5bf94",
+        "d96f5a26-04bc-5e67-8fb7-0a331476e44e",
+        "dc6a8e17-290b-42bf-a2cc-7b4378f936af",
+        "dd8be63d-870a-4eb3-a775-5d3950edb283",
+        "dea404e4-9579-4ec2-91fa-e40f803af3a6",
+        "df183f88-e8af-4de3-986b-27f933afd117",
+        "e23d661d-8a9c-470a-b68c-20edd3b25f53",
+        "e44716e0-bd68-5e7e-98b7-9a151ffd9415",
+        "f26907f6-955b-53e5-b4de-bf2b0229b37f",
+        "f526a31c-2609-54ee-9970-7a69acc5a587"
+      ],
+      "data_apps": [
+        "758a3ae7-d9f4-4ef0-a507-73857a56130c",
+        "b92aba9c-809c-41ba-ae05-b8e3ea1f1830"
+      ],
+      "artifact_keys": [
+        "13c45e69122da325cc38e758da12c33d57fc8ceb478e30817bc6397508ee1de5",
+        "199cbcdd868453e6c4d52551b887094c57a7b61240cbe0cecc549f6e39f1abc6",
+        "64c5302c46c4639abaafda772d1c4011c5d362e7ebe48d89be987f6a7fcce456",
+        "6b048612b8f9db0e51c9383e718ed1a4e247747fdd2496922c6137a785291537",
+        "759da96529293eda9a7f8f06198e1ba72003c308c87659986d180e2982acaa8d",
+        "891cebe6761ceb1ee39f93f1cef70fd441e9245b402850832c7ab8ddc27b7efe",
+        "8f5858fc53d450983e9dba9e919122980109f43480eb5e2c4fcddbc941fe85e3",
+        "ef43a3b8e98917e0b02ac8db0fc882267ad1613163125073c4e0df4f36935cf0"
+      ],
+      "previous_limits": {
+        "MemoryHigh": "infinity",
+        "MemoryMax": "1",
+        "MemorySwapMax": "0"
+      },
+      "runtime_policy_sha256": "9cd4aebb22ad66241bf88a228771103b4db9ff67c864a1e45d4b13127737bcc2",
+      "builder_policy_sha256": "a925c9301dc06b1cdb5247cbdab7d04a427fc2f74c42b44ba4e8078f575d87f8"
+    },
+    "runtime_api_retries": [
+      {
+        "action": "remove",
+        "instance": "2a0cb131-be16-4383-8e0f-857f369b34f0",
+        "http_status": 429
+      }
+    ],
+    "passed": false
+  }
+}
