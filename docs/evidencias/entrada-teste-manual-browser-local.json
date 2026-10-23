@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T17:44:29.031328+00:00",
+  "passed": true,
+  "scope": "Launcher local com Chrome real, TLS temporário e HTML/CSS do login Django renderizado em banco em memória. Não instala nem inicia serviços systemd.",
+  "checks": [
+    "public_profile_and_pin_match",
+    "https_health_verified",
+    "login_fields_visible",
+    "login_no_horizontal_overflow_1280_360"
+  ],
+  "systemd_used": false,
+  "installed_setup_tested": false
+}

@@ -8,8 +8,9 @@ O [plano e backlog](docs/PLANO_DESENVOLVIMENTO.md) e o
 de recursos implementados e homologados.
 
 O [guia de desenvolvimento](docs/DESENVOLVIMENTO.md) explica como iniciar o painel
-local, criar contas, cadastrar apps e inspecionar um ZIP. O executor ainda não
-está habilitado; uma inspeção aprovada não publica o app.
+local, criar contas, cadastrar apps e inspecionar um ZIP. Nesse modo de
+desenvolvimento, o executor fica desabilitado. Para publicar e administrar apps
+reais com os serviços instalados, siga o [teste manual](docs/TESTE_MANUAL.md).
 
 O [isolamento inicial de containers](docs/HOMOLOGACAO_CONTAINERS.md) passou
 na verificação rootful. O [gateway com login central](docs/GATEWAY_ACESSO.md)
@@ -88,9 +89,8 @@ homologação local com containers aprovadas.
 
 F3-05 acrescenta [iniciar, parar e reiniciar apps](docs/OPERACOES_APPS.md),
 individualmente, por seleção ou todos sob sua gestão, com revisão de impacto
-e resultados por app. Requer `control6` e migração `0011`. O teste manual
-completo combinado para o fim da Fase 3 ainda depende de F3-06, F3-07 e da
-instalação permanente de testes. Passaram 310 testes Python, 155 verificações integradas
+e resultados por app. Requer `control6` e migração `0011`.
+Passaram 310 testes Python, 155 verificações integradas
 no CI após o ajuste do roteiro e 157 na homologação local com containers.
 F3-05 está homologada nos dois ambientes. Evidências e limites estão em
 [STATUS.md](docs/STATUS.md).
@@ -109,21 +109,21 @@ com preparação visual, preservação de código/imagens/dados/segredos e inval
 de sessões antigas. Requer `control10` e `age`, sem nova migração de banco.
 A execução inicial é pelo operador Linux, com apps parados.
 
-**F3-07 passou no CI em 202 verificações integradas; a homologação local
-continua pendente.** O ensaio criou e verificou uma cópia com dez imagens,
+**F3-07 passou em 202 verificações integradas no CI e 204 neste servidor.**
+O ensaio local criou e verificou uma cópia com dez imagens e 1.518.409.848 bytes,
 restaurou em uma instalação vazia e confirmou pelo navegador o app recuperado,
 seus dados e segredos. Também verificou chave incorreta, truncamento, destino
 ocupado e bloqueio de partida durante restauração incompleta. Não mede
-capacidade nem testa reboot. Evidências no marco 42 de [STATUS.md](docs/STATUS.md).
+capacidade nem testa reboot. Evidências no marco 43 de [STATUS.md](docs/STATUS.md).
 
-O último ensaio local parou antes do backup por uma recusa de recursos.
-O roteiro agora registra memória e disco e encerra a espera ao reconhecer uma
-tarefa que falhou; passaram 430 testes Python. Caches de ferramentas foram
-transferidos, com cópias conferidas e links nos caminhos originais, para a
-partição com espaço livre. O espaço disponível em `/` passou de 6,18 para
-9,36 GiB. O próximo comando de homologação está em [STATUS.md](docs/STATUS.md).
+O [roteiro do primeiro teste pela interface](docs/TESTE_MANUAL.md) prepara uma
+instalação persistente, acessível pelo Chrome nesta mesma máquina Linux, com
+quatro ZIPs de exemplo e dois ambientes R já homologados. A preparação exige
+sudo, namespace vazio e criação da sua conta; o painel permanente ainda precisa
+ser iniciado por esses comandos. Passaram 454 testes Python e a conferência do
+login em Chrome real com TLS temporário. O teste do novo preparador com systemd
+foi acrescentado ao CI e ainda aguarda execução. A Fase 4, incluindo múltiplas
+instâncias e validação de QoS sob disputa, continua pendente para o MVP.
 
-O teste manual completo combinado para o fim da Fase 3 depende da aprovação
-local e da configuração de uma instalação permanente de testes. O histórico
-das correções de backup, limpeza, compressão, SQLite WAL e diagnóstico está
-preservado nos marcos 34–42 de [STATUS.md](docs/STATUS.md).
+O histórico das correções de backup, limpeza, compressão, SQLite WAL e
+diagnóstico está preservado nos marcos 34–43 de [STATUS.md](docs/STATUS.md).

@@ -2268,3 +2268,85 @@ sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
 **F3-07 está aprovada no CI; a homologação local permanece pendente.** O teste
 manual completo combinado continua dependendo dela e da instalação permanente
 de testes. Ainda não foi anunciada a liberação desse teste.
+
+## Marco 43 — Backup homologado localmente e preparação do teste pela interface
+
+Em **2026-10-23**, o operador executou novamente o ensaio integrado com backup.
+O relatório iniciado às **16:42:17 UTC**, concluído aproximadamente às
+**17:07:33 UTC**, aprovou **204 de 204 verificações**, incluindo **148** da pilha
+instalada. Não houve erro do ensaio nem da limpeza. A cópia integral conferida
+está em [`backup-instalado-local-sucesso.json`](evidencias/backup-instalado-local-sucesso.json),
+com SHA-256 `78ad672aff9db70cc02b0d5635f7579e3352dfa6cfa73a4da121ec899147757c`.
+
+O host observado usava kernel **7.0.0-38-generic**, arquitetura **x86_64**,
+**16 CPUs lógicas**, **66.735.198.208 bytes de RAM** e Podman **4.9.3**. O perfil
+foi funcional: dois ambientes R, builds offline, interações Shiny e operações
+de administração. Esses números não medem capacidade de atendimento.
+
+O arquivo de backup continha **dez imagens**, com **1.518.409.848 bytes** e
+SHA-256 `e2de9c9341a11336cb5d07948a19a0d823d4d7966e657fc13b7e6db25126f936`.
+A restauração em vazio recuperou o app, seus dados e seus segredos, conferidos
+pelo navegador. Também passaram as recusas de chave incorreta, arquivo truncado,
+destino ocupado e partida durante restauração incompleta. O pacote instalado
+continuou sendo `control10`, SHA-256
+`762394953a30ac03fd33195d4d7b54a5e2ff5bdbe7504982e51415e98bf79d62`.
+
+Os cinco jobs do [workflow de 86ae3c3](https://github.com/rfsaldanha/shinyd/actions/runs/39986408900)
+também terminaram com sucesso. O CI aprova 202 verificações integradas; o roteiro
+local acrescenta identidade e checksum do pacote do executor. **F3-07 está
+homologada no CI e neste servidor.** A limpeza do ensaio retirou a instalação
+temporária; esse resultado não significa que haja um painel permanente ativo.
+
+O operador escolheu testar pela interface **nesta mesma máquina Linux**. Foram
+acrescentados:
+
+- `scripts/manual_test_setup.py`: prévia sem alterações e preparação explícita
+  com `--apply`, reutilizando pacotes e IDs de imagens observados no relatório.
+  Confere versões, recursos, serviços e namespace vazio; recusa instalação
+  ocupada. Guarda a origem da preparação e preserva chaves em repetição ou
+  retomada de uma falha parcial de configuração. Não cria contas nem inicia
+  serviços. Repetir uma preparação concluída apenas confere os arquivos.
+- `scripts/manual_test_common.py`: perfil local fixo, validação do relatório,
+  certificado de teste e quatro ZIPs reproduzíveis. Os exemplos usam R **4.4.3**
+  com Shiny **1.10.0** e R **4.5.2** com Shiny **1.13.0**, com os pacotes/versões
+  efetivamente observados. As revisões v1/v2 permitem testar rollback; o app
+  inclui contador, upload, download, persistência e presença de um segredo,
+  sem mostrar o valor dele.
+- `scripts/open_manual_test.py`: confere HTTPS e abre Chrome separado em
+  `https://panel.shinyd.test:18443`, ligado a `127.0.0.1`. Resolve os nomes apenas
+  nesse navegador e fixa uma chave TLS. Não altera DNS ou confiança global.
+  A espera inicial é limitada; certificado inválido não é tratado como simples
+  atraso de partida. O perfil local tem permissão 0700.
+- [TESTE_MANUAL.md](TESTE_MANUAL.md): comandos para preparar, criar conta,
+  habilitar/iniciar a pilha e testar publicação, ambientes, configuração,
+  persistência, rollback, drenagem e permissões pela interface.
+
+A preparação define **4 GiB para o conjunto dos workloads**, com limiar de
+pressão em **3,5 GiB**, sem swap, e máximo de **cinco instâncias**. São proteções
+do ambiente de teste, não promessa de capacidade. O catálogo permanece offline.
+As políticas de múltiplas instâncias, concorrência e QoS ainda dependem da Fase 4.
+O certificado local vale 90 dias; renovação automática e acesso por outra máquina
+não integram esse roteiro.
+
+Passaram **454 testes Python** em **29,07 segundos**, incluindo 24 verificações
+novas do preparador/launcher: recusa de arquivos inseguros e instalações ocupadas,
+preservação de chaves, retomada de configuração parcial, inspeção real dos ZIPs
+e lockfiles, validação HTTPS com certificado/nome incorretos e espera de partida.
+Ruff aprovou os diretórios usados pelo CI, com **141 arquivos** formatados.
+A sintaxe do exemplo foi conferida com R. A entrada no navegador passou com
+Chrome real, TLS temporário e HTML/CSS do login Django em 1280 e 360 px, conforme
+[`entrada-teste-manual-browser-local.json`](evidencias/entrada-teste-manual-browser-local.json).
+Esse experimento não usou serviços systemd nem uma instalação permanente.
+
+O workflow recebeu uma etapa para preparar a instalação no runner, conferir o
+login pelo Chrome, repetir o preparador sem mudar o PID do painel e preparar os
+dois ZIPs de exemplo com o builder instalado. **Essa etapa nova ainda aguarda
+execução no CI.** O preparador não foi aplicado ao host local: `sudo -n` continua
+exigindo a senha do operador. Não houve alteração de módulos do produto, pacote
+ou migração neste marco.
+
+O próximo passo é executar o bloco de preparação em [TESTE_MANUAL.md](TESTE_MANUAL.md)
+e criar a conta administrativa no próprio terminal. Isso libera o primeiro teste
+manual funcional combinado. A instalação permanente e a sessão do operador
+ainda precisam ser verificadas após essa execução. Reboot real, capacidade sob
+carga e prontidão do MVP continuam pendentes.

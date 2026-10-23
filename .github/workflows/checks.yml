@@ -127,6 +127,35 @@ jobs:
         run: |
           set -o pipefail
           sudo -n .venv/bin/python scripts/builder_smoke.py --activation --backup --install-package 'dist/shinyd-builder_0.1.0~builder2_amd64.deb' --install-control-package 'dist/shinyd-control_0.1.0~control10_amd64.deb' | tee dist/builder-report.json
+      - name: Prepare persistent local manual test and verify its browser entry
+        run: |
+          set -o pipefail
+          trap 'sudo -n systemctl stop shinyd.target shinyd-runtime.service shinyd-runtime.socket shinyd-builder.service shinyd-builder.socket' EXIT
+          chmod go-w dist/builder-report.json
+          sudo -n .venv/bin/python scripts/manual_test_setup.py --report dist/builder-report.json --apply | tee dist/manual-setup-report.json
+          sudo -n systemctl start shinyd.target
+          .venv/bin/python scripts/open_manual_test.py --check-browser | tee dist/manual-browser-report.json
+          panel_pid_before=$(systemctl show shinyd-panel.service --property=MainPID --value)
+          sudo -n .venv/bin/python scripts/manual_test_setup.py --report dist/builder-report.json --apply >/dev/null
+          test "$panel_pid_before" != 0
+          test "$panel_pid_before" = "$(systemctl show shinyd-panel.service --property=MainPID --value)"
+          sudo -n .venv/bin/python - <<'PY'
+          import hashlib, json, subprocess, uuid
+          from pathlib import Path
+          checks = []
+          for name in ('r-a', 'r-b'):
+              path = Path('/usr/local/share/shinyd-manual-test') / f'demo-{name}-v1.zip'
+              result = subprocess.run(
+                  ['shinyd-build', '--environment', name, '--app-id', str(uuid.uuid4()),
+                   '--sha256', hashlib.sha256(path.read_bytes()).hexdigest(), str(path)],
+                  capture_output=True, text=True, timeout=600,
+              )
+              value = json.loads(result.stdout)
+              checks.append({'environment': name, 'passed': value.get('passed') is True,
+                             'error': value.get('error')})
+              Path('dist/manual-samples-report.json').write_text(json.dumps(checks, indent=2))
+              assert result.returncode == 0 and value.get('passed'), 'manual_sample_build_failed'
+          PY
       - name: Removing the integrated package preserves state
         run: |
           sudo -n touch /var/lib/shinyd-control/package-test-sentinel
@@ -143,3 +172,6 @@ jobs:
             dist/*.deb
             dist/*.sha256
             dist/builder-report.json
+            dist/manual-setup-report.json
+            dist/manual-browser-report.json
+            dist/manual-samples-report.json
