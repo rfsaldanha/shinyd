@@ -21,6 +21,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
+from probe_cleanup import backup_interrupted
 from probe_progress import progress
 
 STATE = Path("/var/lib/shinyd-control")
@@ -611,7 +612,9 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
     finally:
         if owned:
             stopped = run("systemctl", "stop", *UNITS, check=False)
-            if stopped.returncode:
+            if backup_interrupted():
+                report["cleanup_error"] = "backup_interrupted_preserved"
+            elif stopped.returncode:
                 report["cleanup_error"] = "installed_services_stop"
             elif CONFIG.exists() and (STATE / "metadata.sqlite3").exists():
                 try:

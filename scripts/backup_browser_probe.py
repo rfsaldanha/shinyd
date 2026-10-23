@@ -13,6 +13,34 @@ from urllib.parse import urlsplit
 from installed_browser_probe import UNITS
 from probe_progress import progress
 
+BACKUP_ERRORS = {
+    "Espaço insuficiente; mantenha ao menos 1 GiB livre além da operação.": "insufficient_space",
+    "Imagens excedem o limite do backup.": "image_size_limit",
+    "Arquivo final excede o limite do backup.": "archive_size_limit",
+    "Comando de manutenção falhou; consulte os pré-requisitos do guia.": (
+        "maintenance_command_failed"
+    ),
+    "Pare os serviços, sockets e timer do shinyd antes da manutenção.": "services_active",
+    "Retire os containers do shinyd antes da manutenção.": "containers_present",
+    "Links e arquivos especiais não são aceitos no backup.": "unsafe_entry",
+    "Arquivo ausente, inacessível ou link inseguro.": "inaccessible_entry",
+    "Backup/restauração não concluído. Confira o guia, arquivos e chaves; "
+    "os serviços não foram iniciados.": "validation_or_io_failed",
+}
+
+
+def backup_command(run, report, *args, timeout=1800):
+    result = run(*args, timeout=timeout, check=False)
+    if result.returncode:
+        # Only literal platform errors cross this boundary. Never copy raw stderr.
+        report["backup_failure"] = {
+            "operation": args[1],
+            "exit_code": result.returncode,
+            "reason": BACKUP_ERRORS.get(result.stderr.strip(), "unknown_failure"),
+        }
+        raise RuntimeError("backup_command_failed:" + report["backup_failure"]["reason"])
+    return json.loads(result.stdout)
+
 
 def prepare_environment(admin, app_id):
     """Create this test's own secret; an earlier scenario intentionally removed APP_TOKEN."""
@@ -113,7 +141,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             (control / "keys/secrets.key").read_bytes() == expected_keys["secrets.key"],
         )
         progress("backup_create")
-        created = json.loads(run(*create, timeout=1800).stdout)
+        created = backup_command(run, report, *create)
         check(
             "backup_encrypted_archive_created",
             output.stat().st_mode & 0o077 == 0
@@ -152,8 +180,8 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             != 0,
         )
         progress("backup_verify")
-        verified = json.loads(
-            run("shinyd-backup", "verify", str(output), "--identity", str(key), timeout=1800).stdout
+        verified = backup_command(
+            run, report, "shinyd-backup", "verify", str(output), "--identity", str(key)
         )
         check("backup_full_verification", verified["backup_id"] == created["backup_id"])
         check(
@@ -189,10 +217,8 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
             run("podman", "image", "exists", expected["image"], check=False).returncode != 0,
         )
         progress("backup_restore")
-        restored = json.loads(
-            run(
-                "shinyd-backup", "restore", str(output), "--identity", str(key), timeout=1800
-            ).stdout
+        restored = backup_command(
+            run, report, "shinyd-backup", "restore", str(output), "--identity", str(key)
         )
         check("backup_empty_installation_restored", restored["backup_id"] == created["backup_id"])
         check(

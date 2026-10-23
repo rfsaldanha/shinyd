@@ -115,3 +115,7 @@ O primeiro ensaio encontrou um erro de preparação do roteiro: um teste anterio
 havia removido o segredo que ele tentava conferir. A correção cria um segredo
 próprio para a restauração e mostra progresso no terminal. Passaram 365 testes
 Python; resultados e pendências estão no marco 35 de [STATUS.md](docs/STATUS.md).
+A tentativa seguinte avançou até a criação do backup, mas falhou e deixou
+a limpeza incompleta. O marco 36 registra a correção da limpeza, 374 testes
+Python aprovados e um diagnóstico somente de leitura. O próximo passo é
+conferir esse diagnóstico antes de uma nova homologação completa.

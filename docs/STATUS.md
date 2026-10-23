@@ -1750,3 +1750,69 @@ O novo roteiro ainda exige uma homologação completa. A execução recebida
 não produziu backup nem demonstrou restauração. O marco combinado para
 teste manual completo continua pendente da homologação de F3-07 e da
 instalação permanente de testes.
+
+## Marco 36 — diagnóstico da criação e limpeza após backup interrompido
+
+O novo [relatório local](evidencias/backup-criacao-local-falha.json), iniciado
+em `2026-10-23T11:22:25.893941+00:00`, passou pela preparação do segredo que
+falhou antes. Também registrou a presença do link de teste, a recusa da
+cópia contendo esse link e a preservação do alvo; o roteiro antigo não
+registrava o motivo específico dessa recusa. A criação efetiva do backup
+falhou em seguida, antes de registrar `backup_encrypted_archive_created`.
+Há 55 verificações aprovadas na lista principal e 130 na seção instalada.
+Nenhum backup ou restauração foi comprovado nesse ensaio.
+
+A mensagem original do comando foi descartada pelo wrapper antigo, que
+registrou apenas `RuntimeError` e a linha 116 de `backup_browser_probe.py`.
+**A causa da criação ainda não está determinada.** A partição de `/var/lib`
+tinha cerca de 7,4 GB livres após a execução, com 97% de ocupação; esse dado
+isolado não comprova que a falta de espaço causou a falha.
+
+O [CI de 9cc1a61](https://github.com/rfsaldanha/shinyd/actions/runs/39945333609)
+falhou no mesmo ponto. O [relatório remoto](evidencias/backup-criacao-ci-falha.json)
+registra os mesmos 130 checks instalados e 46 falhas na limpeza. Python, Go,
+agente e runtime passaram; builder falhou. As mensagens de progresso mostram
+o início da criação às 11:44:05 UTC e da limpeza às 11:45:16 UTC, sem preservar
+a razão devolvida pelo comando. Não se atribui essa falha a uma causa por inferência.
+
+A limpeza do ensaio local também falhou em 46 chamadas `remove`, porque o
+backup havia parado explicitamente o socket do executor. O roteiro tentava
+usar a API com esse socket desligado. Serviços e socket foram encontrados
+inativos após a execução; não foram iniciados nesta rodada. As políticas,
+registros e dados que ficaram após a limpeza incompleta precisam de inventário
+antes de qualquer remoção ou nova homologação.
+
+Correções nos roteiros:
+
+* A limpeza confere a política que pertence à fixture e reabre o socket do
+  executor antes de retirar as instâncias. Não inicia apps. Se houver marcador
+  de manutenção/restauração incompleta, preserva o estado para recuperação.
+* O painel de teste também preserva banco/configuração nesse caso. O relatório
+  passa a incluir inventário de IDs, hashes das políticas e limites anteriores
+  do grupo, para tornar uma limpeza incompleta verificável.
+* Falhas de `create`, `verify` e `restore` passam a registrar operação,
+  código de saída e uma categoria baseada em mensagens fixas da plataforma.
+  Saídas desconhecidas, tracebacks e valores de segredos não são copiados.
+
+Foi acrescentado `scripts/backup_failure_diagnose.py`, **somente de leitura**.
+Ele compara os IDs remanescentes com o relatório, conta dados sem ler seu
+conteúdo, verifica imagens locais por ID, consulta serviços/limites e informa
+espaço disponível e uma estimativa conservadora baseada em imagens
+descomprimidas. Não inicia ou remove serviços, containers, imagens ou arquivos,
+e não lê as chaves. A estimativa não substitui medição do pico de armazenamento,
+nem recupera a mensagem perdida da falha anterior.
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo python3 scripts/backup_failure_diagnose.py --report var/backup-report.json \
+  | tee var/backup-diagnostic.json
+```
+
+Passaram **374 testes Python**, incluindo proteção contra limpeza de uma
+restauração interrompida, política diferente, socket indisponível, classificação
+segura de erros e diagnóstico sem alterações nem exposição de segredos.
+Ruff e formatação passaram. Não há alteração do produto ou dos pacotes;
+o artefato `control8` continua com o checksum registrado no marco anterior.
+O diagnóstico instalado requer sudo, que ainda exige senha nesta sessão.
+F3-07 e a liberação do teste manual completo continuam pendentes.

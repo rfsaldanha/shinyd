@@ -18,6 +18,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
+from probe_cleanup import backup_interrupted, prepare_runtime_cleanup
 from probe_progress import progress
 from runtime_smoke import API_RETRIES, api, command, require_crun
 
@@ -665,13 +666,16 @@ def main():
         finally:
             progress("cleanup")
             cleanup_errors = []
+            interrupted = backup_interrupted()
+            if interrupted:
+                cleanup_errors.append("backup_interrupted_preserved")
             if panel_state and (panel_state / "activation-instances.json").exists():
                 for identity in json.loads((panel_state / "activation-instances.json").read_text()):
                     if str(uuid.UUID(identity)) != identity:
                         raise RuntimeError("Identificador inválido no roteiro de ativação.")
                     if identity not in created:
                         created.append(identity)
-            if builder_started:
+            if builder_started and not interrupted:
                 # Namespace was verified empty before this fixture used it.
                 panel_jobs = [p.name for p in (STATE / "jobs").iterdir() if p.is_dir()]
                 for job_id in panel_jobs:
@@ -697,13 +701,33 @@ def main():
                         shutil.rmtree(STATE / "jobs" / job_id)
                 else:
                     cleanup_errors.append("pending_api_build")
-            if panel_state is not None:
+            if panel_state is not None and not interrupted:
                 shutil.rmtree(panel_state)
-            for instance in created:
+            report["cleanup_inventory"] = {
+                "instances": sorted(set(created)),
+                "data_apps": sorted(set(data_apps)),
+                "artifact_keys": sorted(set(artifacts)),
+                "previous_limits": previous_limits,
+                "runtime_policy_sha256": hashlib.sha256(own_runtime).hexdigest()
+                if own_runtime
+                else None,
+                "builder_policy_sha256": hashlib.sha256(own_policy).hexdigest()
+                if own_policy
+                else None,
+            }
+            ready = False
+            if created and not interrupted:
                 try:
-                    api("remove", instance)
-                except Exception as exc:
-                    cleanup_errors.append("instance:" + instance + ":" + str(exc))
+                    prepare_runtime_cleanup(RUNTIME_POLICY, own_runtime, command)
+                    ready = True
+                except Exception:
+                    cleanup_errors.append("runtime_cleanup_unavailable")
+            if ready:
+                for instance in created:
+                    try:
+                        api("remove", instance)
+                    except Exception as exc:
+                        cleanup_errors.append("instance:" + instance + ":" + str(exc))
             if own_runtime is not None and not cleanup_errors:
                 stopped = command(
                     "systemctl",
