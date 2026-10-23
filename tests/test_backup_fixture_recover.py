@@ -1,4 +1,6 @@
+import fcntl
 import json
+import os
 import uuid
 
 import backup_failure_diagnose as diagnose
@@ -130,6 +132,95 @@ def test_quarantine_rolls_back_completed_moves_if_a_rename_fails(tmp_path, fixtu
     journal = next((tmp_path / "var/lib").glob("shinyd-probe-quarantine-*/receipt.json"))
     assert json.loads(journal.read_text())["status"] == "rolled_back"
     assert data.read_bytes() == b"private fixture data"
+
+
+def test_empty_builder_api_lock_is_held_and_preserved_during_quarantine(tmp_path, fixture):
+    report, diagnostic, run, data = fixture
+    jobs = tmp_path / "var/lib/shinyd-builder/jobs"
+    lock = jobs / ".api-lock"
+    lock.touch(mode=0o600)
+    original = lock.stat()
+    with recovery.builder_api_lock(jobs, tmp_path) as held:
+        paths, _ = recovery.prepare(report, diagnostic, root=tmp_path, run=run, held_api_lock=held)
+        assert lock not in paths
+        with lock.open("rb") as other:
+            with pytest.raises(BlockingIOError):
+                fcntl.flock(other, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        (tmp_path / "var/lib/shinyd-backup").mkdir(mode=0o700)
+        area, receipt = recovery.guarded_quarantine(
+            report,
+            diagnostic,
+            paths,
+            tmp_path,
+            {},
+            run=run,
+            held_api_lock=held,
+        )
+        assert receipt["status"] == "quarantined"
+        assert "var/lib/shinyd-builder/jobs/.api-lock" not in receipt["paths"]
+        assert (
+            area / "originals" / data.relative_to(tmp_path)
+        ).read_bytes() == b"private fixture data"
+    assert (lock.stat().st_dev, lock.stat().st_ino) == (original.st_dev, original.st_ino)
+    assert lock.read_bytes() == b"" and lock.stat().st_mode & 0o777 == 0o600
+    with lock.open("rb") as reopened:
+        fcntl.flock(reopened, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+@pytest.mark.parametrize(
+    "kind", ["content", "mode", "symlink", "hardlink", "fifo", "directory", "busy"]
+)
+def test_recovery_rejects_unsafe_or_busy_builder_api_lock(tmp_path, fixture, kind):
+    report, diagnostic, run, data = fixture
+    lock = tmp_path / "var/lib/shinyd-builder/jobs/.api-lock"
+    lock.touch(mode=0o600)
+    if kind == "content":
+        lock.write_bytes(b"preserve this content")
+    elif kind == "mode":
+        lock.chmod(0o644)
+    elif kind in {"symlink", "fifo", "directory"}:
+        lock.unlink()
+        if kind == "symlink":
+            lock.symlink_to(tmp_path / "outside")
+        elif kind == "fifo":
+            os.mkfifo(lock, 0o600)
+        else:
+            lock.mkdir(mode=0o700)
+    elif kind == "hardlink":
+        os.link(lock, tmp_path / "second-name")
+    if kind == "busy":
+        with lock.open("rb") as owner:
+            fcntl.flock(owner, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with pytest.raises(ValueError, match="builder_api_lock_busy"):
+                recovery.prepare(report, diagnostic, root=tmp_path, run=run)
+    else:
+        with pytest.raises((ValueError, OSError)):
+            recovery.prepare(report, diagnostic, root=tmp_path, run=run)
+    assert data.read_bytes() == b"private fixture data"
+    assert not list((tmp_path / "var/lib").glob("shinyd-probe-quarantine-*"))
+
+
+def test_recovery_rechecks_lock_inode_before_moving_files(tmp_path, fixture):
+    report, diagnostic, run, data = fixture
+    jobs = tmp_path / "var/lib/shinyd-builder/jobs"
+    lock = jobs / ".api-lock"
+    lock.touch(mode=0o600)
+    with recovery.builder_api_lock(jobs, tmp_path) as held:
+        lock.rename(tmp_path / "original-lock")
+        lock.touch(mode=0o600)
+        with pytest.raises(ValueError, match="unsafe_builder_api_lock"):
+            recovery.prepare(report, diagnostic, root=tmp_path, run=run, held_api_lock=held)
+    assert data.read_bytes() == b"private fixture data"
+
+
+@pytest.mark.parametrize("field", [4, 5])
+def test_builder_api_lock_must_belong_to_the_operator(tmp_path, field):
+    lock = tmp_path / "lock"
+    lock.touch(mode=0o600)
+    info = list(lock.stat())
+    info[field] += 1  # uid/gid; no privileged chown is needed in this test.
+    with pytest.raises(ValueError, match="unsafe_builder_api_lock"):
+        recovery.validate_api_lock(os.stat_result(info))
 
 
 @pytest.mark.parametrize("partial", [False, True])

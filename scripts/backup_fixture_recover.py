@@ -8,7 +8,7 @@ import os
 import stat
 import sys
 import tempfile
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 
 import backup_failure_diagnose as diagnose
@@ -27,6 +27,8 @@ SAFE_ERRORS = {
     "quarantine_partial_preserved",
     "diagnostic_does_not_match_report",
     "unsafe_lock",
+    "unsafe_builder_api_lock",
+    "builder_api_lock_busy",
 }
 
 
@@ -39,7 +41,46 @@ def safe_directory(path, root):
             break
 
 
-def prepare(report, diagnostic, *, root=Path("/"), run=diagnose.command, own_marker=False):
+@contextmanager
+def builder_api_lock(jobs, root):
+    """Preserve the builder daemon's empty lock, holding its actual inode while used."""
+    safe_directory(jobs, root)
+    path = jobs / ".api-lock"
+    if not path.exists() and not path.is_symlink():
+        yield None
+        return
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+    with os.fdopen(fd, "rb") as stream:
+        info = os.fstat(stream.fileno())
+        validate_api_lock(info)
+        try:
+            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ValueError("builder_api_lock_busy") from None
+        yield info
+
+
+def validate_api_lock(info):
+    if (
+        not stat.S_ISREG(info.st_mode)
+        or info.st_nlink != 1
+        or info.st_size != 0
+        or info.st_uid != os.geteuid()
+        or info.st_gid != os.getegid()
+        or stat.S_IMODE(info.st_mode) != 0o600
+    ):
+        raise ValueError("unsafe_builder_api_lock")
+
+
+def prepare(
+    report,
+    diagnostic,
+    *,
+    root=Path("/"),
+    run=diagnose.command,
+    own_marker=False,
+    held_api_lock=None,
+):
     current = diagnose.collect(report, root=root, run=run)
     for key in ("runtime_records", "artifacts", "data", "policies"):
         if current[key] != diagnostic[key]:
@@ -73,10 +114,23 @@ def prepare(report, diagnostic, *, root=Path("/"), run=diagnose.command, own_mar
         raise ValueError("unidentified_or_unsafe_fixture")
     lib = root / "var/lib"
     # The old probe deleted its control state and build jobs before cleanup failed.
+    # The builder intentionally leaves its daemon lock after exiting.
     for name in ("shinyd-control", "shinyd-builder/jobs"):
         directory = lib / name
-        if directory.is_symlink() or (directory.exists() and any(directory.iterdir())):
+        allowed_entries = {".api-lock"} if name == "shinyd-builder/jobs" else set()
+        if directory.is_symlink() or (
+            directory.exists() and any(p.name not in allowed_entries for p in directory.iterdir())
+        ):
             raise ValueError("remaining_control_or_jobs")
+    # Called directly in tests/dry checks too; never accept a name alone as a safe lock.
+    if held_api_lock is None:
+        with builder_api_lock(lib / "shinyd-builder/jobs", root):
+            pass
+    else:
+        actual = (lib / "shinyd-builder/jobs/.api-lock").lstat()
+        validate_api_lock(actual)
+        if (actual.st_dev, actual.st_ino) != (held_api_lock.st_dev, held_api_lock.st_ino):
+            raise ValueError("unsafe_builder_api_lock")
     for name in (
         "etc/shinyd/control.json",
         "etc/shinyd-gateway/key",
@@ -152,7 +206,9 @@ def quarantine(paths, root, checksums):
     return area, receipt
 
 
-def guarded_quarantine(report, diagnostic, paths, root, checksums, *, run=diagnose.command):
+def guarded_quarantine(
+    report, diagnostic, paths, root, checksums, *, run=diagnose.command, held_api_lock=None
+):
     marker = root / "var/lib/shinyd-backup/maintenance"
     with marker.open("x") as guard:
         guard.write("fixture-quarantine\n")
@@ -161,7 +217,9 @@ def guarded_quarantine(report, diagnostic, paths, root, checksums, *, run=diagno
     completed = False
     try:
         # Guard new service starts, then recheck state before the first move.
-        paths, _ = prepare(report, diagnostic, root=root, run=run, own_marker=True)
+        paths, _ = prepare(
+            report, diagnostic, root=root, run=run, own_marker=True, held_api_lock=held_api_lock
+        )
         result = quarantine(paths, root, checksums)
         completed = True
         return result
@@ -197,8 +255,12 @@ def main():
                 if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != 0:
                     raise ValueError("unsafe_lock")
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            paths, _ = prepare(report, diagnostic)
+            held_api_lock = stack.enter_context(
+                builder_api_lock(Path("/var/lib/shinyd-builder/jobs"), Path("/"))
+            )
+            paths, _ = prepare(report, diagnostic, held_api_lock=held_api_lock)
             result = {"passed": True, "applied": args.apply, "identified_paths": len(paths)}
+            result["preserved_builder_api_lock"] = held_api_lock is not None
             if args.apply:
                 area, receipt = guarded_quarantine(
                     report,
@@ -206,6 +268,7 @@ def main():
                     paths,
                     Path("/"),
                     {"report_sha256": report_hash, "diagnostic_sha256": diagnostic_hash},
+                    held_api_lock=held_api_lock,
                 )
                 result.update(quarantine=str(area), **receipt)
             print(json.dumps(result, indent=2))

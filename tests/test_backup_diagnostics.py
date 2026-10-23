@@ -222,3 +222,8 @@ def test_namespace_diagnostic_lists_only_fixed_names_and_metadata(tmp_path):
     identity = str(uuid.uuid4())
     (jobs / identity).mkdir()
     assert diagnose.namespace_entries(jobs, jobs=True)["entries"][0]["name"] == identity
+    (jobs / ".api-lock").touch(mode=0o600)
+    assert {entry["name"] for entry in diagnose.namespace_entries(jobs, jobs=True)["entries"]} == {
+        ".api-lock",
+        identity,
+    }

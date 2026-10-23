@@ -141,10 +141,13 @@ def namespace_entries(path, *, jobs=False):
         )
         name = child.name if child.name in known and not jobs else "unrecognized"
         if jobs:
-            try:
-                name = identity(child.name)
-            except ValueError:
-                pass
+            if child.name == ".api-lock":
+                name = child.name
+            else:
+                try:
+                    name = identity(child.name)
+                except ValueError:
+                    pass
         entries.append(
             {
                 "name": name,

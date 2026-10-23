@@ -1968,3 +1968,52 @@ passaram **403 testes Python**, Ruff e formatação.
 O CI voltará a executar a homologação com identificação mais completa das
 recusas. A operação local ainda depende da senha sudo do operador.
 **F3-07 e o teste manual completo continuam pendentes.**
+
+## Marco 39 — Reconhecimento da trava do builder na recuperação
+
+O diagnóstico de **23/10/2026, 14:02 UTC**, preservado em
+[`backup-namespace-local.json`](evidencias/backup-namespace-local.json),
+confirmou o diretório do painel vazio. No diretório de tarefas havia somente
+um arquivo regular de **0 bytes**, dono/grupo **root:root**, modo **0600** e
+um vínculo. O diagnóstico anterior ocultava o nome como `unrecognized`.
+
+A inspeção de `backend/builder/api.py` encontrou a trava `.api-lock`, criada
+na pasta de tarefas e mantida ali quando a API encerra. O roteiro exigia essa
+pasta completamente vazia, portanto recusava também essa estrutura normal.
+Os metadados observados são compatíveis com a trava; a próxima execução
+conferirá o nome efetivo, sem autorizar arquivos arbitrários pela semelhança.
+
+A recuperação passa a aceitar exclusivamente `.api-lock` regular, vazia,
+com um vínculo, modo 0600 e dono/grupo do operador root. Abre sem seguir links
+e tenta adquirir sua trava exclusiva sem aguardar. Se estiver em uso, recusa
+a operação. Mantém o descritor aberto durante toda a quarentena e reconfere
+o arquivo pelo dispositivo e inode antes de mover os resíduos. O arquivo de
+trava fica no local, com conteúdo e identidade preservados; não entra na lista
+de dados movidos. O resultado informa `preserved_builder_api_lock`.
+
+O painel continua precisando estar vazio, e arquivos desconhecidos, tarefas
+restantes, serviços ativos e mudanças no inventário continuam impedindo a
+operação. O diagnóstico passou a reconhecer o nome fixo `.api-lock` sem ler
+seu conteúdo nem revelar nomes desconhecidos.
+
+Passaram **37 testes específicos** de diagnóstico e recuperação. Os casos
+novos usam locks reais e verificam preservação do arquivo, liberação depois
+da operação, recusa de trava em uso, conteúdo, permissões/donos diferentes,
+links, FIFO, diretório e substituição do arquivo após abrir o descritor.
+A suíte completa passou com **414 testes Python**; Ruff e formatação passaram.
+
+Não há alteração do produto nem dos pacotes; `control9` mantém o checksum
+registrado no marco 37. A recuperação instalada ainda depende da senha sudo:
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo python3 scripts/backup_fixture_recover.py \
+  --report var/backup-report.json \
+  --diagnostic var/backup-diagnostic.json --apply \
+  | tee var/backup-recovery.json
+```
+
+Este comando aplica a quarentena somente se todas as conferências passarem;
+não repete a publicação pelo navegador. **F3-07 e o teste manual completo
+continuam pendentes.**

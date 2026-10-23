@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "read_only": true,
+  "observed_at": "2026-10-23T14:02:27.662005+00:00",
+  "remaining_namespaces": {
+    "control": {
+      "present": true,
+      "directory": true,
+      "entries": []
+    },
+    "builder_jobs": {
+      "present": true,
+      "directory": true,
+      "entries": [
+        {
+          "name": "unrecognized",
+          "kind": "file",
+          "bytes": 0,
+          "uid": 0,
+          "gid": 0,
+          "mode": "0o600",
+          "links": 1
+        }
+      ]
+    }
+  }
+}

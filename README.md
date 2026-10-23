@@ -129,3 +129,7 @@ painel ou nas tarefas e duas falhas do CI ainda sem motivo identificado.
 O roteiro agora identifica todas as mensagens literais de recusa do backup
 e exige o motivo esperado nos testes negativos. O próximo diagnóstico local
 é curto, somente de leitura, e está em [STATUS.md](docs/STATUS.md).
+O diagnóstico encontrou apenas um arquivo vazio no diretório de tarefas.
+O marco 39 corrige o roteiro para reconhecer e preservar a trava `.api-lock`
+do builder, conferindo nome, dono, permissões e ausência de uso antes de
+permitir a quarentena dos resíduos identificados. A homologação continua pendente.
