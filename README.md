@@ -119,10 +119,12 @@ capacidade nem testa reboot. Evidências no marco 43 de [STATUS.md](docs/STATUS.
 O [roteiro do primeiro teste pela interface](docs/TESTE_MANUAL.md) prepara uma
 instalação persistente, acessível pelo Chrome nesta mesma máquina Linux, com
 quatro ZIPs de exemplo e dois ambientes R já homologados. A preparação exige
-sudo, namespace vazio e criação da sua conta; o painel permanente ainda precisa
-ser iniciado por esses comandos. Passaram 454 testes Python e a conferência do
-login em Chrome real com TLS temporário. O teste do novo preparador com systemd
-foi acrescentado ao CI e ainda aguarda execução. A Fase 4, incluindo múltiplas
+sudo, namespace vazio e criação da sua conta. No host local, o operador concluiu
+a preparação, criou a conta e iniciou os serviços: HTTPS e login da instalação
+permanente passaram na conferência pelo Chrome em 1280 e 360 px. O primeiro teste
+manual está liberado; login com a conta do operador e publicação dos exemplos
+ainda dependem desse teste. Passaram 454 testes Python. A etapa do novo preparador
+com systemd no CI ainda aguarda resultado. A Fase 4, incluindo múltiplas
 instâncias e validação de QoS sob disputa, continua pendente para o MVP.
 
 O histórico das correções de backup, limpeza, compressão, SQLite WAL e

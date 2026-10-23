@@ -2350,3 +2350,42 @@ e criar a conta administrativa no próprio terminal. Isso libera o primeiro test
 manual funcional combinado. A instalação permanente e a sessão do operador
 ainda precisam ser verificadas após essa execução. Reboot real, capacidade sob
 carga e prontidão do MVP continuam pendentes.
+
+## Marco 44 — Painel permanente acessível para o primeiro teste manual
+
+Em **2026-10-23**, o operador aplicou a preparação local do marco 43 e informou
+a criação da conta administrativa. Foram conferidos os recibos em
+`var/manual-test-setup.json` e `/usr/local/share/shinyd-manual-test/setup.json`:
+configuração concluída para `https://panel.shinyd.test:18443`, ligada somente a
+`127.0.0.1`, com certificado válido até **2027-01-21 18:12:18 UTC**. Os quatro
+ZIPs de exemplo estão disponíveis em `/usr/local/share/shinyd-manual-test/`.
+
+Na primeira consulta, os serviços ainda estavam parados. Durante a conferência,
+o operador concluiu os comandos: `shinyd.target` passou a ativo e habilitado
+para inicialização automática; painel, autorizador, worker, gateway e ingresso
+HTTPS passaram a ativos/em execução. A entrada no estado ativo do painel foi
+registrada pelo systemd às **15:18:23 -03**. Habilitação no boot não comprova
+recuperação após reboot, cujo ensaio permanece pendente.
+
+O comando `.venv/bin/python scripts/open_manual_test.py --check-browser`,
+executado sem sudo, retornou código zero e:
+
+```json
+{"passed": true, "origin": "https://panel.shinyd.test:18443", "tls_verified": true, "browser_checked": true}
+```
+
+A conferência usou os serviços instalados e o certificado efetivo, verificando
+HTTPS, campos do login no Chrome e ausência de rolagem horizontal em **1280 e
+360 px**. Não acessou a senha nem a sessão do operador. O acesso autenticado e
+a publicação manual dos exemplos ainda precisam ser experimentados pelo usuário;
+o fluxo automatizado integrado já foi homologado no marco 43.
+
+**O primeiro teste manual funcional pela interface está liberado.** Abra o
+launcher conforme [TESTE_MANUAL.md](TESTE_MANUAL.md), entre com a conta criada e
+publique `demo-r-a-v1.zip` no ambiente `r-a`. A preparação preserva os dados entre
+os testes; não repita o ensaio descartável sobre essa instalação ocupada.
+
+Na consulta deste marco, o [workflow de 4581fe0](https://github.com/rfsaldanha/shinyd/actions/runs/40001309669)
+continuava em execução. Portanto, a nova etapa do preparador no CI ainda não tem
+resultado confirmado. Este marco registra a verificação local, sem mudança de
+código, pacote ou migração; a suíte Python não foi repetida.
