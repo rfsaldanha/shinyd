@@ -107,39 +107,23 @@ Evidências e limites estão em [STATUS.md](docs/STATUS.md).
 F3-07 implementa [backup criptografado e restauração em vazio](docs/BACKUP_RESTAURACAO.md),
 com preparação visual, preservação de código/imagens/dados/segredos e invalidação
 de sessões antigas. Requer `control10` e `age`, sem nova migração de banco.
-A execução inicial é pelo operador Linux, com apps parados. Passaram 361 testes
-Python e a página foi verificada no Chrome em 1280 px e 360 px.
-**A homologação instalada de F3-07 ainda está pendente.** O teste manual
-completo combinado continua dependendo dela e da instalação permanente de testes.
-O primeiro ensaio encontrou um erro de preparação do roteiro: um teste anterior
-havia removido o segredo que ele tentava conferir. A correção cria um segredo
-próprio para a restauração e mostra progresso no terminal. Passaram 365 testes
-Python; resultados e pendências estão no marco 35 de [STATUS.md](docs/STATUS.md).
-A tentativa seguinte avançou até a criação do backup, mas falhou e deixou
-a limpeza incompleta. O marco 36 registra a correção da limpeza, 374 testes
-Python aprovados e um diagnóstico somente de leitura. Naquela etapa, era
-necessário recuperar o namespace de teste antes de uma nova homologação completa.
-O diagnóstico mostrou 7,4 GiB livres e repetição de camadas no transporte das
-imagens. O marco 37 reduz esse consumo com exportação conjunta comprimida
-(`control9`) e acrescenta quarentena reversível dos resíduos identificados.
-Um experimento local exportou e carregou três imagens em armazenamento
-separado, preservando seus IDs; isso ainda não homologa F3-07.
-O marco 38 registra a recusa da quarentena por conteúdo remanescente no
-painel ou nas tarefas e duas falhas do CI ainda sem motivo identificado.
-O roteiro agora identifica todas as mensagens literais de recusa do backup
-e exige o motivo esperado nos testes negativos. O diagnóstico local seguinte,
-somente de leitura, está registrado em [STATUS.md](docs/STATUS.md).
-O diagnóstico encontrou apenas um arquivo vazio no diretório de tarefas.
-O marco 39 corrige o roteiro para reconhecer e preservar a trava `.api-lock`
-do builder, conferindo nome, dono, permissões e ausência de uso antes de
-permitir a quarentena dos resíduos identificados. A homologação continua pendente.
-O marco 40 confirma a recuperação dos 55 caminhos e corrige a criação do backup
-com SQLite em modo WAL no `control10`. Passaram 418 testes Python, incluindo
-restauração de dados presentes apenas no WAL. A nova homologação instalada
-continua necessária; o comando está em [STATUS.md](docs/STATUS.md).
-O ensaio local do marco 41 foi interrompido antes do backup por uma recusa de
-recursos do builder. A observação posterior encontrou apenas cerca de 217 MiB
-acima da reserva mínima de disco. O roteiro passou a reconhecer tarefas que
-falharam sem esperar o prazo de sucesso e a registrar memória e disco. Antes
-de repetir o ensaio local, é necessário revisar o espaço disponível, conforme
-[STATUS.md](docs/STATUS.md). A suíte passou com 430 testes Python.
+A execução inicial é pelo operador Linux, com apps parados.
+
+**F3-07 passou no CI em 202 verificações integradas; a homologação local
+continua pendente.** O ensaio criou e verificou uma cópia com dez imagens,
+restaurou em uma instalação vazia e confirmou pelo navegador o app recuperado,
+seus dados e segredos. Também verificou chave incorreta, truncamento, destino
+ocupado e bloqueio de partida durante restauração incompleta. Não mede
+capacidade nem testa reboot. Evidências no marco 42 de [STATUS.md](docs/STATUS.md).
+
+O último ensaio local parou antes do backup por uma recusa de recursos.
+O roteiro agora registra memória e disco e encerra a espera ao reconhecer uma
+tarefa que falhou; passaram 430 testes Python. Caches de ferramentas foram
+transferidos, com cópias conferidas e links nos caminhos originais, para a
+partição com espaço livre. O espaço disponível em `/` passou de 6,18 para
+9,36 GiB. O próximo comando de homologação está em [STATUS.md](docs/STATUS.md).
+
+O teste manual completo combinado para o fim da Fase 3 depende da aprovação
+local e da configuração de uma instalação permanente de testes. O histórico
+das correções de backup, limpeza, compressão, SQLite WAL e diagnóstico está
+preservado nos marcos 34–42 de [STATUS.md](docs/STATUS.md).

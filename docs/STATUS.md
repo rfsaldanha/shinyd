@@ -2177,3 +2177,94 @@ O inventário permite decidir uma liberação de espaço ou mudança de armazena
 com base nos dados encontrados. Não execute uma limpeza geral de imagens:
 a quarentena do marco 40 ainda depende das imagens preservadas. **F3-07 e o
 teste manual completo continuam pendentes.**
+
+## Marco 42 — Backup aprovado no CI e espaço local recuperado
+
+O [workflow de `04d825c`](https://github.com/rfsaldanha/shinyd/actions/runs/39980895241)
+terminou com **todos os cinco jobs aprovados**, em **23/10/2026, 16:12 UTC**.
+O ensaio integrado aprovou **202 verificações**, incluindo os **148 checks**
+do fluxo instalado. A evidência completa está em
+[`backup-instalado-ci-sucesso.json`](evidencias/backup-instalado-ci-sucesso.json).
+O backup criptografado incluiu **10 imagens** e teve **1.518.399.608 bytes**.
+Esse tamanho é do arquivo final; não mede o pico de disco durante a operação.
+
+Foram exercitadas a criação e a verificação completa, as recusas de serviços
+ativos, link inseguro, chave errada, truncamento e destino ocupado, a remoção
+da imagem publicada e sua recuperação a partir da cópia. A restauração preservou
+dados e chave mestra, rotacionou as chaves de transporte, invalidou o login
+antigo, manteve as contas e permitiu iniciar o app recuperado pelo navegador.
+O teste confirmou reatividade Shiny com dados e segredos, além do bloqueio de
+partida durante uma restauração marcada como incompleta. A limpeza terminou
+sem erro registrado.
+
+O runner tinha kernel **6.17.0-1022-azure**, arquitetura x86_64, **4 CPUs lógicas**,
+**16.766.410.752 bytes de RAM** e Podman **4.9.3**. O cenário usa dois apps e
+operações funcionais; não mede capacidade ou QoS sob carga. Não testa reboot,
+DNS público ou emissão de certificados. O SHA-256 do pacote do CI está no
+relatório e difere do pacote construído localmente; o ensaio local segue necessário.
+
+O levantamento de disco do operador, às **16:10 UTC**, confirmou aproximadamente
+**100 GiB em `/var/lib/postgresql`**, **4,9 GiB em `/var/lib/containers`** e
+**4,1 GiB no journal**. O Podman listou 61 imagens, nenhum container e nenhum
+volume. Sua indicação de espaço recuperável não considera referências de
+rollback, backup ou quarentena. Nenhum desses conteúdos foi removido.
+O resumo e os hashes dos relatórios estão em
+[`armazenamento-local-inventario.json`](evidencias/armazenamento-local-inventario.json);
+o levantamento completo da pasta pessoal permanece somente em `var/`.
+
+Para aumentar a folga sem alterar bancos, projetos ou estado do shinyd, foram
+transferidas quatro pastas de ferramentas da conta local para
+`/mnt/data/shinyd-tool-cache`, com permissão **0700**:
+
+| Caminho original em `~/.cache/` | Destino sob `/mnt/data/shinyd-tool-cache/` |
+| --- | --- |
+| `pip` | `pip` |
+| `go-build` | `go-build` |
+| `ms-playwright` | `ms-playwright` |
+| `google-chrome-headless` | `google-chrome-headless` |
+
+A operação conferiu ausência de processos usando essas pastas e de arquivos abertos nelas,
+donos, tipos de arquivos e disponibilidade do destino. Cada cópia foi
+comparada à origem por conteúdo SHA-256, caminhos, tipos, modos, horários e
+alvos de links. A origem foi reconferida antes e depois da troca. Os caminhos
+originais agora são links para as cópias conferidas; só então as cópias antigas
+foram retiradas da partição do sistema. O conteúdo foi preservado, inclusive
+os perfis temporários do navegador de testes. PostgreSQL, imagens Podman,
+dados, segredos, políticas e quarentena ficaram intactos.
+
+Entre **16:18:10 e 16:18:58 UTC**, o espaço livre observado em `/` passou de
+**6.640.934.912 para 10.055.061.504 bytes**, aproximadamente **6,18 para 9,36 GiB**.
+O recibo está em
+[`caches-ferramentas-transferidos.json`](evidencias/caches-ferramentas-transferidos.json).
+Foram conferidos os quatro links, a resolução dos caches pelo pip e Go e a
+consulta de versão do Chromium instalado no cache transferido. O conteúdo depende agora
+da montagem de `/mnt/data`. Para reverter, com essas ferramentas paradas e
+espaço suficiente em `/`, copie cada pasta de volta, confira a cópia e substitua
+somente o link correspondente pela pasta; preserve o destino até concluir a
+conferência. O recibo registra os pares de caminhos exatos.
+
+Não houve alteração de código do produto, migração ou novo pacote. `control10`
+mantém o SHA-256 local do marco 40. As mudanças de roteiro do marco 41 já passaram
+nos **430 testes Python**; neste marco foram conferidas as evidências e a
+transferência local, sem repetir testes de código inalterado. O workflow de
+`e066ba8` ainda estava executando o ensaio integrado na consulta; seus outros
+quatro jobs já haviam passado.
+
+O próximo passo é repetir a homologação local com o espaço recuperado. O pico
+de consumo ainda não é conhecido; as proteções de disco e memória continuam
+ativas. O ensaio do CI levou aproximadamente 26 minutos até a limpeza. O comando
+local continua exigindo a senha sudo do operador:
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
+  --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control10_amd64.deb \
+  | tee var/backup-report.json
+```
+
+**F3-07 está aprovada no CI; a homologação local permanece pendente.** O teste
+manual completo combinado continua dependendo dela e da instalação permanente
+de testes. Ainda não foi anunciada a liberação desse teste.

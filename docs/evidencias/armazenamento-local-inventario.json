@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T16:10:04.641231+00:00",
+  "source": "du -xhd1 executado pelo operador; tamanhos arredondados pelo comando.",
+  "selected_usage": {
+    "/var/lib/shinyd-probe-quarantine-j437nwoh": "288K",
+    "/var/cache": "303M",
+    "/var/log/journal": "4,1G",
+    "/var/lib/containers": "4,9G",
+    "/var/lib/postgresql": "100G"
+  },
+  "podman_system_df": "TYPE           TOTAL       ACTIVE      SIZE        RECLAIMABLE\nImages         61          0           4.886GB     4.886GB (100%)\nContainers     0           0           0B          0B (0%)\nLocal Volumes  0           0           0B          0B (0%)\n",
+  "du_stderr_empty": true,
+  "source_sha256": {
+    "disco-uso.txt": "68d47a07c9450d9123abc11252e04aec95e467f28f5b86d6f1ef7463c892c646",
+    "disco-erros.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "podman-disco.txt": "5184508903662d2f074ba67275281a55f0c9f02d4c65dde0afde555f9743e18e"
+  },
+  "limitations": [
+    "O levantamento completo da pasta pessoal permanece somente em var/.",
+    "A indicação reclaimable do Podman não verifica dependências de rollback, backup ou quarentena."
+  ]
+}

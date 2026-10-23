@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-10-23T16:18:10.919912+00:00",
+  "root_available_before": 6640934912,
+  "destination": "/mnt/data/shinyd-tool-cache",
+  "moved": [
+    {
+      "source": "/home/raphaelsaldanha/.cache/pip",
+      "target": "/mnt/data/shinyd-tool-cache/pip",
+      "entries": 2211,
+      "regular_bytes": 373368214,
+      "inventory_sha256": "9872515e1ab42ead40c7f4437dd4d504b184dcad4244c0e576fe087bb4b2eafe",
+      "copy_verified": true,
+      "original_path_is_link": true
+    },
+    {
+      "source": "/home/raphaelsaldanha/.cache/go-build",
+      "target": "/mnt/data/shinyd-tool-cache/go-build",
+      "entries": 8980,
+      "regular_bytes": 508914612,
+      "inventory_sha256": "2ec6f1d122bb4a0f36fc6c6ba0e6b2eed00ceae5da97f955115f01b433e65e44",
+      "copy_verified": true,
+      "original_path_is_link": true
+    },
+    {
+      "source": "/home/raphaelsaldanha/.cache/ms-playwright",
+      "target": "/mnt/data/shinyd-tool-cache/ms-playwright",
+      "entries": 682,
+      "regular_bytes": 995205786,
+      "inventory_sha256": "a556346d238c1351380e4a6aee475bd43d51f1b8ad311e290c2ca774a93dc12c",
+      "copy_verified": true,
+      "original_path_is_link": true
+    },
+    {
+      "source": "/home/raphaelsaldanha/.cache/google-chrome-headless",
+      "target": "/mnt/data/shinyd-tool-cache/google-chrome-headless",
+      "entries": 55531,
+      "regular_bytes": 1299961740,
+      "inventory_sha256": "1037b947ea8650575178e3d9c9e1e202f16cd5af940078f62361e17623014600",
+      "copy_verified": true,
+      "original_path_is_link": true
+    }
+  ],
+  "complete": true,
+  "root_available_after": 10055061504,
+  "finished_at": "2026-10-23T16:18:58.939350+00:00",
+  "verification": {
+    "pip_cache_dir": "/mnt/data/shinyd-tool-cache/pip",
+    "go_cache_dir": "/home/raphaelsaldanha/.cache/go-build",
+    "cached_chromium_version": "Google Chrome for Testing 153.0.8010.12",
+    "original_links_checked": 4,
+    "destination_mode": "0700",
+    "product_code_changed": false
+  }
+}
