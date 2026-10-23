@@ -189,7 +189,7 @@ def probe(page, app_url, password, run, admin, check, before_backup, report):
         )
         check(
             "backup_unsafe_link_refused",
-            refused_command(run, report, "unsafe_entry", *create) and not output.exists(),
+            refused_command(run, report, "inaccessible_entry", *create) and not output.exists(),
         )
         link.unlink()  # Only the exact disposable symlink checked above; never follow it.
         check(

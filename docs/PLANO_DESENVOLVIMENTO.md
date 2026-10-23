@@ -229,7 +229,7 @@ reproduzível; nenhum item conclui apenas por uma afirmação.
 | F3-04 | P0 | Telemetria/drenagem preserva sessão antiga | F0-04,F2-05 |
 | F3-05 | P0 | [Operações/lotes](OPERACOES_APPS.md): confirmação do conjunto/impacto, resultados individuais, parada retomável e dados preservados | F3-04 |
 | F3-06 | P0 | [Recuperação de falhas](RECUPERACAO_APPS.md): circuito persistente, até três tentativas, observação conservadora e intervenção pela UI | F2-07,F3-05 |
-| F3-07 | P0 | Backup básico restaura app/dados/segredo em vazio; implementação em control8, homologação instalada pendente (marco 34 em STATUS) | F3-01–03 |
+| F3-07 | P0 | Backup básico restaura app/dados/segredo em vazio; control10 corrige cópia SQLite WAL, homologação instalada pendente (marco 40 em STATUS) | F3-01–03 |
 | F4-01 | P0 | Distribuição e afinidade de múltiplas instâncias | F3-04 |
 | F4-02 | P0 | Peso agregado não aumenta com processos | F1-05,F4-01 |
 | F4-03 | P0 | Admissão não reserva a mesma RAM duas vezes | F4-01 |

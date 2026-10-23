@@ -2017,3 +2017,81 @@ sudo python3 scripts/backup_fixture_recover.py \
 Este comando aplica a quarentena somente se todas as conferências passarem;
 não repete a publicação pelo navegador. **F3-07 e o teste manual completo
 continuam pendentes.**
+
+## Marco 40 — Quarentena concluída e correção do backup com SQLite WAL
+
+A recuperação local foi concluída em **23/10/2026, 15:30 UTC**. O relatório
+[`backup-quarentena-local-sucesso.json`](evidencias/backup-quarentena-local-sucesso.json)
+registra `passed: true`, `applied: true` e os **55 caminhos** movidos para
+`/var/lib/shinyd-probe-quarantine-j437nwoh`. A trava `.api-lock` permaneceu no
+local. Nenhuma imagem foi removida e os limites de recursos não foram alterados.
+Mantenha essa quarentena até a conclusão da homologação.
+
+O [workflow de `d08edda`](https://github.com/rfsaldanha/shinyd/actions/runs/39967368155)
+aprovou Go, Python, executor e pacote do agente. O builder falhou no cenário
+negativo `backup_unsafe_link_refused`: o backup recusou o link, mas o roteiro
+esperava `unsafe_entry` em vez de `inaccessible_entry`. Há **53 verificações
+principais aprovadas**, uma falha agregada e **128 checks** registrados no ensaio
+instalado, sem erro de limpeza. A evidência está em
+[`backup-link-ci-falha.json`](evidencias/backup-link-ci-falha.json).
+O roteiro agora exige a classificação efetivamente emitida ao abrir um link
+com `O_NOFOLLOW`; um teste usa a rotina real de cópia e verifica que o destino
+do link não é copiado nem alterado.
+
+Também foi reproduzida uma falha do produto usando o modo **WAL** do SQLite,
+ativado pelo painel. Nesse modo, alterações confirmadas podem permanecer em
+um arquivo auxiliar antes de serem incorporadas ao arquivo principal. A cópia
+herdava esse modo e sua inspeção criava arquivos `-wal` e `-shm`, recusados pelo
+inventário restrito do backup. O cenário com WAL falhou em `archive.pack` com
+“Conteúdo fora da estrutura permitida para backup.”; o cenário com DELETE passou.
+Isso comprova uma regressão local; não recupera a mensagem perdida nos ensaios
+antigos nem demonstra retrospectivamente a causa de cada falha anterior.
+
+O `control10` usa a API de backup do SQLite e consolida **somente a cópia
+temporária** em modo DELETE antes de validá-la. Fecha explicitamente as conexões
+de cópia, inspeção e redefinição de acesso. O contexto de conexão do Python
+gerencia a transação, mas não fecha a conexão, conforme a
+[documentação oficial](https://docs.python.org/3/library/sqlite3.html#how-to-use-the-connection-context-manager).
+O banco de origem mantém WAL. Na restauração, os serviços voltam a ativá-lo.
+
+Os dois cenários passaram após a correção, com `age` e SQLite reais. O teste
+mantém a origem aberta, desativa o checkpoint automático, confirma uma alteração
+presente apenas no WAL e a recupera após criar, verificar e restaurar o backup.
+Dados e chave dos segredos permanecem preservados. A evidência
+[`backup-wal-regressao-local.json`](evidencias/backup-wal-regressao-local.json)
+explicita que Podman e os privilégios de instalação são simulados nesse teste;
+ele não substitui o ensaio instalado. Outros testes verificam fechamento das
+conexões tanto após commit quanto após rollback da transação.
+
+A suíte completa passou com **418 testes Python**. Foi corrigida também uma
+instabilidade preexistente no teste de upload idempotente: a repetição agora
+reutiliza os mesmos bytes do ZIP, incluindo seus horários, em vez de gerar
+outro arquivo. A regra do produto que recusa conteúdo diferente com a mesma
+chave permanece inalterada. Ruff, formatação, migrações em banco temporário,
+ausência de migrações novas e verificações Django de implantação passaram.
+
+Pacote construído e conferido, ainda **não instalado/homologado** neste marco:
+
+* `shinyd-control_0.1.0~control10_amd64.deb`
+* SHA-256: `762394953a30ac03fd33195d4d7b54a5e2ff5bdbe7504982e51415e98bf79d62`
+
+Não há nova migração, nem alteração dos pacotes `builder2` e `runtime5`.
+Com os resíduos recuperados e o pacote corrigido disponível, o próximo passo
+é repetir o ensaio instalado completo. Ele instala os pacotes, publica apps
+de teste e exercita backup/restauração. Pode levar mais de 20 minutos e informa
+progresso no terminal. A execução local continua dependendo da senha sudo do
+operador, indisponível para esta sessão do agente:
+
+```sh
+cd /mnt/data/drive2/shinyd
+set -o pipefail
+sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
+  --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
+  --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control10_amd64.deb \
+  | tee var/backup-report.json
+```
+
+**F3-07 continua com homologação instalada pendente.** O teste manual completo
+combinado depende dessa aprovação e da configuração de uma instalação
+permanente de testes; ainda não foi liberado.

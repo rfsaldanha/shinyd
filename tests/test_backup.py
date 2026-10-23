@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 import tarfile
 import uuid
+from contextlib import closing
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -27,6 +28,31 @@ from deployment.backup_archive import BackupError
 from tests.test_deployment import CONFIG, pem
 
 IMAGE = "sha256:" + "a" * 64
+
+
+@pytest.mark.parametrize("fail", [False, True])
+def test_database_context_closes_connection_and_commits_or_rolls_back(tmp_path, fail):
+    path = tmp_path / "metadata.sqlite3"
+    with closing(sqlite3.connect(path)) as seed, seed:
+        seed.execute("CREATE TABLE fixture (value TEXT)")
+
+    def edit():
+        with backup_state.database(path, writable=True) as db:
+            observed.append(db)
+            db.execute("INSERT INTO fixture VALUES ('transaction-fixture')")
+            if fail:
+                raise RuntimeError("simulated transaction failure")
+
+    observed = []
+    if fail:
+        with pytest.raises(RuntimeError):
+            edit()
+    else:
+        edit()
+    with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+        observed[0].execute("SELECT 1")
+    with closing(sqlite3.connect(path)) as actual:
+        assert actual.execute("SELECT count(*) FROM fixture").fetchone() == (0 if fail else 1,)
 
 
 @pytest.fixture
@@ -441,11 +467,29 @@ def test_expired_tls_can_be_recovered_but_configuration_requires_renewal(tree):
         verify_certificate(cert, key, CONFIG)
 
 
+@pytest.mark.parametrize("journal_mode", ["DELETE", "WAL"])
 def test_create_verify_restore_orchestration_with_real_age_and_sqlite(
-    tree, destination, tmp_path, age_binary, monkeypatch
+    tree, destination, tmp_path, age_binary, monkeypatch, journal_mode, request
 ):
     manifest = {**metadata(), "files": archive.inventory(tree)}
     backup.install(tree, manifest, destination)
+    source = sqlite3.connect(destination.control / "metadata.sqlite3")
+    request.addfinalizer(source.close)
+    with source:
+        assert (
+            source.execute("PRAGMA journal_mode=" + journal_mode).fetchone()[0]
+            == journal_mode.lower()
+        )
+        source.execute("PRAGMA wal_autocheckpoint=0")
+        source.execute(
+            "UPDATE control_user SET first_name='committed-after-wal-enable' WHERE username='admin'"
+        )
+    if journal_mode == "WAL":
+        assert (destination.control / "metadata.sqlite3-wal").stat().st_size > 0
+        assert (
+            b"committed-after-wal-enable"
+            not in (destination.control / "metadata.sqlite3").read_bytes()
+        )
     key, public = identity(tmp_path, age_binary)
     output = tmp_path / "copy.age"
     monkeypatch.setattr(backup, "compatibility", lambda: {"test": True})
@@ -474,6 +518,7 @@ def test_create_verify_restore_orchestration_with_real_age_and_sqlite(
         argparse.Namespace(operation="create", file=output, recipient=public, max_gib=1),
         destination,
     )
+    assert source.execute("PRAGMA journal_mode").fetchone()[0] == journal_mode.lower()
     verified = backup.execute(
         argparse.Namespace(operation="verify", file=output, identity=key, max_gib=1), destination
     )
@@ -509,3 +554,8 @@ def test_create_verify_restore_orchestration_with_real_age_and_sqlite(
     ).read_bytes()
     assert (destination.control / "metadata.sqlite3").is_file()
     assert list(other.work.iterdir()) == [other.work / ".lock"]
+    with closing(sqlite3.connect(other.control / "metadata.sqlite3")) as restored_db:
+        assert restored_db.execute("PRAGMA journal_mode").fetchone() == ("delete",)
+        assert restored_db.execute(
+            "SELECT first_name FROM control_user WHERE username='admin'"
+        ).fetchone() == ("committed-after-wal-enable",)

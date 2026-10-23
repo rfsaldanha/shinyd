@@ -14,15 +14,19 @@ from tests.test_archives import archive_bytes
 pytestmark = pytest.mark.django_db
 
 
-def send(app, actor, key=None, code="shiny::shinyApp(ui, server)"):
-    upload = SimpleUploadedFile("app.zip", archive_bytes([("app.R", code)]))
+def send(app, actor, key=None, code="shiny::shinyApp(ui, server)", *, payload=None):
+    upload = SimpleUploadedFile(
+        "app.zip", archive_bytes([("app.R", code)]) if payload is None else payload
+    )
     return receive_upload(actor, app.pk, upload, key or uuid.uuid4())
 
 
 def test_upload_is_idempotent_and_no_execution(app, accounts, local_state):
     key = uuid.uuid4()
-    job = send(app, accounts["publisher"], key)
-    assert send(app, accounts["publisher"], key).pk == job.pk
+    # A retry sends the same ZIP bytes, including the original entry timestamps.
+    payload = archive_bytes([("app.R", "shiny::shinyApp(ui, server)")])
+    job = send(app, accounts["publisher"], key, payload=payload)
+    assert send(app, accounts["publisher"], key, payload=payload).pk == job.pk
     assert Version.objects.count() == 1
     assert len(list((local_state / "sources").glob("*.zip"))) == 1
     assert process_one()

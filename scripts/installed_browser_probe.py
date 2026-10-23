@@ -132,7 +132,7 @@ def installed_probe(package, fixture, created, data_apps, before_backup=None):
         check(
             "control_package_identity",
             run("dpkg-deb", "--show", "--showformat=${Package} ${Version}", str(package)).stdout
-            == "shinyd-control 0.1.0~control9",
+            == "shinyd-control 0.1.0~control10",
         )
         stage = "installation"
         run("dpkg", "--install", str(package))

@@ -187,8 +187,8 @@ def snapshot(layout, root, limit):
     safe_directory(layout.control, owner=pwd.getpwnam("shinyd-control").pw_uid)
     # SQLite's backup API also handles a cleanly stopped database with a remaining WAL.
     with archive.regular(layout.control / "metadata.sqlite3"):
-        with sqlite3.connect(
-            (layout.control / "metadata.sqlite3").as_uri() + "?mode=ro", uri=True
+        with contextlib.closing(
+            sqlite3.connect((layout.control / "metadata.sqlite3").as_uri() + "?mode=ro", uri=True)
         ) as src:
             size = (
                 src.execute("PRAGMA page_count").fetchone()[0]
@@ -197,8 +197,12 @@ def snapshot(layout, root, limit):
             if size > limit:
                 raise BackupError("Banco excede o limite do backup.")
             archive.space(root, size)
-            with sqlite3.connect(root / "control/metadata.sqlite3") as dst:
+            with contextlib.closing(sqlite3.connect(root / "control/metadata.sqlite3")) as dst:
                 src.backup(dst)
+                # The backup inherits WAL from production. Keep the private copy
+                # self-contained before validation opens it, without changing the source.
+                if dst.execute("PRAGMA journal_mode=DELETE").fetchone() != ("delete",):
+                    raise BackupError("Não foi possível consolidar a cópia do banco de metadados.")
     for source, target in (
         (layout.control / "sources", root / "control/sources"),
         (layout.data, root / "data"),

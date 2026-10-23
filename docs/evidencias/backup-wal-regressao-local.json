@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-23T15:38:54.273705+00:00",
+  "scope": "Regressão local de criação, verificação e restauração com age e SQLite reais; Podman e privilégios de instalação simulados no teste.",
+  "environment": {
+    "python": "3.12.3",
+    "sqlite": "3.45.1"
+  },
+  "before_fix": {
+    "base_commit": "d08edda",
+    "cases": 2,
+    "passed": 1,
+    "failed": 1,
+    "failed_case": "WAL",
+    "stage": "archive.pack -> inventory",
+    "message": "Conteúdo fora da estrutura permitida para backup."
+  },
+  "after_fix": {
+    "cases": 2,
+    "passed": 2,
+    "journal_modes": [
+      "DELETE",
+      "WAL"
+    ],
+    "committed_wal_only_row_restored": true,
+    "source_journal_mode_preserved": true,
+    "data_and_secret_key_preserved": true,
+    "wrong_compatibility_refused": true
+  },
+  "test": "tests/test_backup.py::test_create_verify_restore_orchestration_with_real_age_and_sqlite",
+  "limitations": [
+    "Não substitui homologação instalada com serviços systemd, imagens Podman e navegador.",
+    "As mensagens perdidas nos ensaios antigos não puderam ser recuperadas."
+  ]
+}

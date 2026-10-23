@@ -1,6 +1,6 @@
 # Backup e restauração básicos — F3-07
 
-O pacote `control9` acrescenta `shinyd-backup create`, `verify`, `restore`
+O pacote `control10` acrescenta `shinyd-backup create`, `verify`, `restore`
 e `resume`. É um backup **com os apps e serviços parados**, operado com sudo.
 A página administrativa “Backup e restauração” mostra quantos apps, tarefas
 e rotas ainda precisam de atenção e o recibo da última restauração.
@@ -24,6 +24,12 @@ testes unitários como comprovação de recuperação real em outro servidor.
   políticas aprovadas e certificado/chave TLS, dentro do arquivo criptografado.
 * Registros de instâncias já retiradas, para preservar a proibição de reutilizar
   seus identificadores. Instâncias ainda presentes impedem a cópia.
+
+O painel usa o modo WAL do SQLite, que pode manter alterações confirmadas em
+um arquivo auxiliar. A cópia usa a API de backup do SQLite para incluir essas
+alterações e consolida somente o banco temporário em um arquivo independente.
+As conexões são fechadas antes de empacotar ou instalar os arquivos. O banco
+original mantém seu modo WAL; os serviços voltam a ativá-lo no banco restaurado.
 
 Logs, caches, tarefas antigas do builder, diretórios temporários, arquivos
 de instalação `.deb`, configurações gerais do Linux, DNS, subuids/subgids e
@@ -56,7 +62,7 @@ para abrir uploads enviados por publicadores.
 
 ## Preparar uma cópia
 
-Instale `age` e `control9`. Escolha diretórios privados do operador, fora do
+Instale `age` e `control10`. Escolha diretórios privados do operador, fora do
 estado do shinyd. Exemplo para uma chave nova:
 
 ```sh
@@ -217,7 +223,7 @@ set -o pipefail
 sudo .venv/bin/python scripts/builder_smoke.py --activation --backup \
   --install-package dist/shinyd-builder_0.1.0~builder2_amd64.deb \
   --install-runtime-package dist/shinyd-runtime_0.1.0~runtime5_amd64.deb \
-  --install-control-package dist/shinyd-control_0.1.0~control9_amd64.deb \
+  --install-control-package dist/shinyd-control_0.1.0~control10_amd64.deb \
   | tee var/backup-report.json
 ```
 

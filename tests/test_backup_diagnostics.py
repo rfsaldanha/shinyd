@@ -125,6 +125,30 @@ def test_negative_backup_check_requires_the_intended_refusal(code, message, expe
     assert "PRIVATE_TOKEN" not in json.dumps(report)
 
 
+def test_backup_link_check_uses_the_actual_copy_tree_refusal(tmp_path):
+    from deployment import backup
+    from deployment.backup_archive import BackupError
+
+    data, copied = tmp_path / "data", tmp_path / "copied"
+    data.mkdir()
+    secret = tmp_path / "secret"
+    secret.write_bytes(b"PRIVATE_COPY_SENTINEL")
+    (data / "escape").symlink_to(secret)
+    with pytest.raises(BackupError) as error:
+        backup.copy_tree(data, copied, 10000)
+    report = {}
+    assert refused_command(
+        lambda *a, **k: SimpleNamespace(returncode=1, stderr=str(error.value)),
+        report,
+        "inaccessible_entry",
+        "shinyd-backup",
+        "create",
+    )
+    assert report == {}
+    assert secret.read_bytes() == b"PRIVATE_COPY_SENTINEL"
+    assert not (copied / "escape").exists()
+
+
 def test_read_only_diagnostic_keeps_data_and_excludes_secrets(tmp_path):
     app, instance, key, image = str(uuid.uuid4()), str(uuid.uuid4()), "b" * 64, "sha256:" + "a" * 64
     private = "PRIVATE_DIAGNOSTIC_SENTINEL"

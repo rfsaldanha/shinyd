@@ -6,6 +6,7 @@ import re
 import secrets
 import sqlite3
 import uuid
+from contextlib import closing, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -17,17 +18,21 @@ from deployment.cli import verify_certificate
 from deployment.config import validate
 
 
+@contextmanager
 def database(path, *, writable=False):
-    connection = sqlite3.connect(path.as_uri() + ("?mode=rw" if writable else "?mode=ro"), uri=True)
-    connection.execute("PRAGMA trusted_schema=OFF")
-    connection.execute("PRAGMA foreign_keys=ON")
-    if connection.execute(
-        "SELECT 1 FROM sqlite_master WHERE type IN ('trigger','view') "
-        "OR upper(sql) LIKE '%VIRTUAL TABLE%'"
-    ).fetchone():
-        connection.close()
-        raise BackupError("Estrutura SQLite não permitida.")
-    return connection
+    with closing(
+        sqlite3.connect(path.as_uri() + ("?mode=rw" if writable else "?mode=ro"), uri=True)
+    ) as connection:
+        connection.execute("PRAGMA trusted_schema=OFF")
+        connection.execute("PRAGMA foreign_keys=ON")
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type IN ('trigger','view') "
+            "OR upper(sql) LIKE '%VIRTUAL TABLE%'"
+        ).fetchone():
+            raise BackupError("Estrutura SQLite não permitida.")
+        # The SQLite context manages transactions, not the connection lifetime.
+        with connection:
+            yield connection
 
 
 def inspect_database(path, key):

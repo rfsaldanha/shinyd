@@ -106,7 +106,7 @@ Evidências e limites estão em [STATUS.md](docs/STATUS.md).
 
 F3-07 implementa [backup criptografado e restauração em vazio](docs/BACKUP_RESTAURACAO.md),
 com preparação visual, preservação de código/imagens/dados/segredos e invalidação
-de sessões antigas. Requer `control9` e `age`, sem nova migração de banco.
+de sessões antigas. Requer `control10` e `age`, sem nova migração de banco.
 A execução inicial é pelo operador Linux, com apps parados. Passaram 361 testes
 Python e a página foi verificada no Chrome em 1280 px e 360 px.
 **A homologação instalada de F3-07 ainda está pendente.** O teste manual
@@ -117,8 +117,8 @@ próprio para a restauração e mostra progresso no terminal. Passaram 365 teste
 Python; resultados e pendências estão no marco 35 de [STATUS.md](docs/STATUS.md).
 A tentativa seguinte avançou até a criação do backup, mas falhou e deixou
 a limpeza incompleta. O marco 36 registra a correção da limpeza, 374 testes
-Python aprovados e um diagnóstico somente de leitura. O próximo passo é
-recuperar o namespace de teste antes de uma nova homologação completa.
+Python aprovados e um diagnóstico somente de leitura. Naquela etapa, era
+necessário recuperar o namespace de teste antes de uma nova homologação completa.
 O diagnóstico mostrou 7,4 GiB livres e repetição de camadas no transporte das
 imagens. O marco 37 reduz esse consumo com exportação conjunta comprimida
 (`control9`) e acrescenta quarentena reversível dos resíduos identificados.
@@ -127,9 +127,13 @@ separado, preservando seus IDs; isso ainda não homologa F3-07.
 O marco 38 registra a recusa da quarentena por conteúdo remanescente no
 painel ou nas tarefas e duas falhas do CI ainda sem motivo identificado.
 O roteiro agora identifica todas as mensagens literais de recusa do backup
-e exige o motivo esperado nos testes negativos. O próximo diagnóstico local
-é curto, somente de leitura, e está em [STATUS.md](docs/STATUS.md).
+e exige o motivo esperado nos testes negativos. O diagnóstico local seguinte,
+somente de leitura, está registrado em [STATUS.md](docs/STATUS.md).
 O diagnóstico encontrou apenas um arquivo vazio no diretório de tarefas.
 O marco 39 corrige o roteiro para reconhecer e preservar a trava `.api-lock`
 do builder, conferindo nome, dono, permissões e ausência de uso antes de
 permitir a quarentena dos resíduos identificados. A homologação continua pendente.
+O marco 40 confirma a recuperação dos 55 caminhos e corrige a criação do backup
+com SQLite em modo WAL no `control10`. Passaram 418 testes Python, incluindo
+restauração de dados presentes apenas no WAL. A nova homologação instalada
+continua necessária; o comando está em [STATUS.md](docs/STATUS.md).
